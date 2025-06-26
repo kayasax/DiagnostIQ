@@ -61,6 +61,17 @@ The application includes **7 comprehensive troubleshooting scenarios** with **21
    - Password hash sync
    - Object synchronization status
 
+## 🏗️ Architecture
+
+DiagnosticIQ uses a **modular hybrid architecture** designed for scalability:
+
+- **Core Samples**: Quick-start scenarios for immediate use
+- **Modular Scenarios**: Organized by category in individual JSON files
+- **DataManager**: Centralized loading and management system
+- **Backward Compatible**: Supports legacy formats and smooth migrations
+
+📖 **See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation**
+
 ## 🛠 Technical Stack
 
 - **Frontend**: Pure HTML5, CSS3, JavaScript (ES6+)
