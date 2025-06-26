@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure AD Troubleshooting Query Library</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1><i class="fas fa-search"></i> Azure AD Query Library</h1>
+                <div class="header-actions">
+                    <input type="file" id="importFile" accept=".json" class="hidden-file-input" onchange="importLibrary(event)">
+                    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">
+                        <i class="fas fa-upload"></i> Import
+                    </button>
+                    <button class="btn btn-outline" onclick="exportLibrary()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddCheatSheet()">
+                        <i class="fas fa-plus"></i> Add Cheat Sheet
+                    </button>
+                    <button class="btn btn-secondary" onclick="syncLibrary()">
+                        <i class="fas fa-sync"></i> Sync Library
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search scenarios, queries, or keywords... (e.g., 'Cross Tenant Sync')"
+                    onkeyup="performSearch()"
+                >
+                <button class="clear-search" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="search-filters">
+                <select id="clusterFilter" onchange="performSearch()">
+                    <option value="">All Clusters</option>
+                    <option value="prod">Production</option>
+                    <option value="staging">Staging</option>
+                    <option value="dogfood">Dogfood</option>
+                </select>
+                <select id="categoryFilter" onchange="performSearch()">
+                    <option value="">All Categories</option>
+                    <option value="sync">Synchronization</option>
+                    <option value="auth">Authentication</option>
+                    <option value="provisioning">Provisioning</option>
+                    <option value="performance">Performance</option>
+                    <option value="applications">Applications</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Quick Access</h3>
+                    <ul class="quick-links">
+                        <li><a href="#" onclick="searchFor('Cross Tenant Sync')">Cross Tenant Sync</a></li>
+                        <li><a href="#" onclick="searchFor('Authentication Issues')">Authentication Issues</a></li>
+                        <li><a href="#" onclick="searchFor('Provisioning Errors')">Provisioning Errors</a></li>
+                        <li><a href="#" onclick="searchFor('Performance Issues')">Performance Issues</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-section">
+                    <h3>Recent Queries</h3>
+                    <ul id="recentQueries" class="recent-list">
+                        <!-- Populated by JavaScript -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                <div id="searchResults" class="search-results">
+                    <!-- Results will be populated here -->
+                </div>
+
+                <div id="welcomeMessage" class="welcome-message">
+                    <div class="welcome-content">
+                        <i class="fas fa-rocket"></i>
+                        <h2>Welcome to Azure AD Query Library</h2>
+                        <p>Search for troubleshooting scenarios, KQL queries, and step-by-step procedures.</p>
+                        <p>Try searching for: <strong>"Cross Tenant Sync"</strong> or <strong>"Authentication"</strong></p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Add Cheat Sheet -->
+    <div id="addCheatSheetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Cheat Sheet</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cheatSheetForm">
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select id="category" required>
+                            <option value="sync">Synchronization</option>
+                            <option value="auth">Authentication</option>
+                            <option value="provisioning">Provisioning</option>
+                            <option value="performance">Performance</option>
+                            <option value="applications">Applications</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cluster">Cluster:</label>
+                        <input type="text" id="cluster" placeholder="e.g., prod, staging, dogfood">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea id="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="steps">Troubleshooting Steps:</label>
+                        <textarea id="steps" rows="5" placeholder="1. First step...&#10;2. Second step..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Queries:</label>
+                        <div id="queryInputs">
+                            <!-- Query inputs will be dynamically generated here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCheatSheet()">Save Cheat Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
