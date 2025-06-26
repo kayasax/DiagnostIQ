@@ -1,4 +1,4 @@
-// Azure AD Troubleshooting Query Library - Main Application Logic
+// DiagnosticIQ - Main Application Logic
 
 class QueryLibraryApp {
     constructor() {
@@ -656,7 +656,7 @@ class QueryLibraryApp {
 
     syncLibrary() {
         // Placeholder for library synchronization
-        alert('Library sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
+        alert('DiagnosticIQ sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
     }
 }
 

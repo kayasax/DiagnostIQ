@@ -1,8 +1,8 @@
-# 🔍 Azure AD Troubleshooting Query Library
+# 🧠 DiagnosticIQ
 
-A comprehensive web-based application designed for Azure AD/Entra ID support engineers to quickly find, manage, and share troubleshooting queries and procedures.
+Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensive web-based application designed for support engineers to quickly find, manage, and share troubleshooting queries and procedures.
 
-![Azure AD Query Library](https://img.shields.io/badge/Azure%20AD-Query%20Library-blue)
+![DiagnosticIQ](https://img.shields.io/badge/DiagnosticIQ-Azure%20AD%20Troubleshooting-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
@@ -72,7 +72,7 @@ The application includes **7 comprehensive troubleshooting scenarios** with **21
 ## 📁 Project Structure
 
 ```
-azure-ad-query-library/
+diagnosticiq/
 ├── index.html              # Main application interface
 ├── styles.css              # Application styling and responsive design
 ├── app.js                  # Core application logic and interactions
@@ -92,8 +92,8 @@ azure-ad-query-library/
 ### Option 2: Local Web Server
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/azure-ad-query-library.git
-cd azure-ad-query-library
+git clone https://github.com/YOUR_USERNAME/diagnosticiq.git
+cd diagnosticiq
 
 # Start a local web server (Python)
 python -m http.server 8000

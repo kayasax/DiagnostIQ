@@ -1,4 +1,4 @@
-// Sample data for the Azure AD Troubleshooting Query Library
+// Sample data for DiagnosticIQ
 const cheatSheets = [
     {
         id: 1,

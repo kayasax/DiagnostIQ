@@ -1,6 +1,6 @@
-# Contributing to Azure AD Query Library
+# Contributing to DiagnosticIQ
 
-Thank you for your interest in contributing to the Azure AD Query Library! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to DiagnosticIQ! This document provides guidelines and information for contributors.
 
 ## 🤝 How to Contribute
 

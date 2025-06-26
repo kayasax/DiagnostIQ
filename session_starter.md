@@ -4,7 +4,7 @@ This file serves as the persistent memory for the AI assistant across sessions i
 ---
 
 ## 📘 Project Overview
-**Project Name:** Azure AD Troubleshooting Query Library & Cheat Sheet App
+**Project Name:** DiagnosticIQ
 
 **Description:** A comprehensive troubleshooting application designed for Azure AD/Entra ID support scenarios. More than just a query collection, it's a searchable library of troubleshooting cheat sheets that include cluster information, KQL queries, and step-by-step troubleshooting procedures. The app focuses on quick access, easy search, and efficient copy/paste workflows for support engineers.
 
