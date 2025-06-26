@@ -1,0 +1,37 @@
+[
+    {
+        "id": "prov-1",
+        "title": "User Provisioning Errors",
+        "category": "provisioning",
+        "cluster": "prod",
+        "description": "Investigate user provisioning failures in connected applications and services.",
+        "queries": [
+            {
+                "name": "Recent Provisioning Failures",
+                "description": "Get all recent provisioning failures across applications",
+                "query": "// User Provisioning Errors - Recent failures\nAuditLogs\n| where TimeGenerated > ago(6h)\n| where Category == \"ApplicationManagement\"\n| where OperationName contains \"Provision\"\n| where Result == \"failure\"\n| extend TargetApp = tostring(TargetResources[0].displayName)\n| extend UserPrincipalName = tostring(TargetResources[0].userPrincipalName)\n| extend ErrorDetails = tostring(ResultReason)\n| project TimeGenerated, OperationName, TargetApp, UserPrincipalName, ErrorDetails\n| order by TimeGenerated desc"
+            },
+            {
+                "name": "Provisioning Failures by Application",
+                "description": "Summary of provisioning failures grouped by application",
+                "query": "// User Provisioning Errors - By application\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where Category == \"ApplicationManagement\"\n| where OperationName contains \"Provision\"\n| where Result == \"failure\"\n| extend TargetApp = tostring(TargetResources[0].displayName)\n| extend ErrorCode = tostring(ResultReason)\n| summarize FailureCount = count() by TargetApp, ErrorCode\n| order by FailureCount desc"
+            },
+            {
+                "name": "SCIM Provisioning Issues",
+                "description": "Focus on SCIM-related provisioning problems",
+                "query": "// User Provisioning Errors - SCIM specific\nAuditLogs\n| where TimeGenerated > ago(12h)\n| where Category == \"ApplicationManagement\"\n| where OperationName contains \"SCIM\" or ResultReason contains \"SCIM\"\n| extend TargetApp = tostring(TargetResources[0].displayName)\n| extend SCIMError = tostring(ResultReason)\n| extend UserPrincipalName = tostring(TargetResources[0].userPrincipalName)\n| project TimeGenerated, OperationName, TargetApp, UserPrincipalName, SCIMError\n| order by TimeGenerated desc"
+            }
+        ],
+        "steps": [
+            "Run the recent failures query to identify which applications are experiencing provisioning failures",
+            "Use the application summary to see which apps have the most issues",
+            "Check if the failures are user-specific or application-wide",
+            "For SCIM apps, run the SCIM-specific query to identify protocol issues",
+            "Verify application configuration and attribute mappings",
+            "Review service principal permissions for the target application",
+            "Check if the target application service is accessible",
+            "Validate user attributes required for provisioning"
+        ],
+        "tags": ["provisioning", "applications", "scim", "user-management"]
+    }
+]

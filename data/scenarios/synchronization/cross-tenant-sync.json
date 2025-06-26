@@ -1,0 +1,35 @@
+[
+    {
+        "id": "sync-1",
+        "title": "Cross Tenant Sync Issues",
+        "category": "sync",
+        "cluster": "prod",
+        "description": "Troubleshoot Cross Tenant Synchronization issues including failed syncs, permission errors, and configuration problems.",
+        "queries": [
+            {
+                "name": "Check Sync Status and Errors",
+                "description": "Monitor recent Cross Tenant Sync operations and identify failures",
+                "query": "// Cross Tenant Sync - Check sync status and errors\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where Category == \"CrossTenantAccessSettings\"\n| where OperationName contains \"Sync\"\n| extend TargetTenant = tostring(TargetResources[0].displayName)\n| extend Result = tostring(Result)\n| extend ErrorCode = tostring(ResultReason)\n| project TimeGenerated, OperationName, Result, ErrorCode, TargetTenant, InitiatedBy\n| order by TimeGenerated desc"
+            },
+            {
+                "name": "Permission Issues Analysis",
+                "description": "Identify permission-related failures in cross-tenant operations",
+                "query": "// Cross Tenant Sync - Permission analysis\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where Category == \"CrossTenantAccessSettings\"\n| where Result == \"failure\"\n| where ResultReason contains \"permission\" or ResultReason contains \"forbidden\" or ResultReason contains \"unauthorized\"\n| extend TargetTenant = tostring(TargetResources[0].displayName)\n| extend Actor = tostring(InitiatedBy.user.userPrincipalName)\n| project TimeGenerated, OperationName, Actor, TargetTenant, ResultReason\n| summarize FailureCount = count() by ResultReason, TargetTenant\n| order by FailureCount desc"
+            },
+            {
+                "name": "Sync Configuration Analysis",
+                "description": "Review cross-tenant sync configuration and scope settings",
+                "query": "// Cross Tenant Sync - Configuration review\nAuditLogs\n| where TimeGenerated > ago(7d)\n| where Category == \"CrossTenantAccessSettings\"\n| where OperationName contains \"Configure\" or OperationName contains \"Update\"\n| extend TargetTenant = tostring(TargetResources[0].displayName)\n| extend ConfigChange = tostring(TargetResources[0].modifiedProperties)\n| extend Actor = tostring(InitiatedBy.user.userPrincipalName)\n| project TimeGenerated, OperationName, Actor, TargetTenant, ConfigChange\n| order by TimeGenerated desc"
+            }
+        ],
+        "steps": [
+            "Verify Cross Tenant Sync configuration in Azure AD",
+            "Check if proper permissions are granted between tenants",
+            "Review audit logs for sync failures using the KQL query above",
+            "Validate user/group scope settings",
+            "Check network connectivity between tenant endpoints",
+            "Verify that the sync service principal has required permissions"
+        ],
+        "tags": ["cross-tenant", "sync", "b2b", "collaboration"]
+    }
+]
