@@ -16,7 +16,7 @@
             ]
         },
         {
-            "name": "synchronization", 
+            "name": "synchronization",
             "displayName": "Synchronization",
             "description": "Cross-tenant sync, directory sync, and related issues",
             "scenarios": [
@@ -30,7 +30,7 @@
         },
         {
             "name": "provisioning",
-            "displayName": "Provisioning", 
+            "displayName": "Provisioning",
             "description": "User provisioning, SCIM issues, and application provisioning",
             "scenarios": [
                 {
@@ -44,7 +44,7 @@
         {
             "name": "performance",
             "displayName": "Performance",
-            "description": "Performance analysis, slow sign-ins, and latency issues", 
+            "description": "Performance analysis, slow sign-ins, and latency issues",
             "scenarios": [
                 {
                     "file": "slow-signins.json",
@@ -60,7 +60,7 @@
             "description": "Application integration, service principal, and consent issues",
             "scenarios": [
                 {
-                    "file": "integration-issues.json", 
+                    "file": "integration-issues.json",
                     "title": "Application Integration Issues",
                     "description": "Troubleshoot application registration and integration problems with Azure AD",
                     "queryCount": 3

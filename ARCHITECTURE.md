@@ -31,7 +31,7 @@ DiagnosticIQ now uses a **hybrid modular architecture** that scales to hundreds 
 - ✅ Lazy loading - load only needed scenarios
 - ✅ Organized by category for easy navigation
 
-### **Maintainability** 
+### **Maintainability**
 - ✅ Individual files are easy to find and edit
 - ✅ Better version control with smaller, focused commits
 - ✅ Reduced merge conflicts in team environments
@@ -144,7 +144,7 @@ The system maintains **full backward compatibility**:
 
 ### 1. Choose the Right Category
 - `authentication/` - Sign-in, MFA, conditional access issues
-- `synchronization/` - Directory sync, cross-tenant scenarios  
+- `synchronization/` - Directory sync, cross-tenant scenarios
 - `provisioning/` - User/group provisioning, SCIM
 - `performance/` - Latency, slow operations analysis
 - `applications/` - App registration, consent, service principals
@@ -172,7 +172,7 @@ Add entry to `data/scenarios/index.json` for documentation.
 3. Test locally by refreshing the app
 4. Commit with descriptive message
 
-### Modifying Existing Scenarios  
+### Modifying Existing Scenarios
 1. Edit the JSON file directly
 2. Validate JSON syntax
 3. Test changes locally

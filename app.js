@@ -13,7 +13,7 @@ class QueryLibraryApp {
         // Don't initialize immediately - wait for data to load
         this.setupEventListeners();
         this.loadSyntaxHighlighter();
-        
+
         // Initialize when data is ready
         if (this.dataManager.getLoadingStatus().complete) {
             this.onDataLoaded();
@@ -508,11 +508,11 @@ class QueryLibraryApp {
         } else {
             // Add new cheat sheet using data manager
             const newCheatSheet = this.dataManager.addCustomScenario(cheatSheetData);
-            
+
             // Also save to local storage for persistence
             this.localCheatSheets.push(newCheatSheet);
             localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-            
+
             this.refreshData();
             alert('Cheat sheet saved successfully!');
         }
@@ -602,7 +602,7 @@ class QueryLibraryApp {
     exportLibrary() {
         // Use data manager for export
         const exportData = this.dataManager.exportScenarios(true); // Export only custom scenarios
-        
+
         // Add recent queries for completeness
         exportData.recentQueries = this.recentQueries;
 
@@ -630,7 +630,7 @@ class QueryLibraryApp {
 
                 // Support both old and new export formats
                 let scenariosToImport = [];
-                
+
                 if (importData.scenarios) {
                     // New format from data manager
                     scenariosToImport = importData.scenarios;
@@ -646,17 +646,17 @@ class QueryLibraryApp {
 
                 // Use data manager to import
                 const importedCount = this.dataManager.importScenarios({ scenarios: scenariosToImport });
-                
+
                 // Also update local storage
                 const newLocalSheets = scenariosToImport.map(sheet => ({
                     ...sheet,
                     id: sheet.id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     isCustom: true
                 }));
-                
+
                 this.localCheatSheets.push(...newLocalSheets);
                 localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-                
+
                 // Import recent queries if available
                 if (importData.recentQueries && Array.isArray(importData.recentQueries)) {
                     // Merge recent queries, keeping existing ones at the top

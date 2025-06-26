@@ -24,24 +24,24 @@ class DataManager {
     async loadAllScenarios() {
         try {
             console.log('🔄 Loading DiagnosticIQ scenarios...');
-            
+
             // Load core samples first
             await this.loadCoreSamples();
-            
+
             // Load modular scenarios
             await this.loadModularScenarios();
-            
+
             this.loadingStatus.complete = true;
             console.log(`✅ Loaded ${this.allScenarios.length} scenarios successfully`);
-            
+
             // Update the global variable for backward compatibility
             window.cheatSheets = this.allScenarios;
-            
+
             // Trigger app initialization if needed
             if (window.initializeApp) {
                 window.initializeApp();
             }
-            
+
             return this.allScenarios;
         } catch (error) {
             console.error('❌ Error loading scenarios:', error);
@@ -56,7 +56,7 @@ class DataManager {
             // Core samples are still in JS format for quick loading
             const script = document.createElement('script');
             script.src = 'data/core-samples.js';
-            
+
             return new Promise((resolve, reject) => {
                 script.onload = () => {
                     if (window.coreSamples) {
@@ -78,14 +78,14 @@ class DataManager {
 
     async loadModularScenarios() {
         const loadPromises = [];
-        
+
         for (const category of this.scenarioSources.categories) {
             for (const file of category.files) {
                 const filePath = `data/scenarios/${category.name}/${file}`;
                 loadPromises.push(this.loadScenarioFile(filePath, category.name));
             }
         }
-        
+
         await Promise.allSettled(loadPromises);
         this.loadingStatus.scenarios = true;
     }
@@ -96,17 +96,17 @@ class DataManager {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const scenarios = await response.json();
-            
+
             // Validate scenario structure
             const validScenarios = scenarios.filter(scenario => this.validateScenario(scenario));
-            
+
             if (validScenarios.length > 0) {
                 this.allScenarios.push(...validScenarios);
                 console.log(`✅ Loaded ${validScenarios.length} scenarios from ${filePath}`);
             }
-            
+
             return validScenarios;
         } catch (error) {
             console.warn(`⚠️ Failed to load ${filePath}:`, error.message);
@@ -117,8 +117,8 @@ class DataManager {
     validateScenario(scenario) {
         // Basic validation to ensure scenario has required fields
         const required = ['id', 'title', 'category', 'description', 'queries'];
-        return required.every(field => scenario.hasOwnProperty(field)) && 
-               Array.isArray(scenario.queries) && 
+        return required.every(field => scenario.hasOwnProperty(field)) &&
+               Array.isArray(scenario.queries) &&
                scenario.queries.length > 0;
     }
 
@@ -158,10 +158,10 @@ class DataManager {
         scenario.id = `custom-${Date.now()}`;
         scenario.isCustom = true;
         this.allScenarios.push(scenario);
-        
+
         // Update global variable
         window.cheatSheets = this.allScenarios;
-        
+
         return scenario;
     }
 
@@ -186,10 +186,10 @@ class DataManager {
     }
 
     exportScenarios(customOnly = false) {
-        const scenariosToExport = customOnly 
+        const scenariosToExport = customOnly
             ? this.allScenarios.filter(s => s.isCustom)
             : this.allScenarios;
-        
+
         return {
             exportedAt: new Date().toISOString(),
             source: 'DiagnosticIQ',
@@ -204,7 +204,7 @@ class DataManager {
         }
 
         const validScenarios = importData.scenarios.filter(scenario => this.validateScenario(scenario));
-        
+
         // Mark as custom and ensure unique IDs
         validScenarios.forEach(scenario => {
             scenario.id = `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -213,7 +213,7 @@ class DataManager {
 
         this.allScenarios.push(...validScenarios);
         window.cheatSheets = this.allScenarios;
-        
+
         return validScenarios.length;
     }
 
@@ -236,7 +236,7 @@ class DataManager {
         this.allScenarios.forEach(scenario => {
             // Count by category
             stats.byCategory[scenario.category] = (stats.byCategory[scenario.category] || 0) + 1;
-            
+
             // Count by cluster
             if (scenario.cluster) {
                 stats.byCluster[scenario.cluster] = (stats.byCluster[scenario.cluster] || 0) + 1;
