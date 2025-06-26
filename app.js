@@ -5,17 +5,40 @@ class QueryLibraryApp {
         this.currentResults = [];
         this.recentQueries = JSON.parse(localStorage.getItem('recentQueries')) || [];
         this.localCheatSheets = JSON.parse(localStorage.getItem('localCheatSheets')) || [];
-        this.allCheatSheets = [...cheatSheets, ...this.localCheatSheets];
+        this.allCheatSheets = []; // Will be populated by data manager
         this.currentQueries = [{ name: '', description: '', query: '' }];
         this.editingSheetId = null;
+        this.dataManager = window.dataManager;
 
-        this.initializeApp();
-    }
-
-    initializeApp() {
-        this.populateRecentQueries();
+        // Don't initialize immediately - wait for data to load
         this.setupEventListeners();
         this.loadSyntaxHighlighter();
+
+        // Initialize when data is ready
+        if (this.dataManager.getLoadingStatus().complete) {
+            this.onDataLoaded();
+        } else {
+            // Wait for data manager to load scenarios
+            this.waitForDataLoad();
+        }
+    }
+
+    async waitForDataLoad() {
+        try {
+            await this.dataManager.loadAllScenarios();
+            this.onDataLoaded();
+        } catch (error) {
+            console.error('Failed to load data:', error);
+            // Continue with fallback data
+            this.onDataLoaded();
+        }
+    }
+
+    onDataLoaded() {
+        // Update local reference to all scenarios
+        this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
+        this.populateRecentQueries();
+        console.log(`📊 DiagnosticIQ initialized with ${this.allCheatSheets.length} scenarios`);
     }
 
     setupEventListeners() {
@@ -468,33 +491,29 @@ class QueryLibraryApp {
         };
 
         if (this.editingSheetId) {
-            // Update existing cheat sheet
-            const index = this.localCheatSheets.findIndex(s => s.id === this.editingSheetId);
-            if (index !== -1) {
-                this.localCheatSheets[index] = { ...cheatSheetData, id: this.editingSheetId };
-                localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-
-                // Update combined list
-                this.allCheatSheets = [...cheatSheets, ...this.localCheatSheets];
-
+            // Update existing cheat sheet using data manager
+            if (this.dataManager.updateScenario(this.editingSheetId, cheatSheetData)) {
+                // Also update local storage for persistence
+                const index = this.localCheatSheets.findIndex(s => s.id === this.editingSheetId);
+                if (index !== -1) {
+                    this.localCheatSheets[index] = { ...cheatSheetData, id: this.editingSheetId };
+                    localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+                }
+                this.refreshData();
                 alert('Cheat sheet updated successfully!');
             } else {
                 alert('Error: Could not find cheat sheet to update.');
                 return;
             }
         } else {
-            // Add new cheat sheet
-            const newCheatSheet = {
-                ...cheatSheetData,
-                id: Date.now()
-            };
+            // Add new cheat sheet using data manager
+            const newCheatSheet = this.dataManager.addCustomScenario(cheatSheetData);
 
+            // Also save to local storage for persistence
             this.localCheatSheets.push(newCheatSheet);
             localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
 
-            // Update combined list
-            this.allCheatSheets = [...cheatSheets, ...this.localCheatSheets];
-
+            this.refreshData();
             alert('Cheat sheet saved successfully!');
         }
 
@@ -504,6 +523,11 @@ class QueryLibraryApp {
         if (document.getElementById('searchResults').style.display === 'block') {
             this.performSearch();
         }
+    }
+
+    refreshData() {
+        // Refresh the local reference to all scenarios
+        this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
     }
 
     editCheatSheet(sheetId) {
@@ -552,40 +576,42 @@ class QueryLibraryApp {
         }
 
         const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet || !sheet.tags || !sheet.tags.includes('custom')) {
+        if (!sheet || (!sheet.tags || !sheet.tags.includes('custom')) && !sheet.isCustom) {
             alert('Only custom cheat sheets can be deleted.');
             return;
         }
 
-        // Remove from local storage
-        this.localCheatSheets = this.localCheatSheets.filter(s => s.id !== sheetId);
-        localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+        // Remove using data manager
+        if (this.dataManager.removeScenario(sheetId)) {
+            // Also remove from local storage
+            this.localCheatSheets = this.localCheatSheets.filter(s => s.id !== sheetId);
+            localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
 
-        // Update combined list
-        this.allCheatSheets = [...cheatSheets, ...this.localCheatSheets];
+            this.refreshData();
+            alert('Cheat sheet deleted successfully!');
 
-        alert('Cheat sheet deleted successfully!');
-
-        // Refresh results if currently searching
-        if (document.getElementById('searchResults').style.display === 'block') {
-            this.performSearch();
+            // Refresh results if currently searching
+            if (document.getElementById('searchResults').style.display === 'block') {
+                this.performSearch();
+            }
+        } else {
+            alert('Error: Could not delete cheat sheet.');
         }
     }
 
     exportLibrary() {
-        const exportData = {
-            exportDate: new Date().toISOString(),
-            version: '1.0',
-            customCheatSheets: this.localCheatSheets,
-            recentQueries: this.recentQueries
-        };
+        // Use data manager for export
+        const exportData = this.dataManager.exportScenarios(true); // Export only custom scenarios
+
+        // Add recent queries for completeness
+        exportData.recentQueries = this.recentQueries;
 
         const dataStr = JSON.stringify(exportData, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
 
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
-        link.download = `query-library-export-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `diagnosticiq-export-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -602,55 +628,57 @@ class QueryLibraryApp {
             try {
                 const importData = JSON.parse(e.target.result);
 
-                if (!importData.customCheatSheets || !Array.isArray(importData.customCheatSheets)) {
-                    alert('Invalid import file format.');
+                // Support both old and new export formats
+                let scenariosToImport = [];
+
+                if (importData.scenarios) {
+                    // New format from data manager
+                    scenariosToImport = importData.scenarios;
+                } else if (importData.customCheatSheets) {
+                    // Old format - convert to new format
+                    scenariosToImport = importData.customCheatSheets;
+                }
+
+                if (!Array.isArray(scenariosToImport) || scenariosToImport.length === 0) {
+                    alert('No valid scenarios found in import file.');
                     return;
                 }
 
-                const importCount = importData.customCheatSheets.length;
-                if (importCount === 0) {
-                    alert('No cheat sheets found in import file.');
-                    return;
-                }
+                // Use data manager to import
+                const importedCount = this.dataManager.importScenarios({ scenarios: scenariosToImport });
 
-                // Merge with existing data, avoiding duplicates by checking titles
-                const existingTitles = this.localCheatSheets.map(s => s.title.toLowerCase());
-                const newSheets = importData.customCheatSheets.filter(
-                    sheet => !existingTitles.includes(sheet.title.toLowerCase())
-                );
+                // Also update local storage
+                const newLocalSheets = scenariosToImport.map(sheet => ({
+                    ...sheet,
+                    id: sheet.id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    isCustom: true
+                }));
 
-                if (newSheets.length === 0) {
-                    alert('All cheat sheets from the import file already exist in your library.');
-                    return;
-                }
-
-                // Update IDs to prevent conflicts
-                newSheets.forEach(sheet => {
-                    sheet.id = Date.now() + Math.random();
-                });
-
-                this.localCheatSheets.push(...newSheets);
+                this.localCheatSheets.push(...newLocalSheets);
                 localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
 
-                // Update combined list
-                this.allCheatSheets = [...cheatSheets, ...this.localCheatSheets];
-
-                alert(`Successfully imported ${newSheets.length} cheat sheets!`);
-
-                // Clear the file input
-                event.target.value = '';
-
-                // Refresh results if searching
-                if (document.getElementById('searchResults').style.display === 'block') {
-                    this.performSearch();
+                // Import recent queries if available
+                if (importData.recentQueries && Array.isArray(importData.recentQueries)) {
+                    // Merge recent queries, keeping existing ones at the top
+                    const mergedQueries = [...this.recentQueries];
+                    importData.recentQueries.forEach(q => {
+                        if (!mergedQueries.some(existing => existing.query === q.query)) {
+                            mergedQueries.push(q);
+                        }
+                    });
+                    this.recentQueries = mergedQueries.slice(0, 10); // Keep only 10 most recent
+                    localStorage.setItem('recentQueries', JSON.stringify(this.recentQueries));
+                    this.populateRecentQueries();
                 }
 
+                this.refreshData();
+                alert(`Successfully imported ${importedCount} scenarios!`);
+
             } catch (error) {
-                alert('Error parsing import file. Please ensure it\'s a valid JSON export.');
                 console.error('Import error:', error);
+                alert('Error reading import file. Please check the file format.');
             }
         };
-
         reader.readAsText(file);
     }
 

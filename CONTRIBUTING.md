@@ -16,13 +16,13 @@ We're always looking for more real-world Azure AD troubleshooting scenarios!
 
 #### What Makes a Good Scenario:
 1. **Common Support Cases**: Issues that support engineers frequently encounter
-2. **Complete Information**: 
+2. **Complete Information**:
    - Clear problem description
    - Multiple related KQL queries
    - Step-by-step troubleshooting procedures
    - Proper categorization and tags
 
-3. **Production-Ready Queries**: 
+3. **Production-Ready Queries**:
    - Tested KQL that works in Log Analytics
    - Proper time ranges and filters
    - Comments explaining query logic
@@ -71,7 +71,7 @@ We're always looking for more real-world Azure AD troubleshooting scenarios!
 #### Code Style Guidelines
 - **HTML**: Use semantic HTML5 elements, proper indentation
 - **CSS**: Follow BEM naming convention where possible, mobile-first approach
-- **JavaScript**: 
+- **JavaScript**:
   - Use ES6+ features
   - Follow camelCase naming
   - Add comments for complex logic

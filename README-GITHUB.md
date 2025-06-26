@@ -1,8 +1,8 @@
-# 🧠 DiagnosticIQ
+# 🔍 Azure AD Troubleshooting Query Library
 
-Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensive web-based application designed for support engineers to quickly find, manage, and share troubleshooting queries and procedures.
+A comprehensive web-based application designed for Azure AD/Entra ID support engineers to quickly find, manage, and share troubleshooting queries and procedures.
 
-![DiagnosticIQ](https://img.shields.io/badge/DiagnosticIQ-Azure%20AD%20Troubleshooting-blue)
+![Azure AD Query Library](https://img.shields.io/badge/Azure%20AD-Query%20Library-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
@@ -61,17 +61,6 @@ The application includes **7 comprehensive troubleshooting scenarios** with **21
    - Password hash sync
    - Object synchronization status
 
-## 🏗️ Architecture
-
-DiagnosticIQ uses a **modular hybrid architecture** designed for scalability:
-
-- **Core Samples**: Quick-start scenarios for immediate use
-- **Modular Scenarios**: Organized by category in individual JSON files
-- **DataManager**: Centralized loading and management system
-- **Backward Compatible**: Supports legacy formats and smooth migrations
-
-📖 **See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation**
-
 ## 🛠 Technical Stack
 
 - **Frontend**: Pure HTML5, CSS3, JavaScript (ES6+)
@@ -83,7 +72,7 @@ DiagnosticIQ uses a **modular hybrid architecture** designed for scalability:
 ## 📁 Project Structure
 
 ```
-diagnosticiq/
+azure-ad-query-library/
 ├── index.html              # Main application interface
 ├── styles.css              # Application styling and responsive design
 ├── app.js                  # Core application logic and interactions
@@ -103,8 +92,8 @@ diagnosticiq/
 ### Option 2: Local Web Server
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/diagnosticiq.git
-cd diagnosticiq
+git clone https://github.com/YOUR_USERNAME/azure-ad-query-library.git
+cd azure-ad-query-library
 
 # Start a local web server (Python)
 python -m http.server 8000

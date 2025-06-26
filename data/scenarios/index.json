@@ -1,0 +1,73 @@
+{
+    "version": "1.0",
+    "lastUpdated": "2025-06-26",
+    "categories": [
+        {
+            "name": "authentication",
+            "displayName": "Authentication",
+            "description": "Authentication failures, MFA issues, and sign-in problems",
+            "scenarios": [
+                {
+                    "file": "token-issues.json",
+                    "title": "Authentication Failures Analysis",
+                    "description": "Analyze authentication failures including sign-in errors, MFA issues, and conditional access blocks",
+                    "queryCount": 3
+                }
+            ]
+        },
+        {
+            "name": "synchronization",
+            "displayName": "Synchronization",
+            "description": "Cross-tenant sync, directory sync, and related issues",
+            "scenarios": [
+                {
+                    "file": "cross-tenant-sync.json",
+                    "title": "Cross Tenant Sync Issues",
+                    "description": "Troubleshoot Cross Tenant Synchronization issues including failed syncs, permission errors, and configuration problems",
+                    "queryCount": 3
+                }
+            ]
+        },
+        {
+            "name": "provisioning",
+            "displayName": "Provisioning",
+            "description": "User provisioning, SCIM issues, and application provisioning",
+            "scenarios": [
+                {
+                    "file": "user-provisioning.json",
+                    "title": "User Provisioning Errors",
+                    "description": "Investigate user provisioning failures in connected applications and services",
+                    "queryCount": 3
+                }
+            ]
+        },
+        {
+            "name": "performance",
+            "displayName": "Performance",
+            "description": "Performance analysis, slow sign-ins, and latency issues",
+            "scenarios": [
+                {
+                    "file": "slow-signins.json",
+                    "title": "Performance Issues - Slow Sign-ins",
+                    "description": "Analyze slow authentication performance and identify bottlenecks in the sign-in process",
+                    "queryCount": 3
+                }
+            ]
+        },
+        {
+            "name": "applications",
+            "displayName": "Applications",
+            "description": "Application integration, service principal, and consent issues",
+            "scenarios": [
+                {
+                    "file": "integration-issues.json",
+                    "title": "Application Integration Issues",
+                    "description": "Troubleshoot application registration and integration problems with Azure AD",
+                    "queryCount": 3
+                }
+            ]
+        }
+    ],
+    "totalScenarios": 5,
+    "totalQueries": 15
+}
