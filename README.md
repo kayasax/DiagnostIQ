@@ -23,8 +23,8 @@ Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensiv
 - **Import/Export**: Backup and share your custom query libraries via JSON files
 - **Recent Queries**: Track recently searched items for quick access
 
-### 🆕 Automated Wiki Extraction
-- **Wiki Integration**: Automatically extract scenarios from locally cloned Azure AD supportability wikis
+### 🆕 Automated Content Extraction
+- **Content Integration**: Automatically extract scenarios from local documentation sources
 - **Smart Content Detection**: Intelligent parsing of markdown files to identify KQL queries, steps, and metadata
 - **Category Auto-Classification**: Automatic categorization based on content analysis
 - **Modular Architecture**: Scenarios organized in a scalable, maintainable structure
@@ -122,21 +122,18 @@ npx http-server
 # Open http://localhost:8000 in your browser
 ```
 
-### Option 3: Wiki Extraction (New!)
-If you have a local clone of the Azure AD supportability wiki:
+### Option 3: Content Extraction (Advanced)
+For advanced users with access to internal documentation:
 
 ```powershell
-# Windows - Use the helper script
-.\extract-wiki.ps1
+# Extract content from local documentation sources
+# (Note: Specific extraction tools not included in public repository)
 
-# Or run directly
-node extract-wiki-scenarios.js "C:\path\to\your\wiki\clone" --verbose
-
-# Test first with sample data
+# Test with sample data
 node test-extraction.js
 ```
 
-📖 **See [EXTRACTION_GUIDE.md](EXTRACTION_GUIDE.md) for detailed extraction documentation**
+📖 **See documentation for detailed extraction procedures**
 
 ## 📖 Usage Guide
 
@@ -182,13 +179,13 @@ We welcome contributions! Here are ways you can help:
 ### Integration Features
 - SharePoint/OneDrive integration
 - GitHub repository synchronization
-- Azure DevOps wiki integration
+- Enterprise documentation integration
 - Query parameterization
 
 ## 🔮 Roadmap
 
 ### Phase 1: Enhanced Data Integration
-- [ ] Wiki content parser for automatic import
+- [ ] Content parser for automatic import
 - [ ] SharePoint integration for team libraries
 - [ ] GitHub repository synchronization
 - [x] Export/import functionality

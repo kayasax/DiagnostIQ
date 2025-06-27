@@ -1,5 +1,5 @@
 # 🧠 AI Session Starter: Project Memory
-This file serves as the persistent memory for # 🧠 AI Session Starter: Project Memory
+- ✅ **NEW**: Advanced extraction from internal documentation with robust categorizationhis file serves as the persistent memory for # 🧠 AI Session Starter: Project Memory
 This file serves as the persistent memory for the DiagnosticIQ project across sessions in this workspace. It should be updated regularly to reflect the current state, goals, and progress of the project.
 
 ---
@@ -20,9 +20,8 @@ This file serves as the persistent memory for the DiagnosticIQ project across se
 **Key Technologies / Tools:**
 - Kusto Query Language (KQL)
 - Azure AD/Entra ID troubleshooting
-- Source wiki: https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/183924/AAD
-- Potential data sources: SharePoint, GitHub, local storage
-- UI framework (TBD - likely web-based for cross-platform support)
+- Data sources: Internal documentation, community knowledge base, local storage
+- UI framework: Web-based for cross-platform support
 
 ---
 
@@ -33,7 +32,7 @@ This section is maintained by the AI assistant to track important context and de
 - ✅ **PROJECT EVOLVED**: DiagnosticIQ started as functional troubleshooting library, now enhanced with enterprise-scale architecture
 - ✅ **MODULAR REFACTORING COMPLETE**: Addressed scalability concerns with hybrid file structure
 - ✅ **PUBLISHED**: Successfully published to GitHub as open-source project with active development
-- ✅ **EXTRACTION WORKFLOW**: Advanced wiki extraction and scenario management system implemented
+- ✅ **EXTRACTION WORKFLOW**: Advanced content extraction and scenario management system implemented
 - ✅ **ROBUST DELETE SYSTEM**: Smart deletion with persistence and restoration capabilities
 - User works in Azure AD/Entra ID support and needed a specialized troubleshooting tool
 - Primary use case is finding relevant queries and procedures for specific scenarios like Cross Tenant Sync
@@ -63,7 +62,7 @@ This section is maintained by the AI assistant to track important context and de
 - ✅ **RESOLVED**: 7 comprehensive troubleshooting scenarios implemented
 - ✅ **RESOLVED**: JSON-based data synchronization strategy implemented
 - ✅ **RESOLVED**: Individual use with community sharing via GitHub
-- ✅ **RESOLVED**: Wiki extraction and automatic scenario generation
+- ✅ **RESOLVED**: Content extraction and automatic scenario generation
 - ✅ **RESOLVED**: Edit and delete button functionality for all scenario types
 
 **Future Considerations:**
@@ -73,13 +72,13 @@ This section is maintained by the AI assistant to track important context and de
 - API integration with Azure monitoring tools
 - **NEW**: Community-driven scenario contributions via modular structure
 - **NEW**: Enterprise deployment with centralized scenario management
-- **NEW**: Automated wiki synchronization and content updates
+- **NEW**: Automated content synchronization and updates
 - **NEW**: Advanced search with semantic matching and AI-powered recommendations
 
-**Recent Major Enhancement - Wiki Extraction & Robust Management:**
+**Recent Major Enhancement - Content Extraction & Robust Management:**
 - **Problem Solved**: Manual scenario creation was time-consuming and limited scalability
-- **Solution Implemented**: Advanced wiki extraction system with robust categorization and KQL parsing
-- **Architecture**: Automated extraction from Azure AD supportability wiki with dynamic index generation
+- **Solution Implemented**: Advanced content extraction system with robust categorization and KQL parsing
+- **Architecture**: Automated extraction from internal documentation with dynamic index generation
 - **Benefits Achieved**: Rapid scenario population, consistent categorization, robust edit/delete functionality
 - **Smart Deletion**: Persistent hiding of scenarios with restoration capabilities via localStorage
 - **Management Tools**: Browser console utilities for advanced scenario management
@@ -98,7 +97,7 @@ This section is maintained by the AI assistant to track important context and de
 | 2025-06-26 | **PROJECT COMPLETION** - Rebranded to "DiagnosticIQ", added comprehensive documentation (README, CONTRIBUTING, LICENSE), initialized Git repository, and successfully published to GitHub: https://github.com/kayasax/DiagnostIQ.git |
 | 2025-06-26 | **MODULAR ARCHITECTURE REFACTORING** - Implemented hybrid modular data structure (Option C) to solve scalability concerns. Created category-based file organization, DataManager class, and comprehensive architecture documentation. Feature branch ready for PR. |
 | 2025-06-26 | **ARCHITECTURE PR MERGED** - Successfully merged modular data structure enhancement into main branch. DiagnosticIQ now has enterprise-scale architecture supporting hundreds of scenarios. Ready for v0.2.0 release. |
-| 2025-06-27 | **WIKI EXTRACTION SYSTEM** - Developed robust wiki extraction workflow with advanced KQL parsing, categorization, and dynamic index generation. Enhanced data manager with sophisticated scenario loading and validation. |
+| 2025-06-27 | **CONTENT EXTRACTION SYSTEM** - Developed robust content extraction workflow with advanced KQL parsing, categorization, and dynamic index generation. Enhanced data manager with sophisticated scenario loading and validation. |
 | 2025-06-27 | **ROBUST DELETE & EDIT SYSTEM** - Implemented persistent deletion system using localStorage with restoration capabilities. Fixed edit/delete button functionality for all scenario types (custom and extracted). Added management utilities for advanced scenario administration. |
 | 2025-06-27 | **UI/UX ENHANCEMENTS & BUG FIXES** - Fixed database field display in scenario cards, resolved query preservation issues in edit mode, implemented dynamic category dropdown population, and enhanced category name mapping. All edit/save/display functionality now working correctly for both custom and extracted scenarios. |
 
@@ -123,10 +122,10 @@ This section is maintained by the AI assistant to track important context and de
 ## ✅ Next Steps
 ### Project Status: 🚀 **PRODUCTION-READY WITH POLISHED UI/UX - v0.3.1**
 **GitHub Repository**: https://github.com/kayasax/DiagnostIQ.git
-**Latest**: Advanced wiki extraction with polished UI/UX and complete scenario management
+**Latest**: Advanced content extraction with polished UI/UX and complete scenario management
 
 ### Recently Completed - v0.3.0+ Advanced Features:
-- [x] **Wiki Extraction System** - Automated extraction from Azure AD supportability wiki
+- [x] **Content Extraction System** - Automated extraction from internal documentation sources
 - [x] **Advanced KQL Parsing** - Robust query extraction with encoding and regex handling
 - [x] **Dynamic Categorization** - Intelligent scenario categorization with consistent mapping
 - [x] **Persistent Deletion** - Smart deletion system that persists across page refreshes
@@ -166,7 +165,7 @@ This section is maintained by the AI assistant to track important context and de
 - [ ] **Performance Optimization** - Fine-tune loading and search for large scenario collections
 
 ### Future Enhancements (Post v0.3.1):
-- [ ] **Real-time Wiki Sync** - Automatic updates from source wiki
+- [ ] **Real-time Content Sync** - Automatic updates from source documentation
 - [ ] **AI-Powered Search** - Semantic search and query recommendations
 - [ ] **Collaboration Features** - Team sharing and scenario approval workflows
 - [ ] **Advanced Analytics** - Usage tracking and scenario effectiveness metrics

@@ -47,5 +47,23 @@ test.html
 *_broken.js
 *_fixed.js
 
+# Extracted scenarios from confidential sources
+data/scenarios/*/*.json
+!data/scenarios/*/cross-tenant-sync-troubleshooting.json
+!data/scenarios/*/user-provisioning.json
+!data/scenarios/*/slow-signins.json
+!data/scenarios/*/token-issues.json
+!data/scenarios/*/integration-issues.json
+data/scenarios/index.json
+
+# Extraction scripts and tools (may contain confidential references)
+extract-wiki-scenarios.js
+extraction-config.json
+update-cross-tenant-clusters.js
+*extraction*.js
+*wiki*.js
+*wiki*.ps1
+*wiki*.bat
+
 # Browser cache
 .cache/
