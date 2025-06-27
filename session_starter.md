@@ -34,12 +34,15 @@ This section is maintained by the AI assistant to track important context and de
 - ✅ **PUBLISHED**: Successfully published to GitHub as open-source project with active development
 - ✅ **EXTRACTION WORKFLOW**: Advanced content extraction and scenario management system implemented
 - ✅ **ROBUST DELETE SYSTEM**: Smart deletion with persistence and restoration capabilities
+- ✅ **UI/UX POLISHED**: Enhanced search experience with preview cards, expand/collapse functionality, and interactive titles
+- ✅ **DYNAMIC NAVIGATION**: Smart quick access, accurate scenario counts, and deduplicated results
 - User works in Azure AD/Entra ID support and needed a specialized troubleshooting tool
 - Primary use case is finding relevant queries and procedures for specific scenarios like Cross Tenant Sync
 - Tool balances comprehensive sample library with local customization capabilities
 - Focus is on support engineer workflow optimization - achieved through smart search, copy-paste, and categorization
 - **NEW**: Modular architecture supports team collaboration and hundreds of scenarios
 - **NEW**: Advanced extraction from Azure AD supportability wiki with robust categorization
+- **NEW**: Polished UI with preview cards, expand/collapse, and intuitive navigation
 
 **Known Constraints or Requirements:**
 - ✅ KQL syntax highlighting implemented using Prism.js
@@ -55,6 +58,12 @@ This section is maintained by the AI assistant to track important context and de
 - ✅ **NEW**: Dynamic category dropdown population with proper value mapping
 - ✅ **NEW**: Query preservation in edit mode with comprehensive debug logging
 - ✅ **NEW**: Enhanced category name mapping supporting both legacy and current formats
+- ✅ **NEW**: Enhanced search experience with preview cards showing excerpts and "Open" buttons
+- ✅ **NEW**: Interactive titles - clickable in both preview and expanded modes for expand/collapse
+- ✅ **NEW**: Minimize controls with both button and title-click functionality
+- ✅ **NEW**: Dynamic quick access with accurate deduplicated scenario counts
+- ✅ **NEW**: Results summary showing total scenarios found with deduplication
+- ✅ **NEW**: Fixed "All Scenarios" functionality with proper filtering and accurate counts
 
 **Pending Questions / Clarifications:**
 - ✅ **RESOLVED**: Web app chosen as preferred technology stack
@@ -100,6 +109,7 @@ This section is maintained by the AI assistant to track important context and de
 | 2025-06-27 | **CONTENT EXTRACTION SYSTEM** - Developed robust content extraction workflow with advanced KQL parsing, categorization, and dynamic index generation. Enhanced data manager with sophisticated scenario loading and validation. |
 | 2025-06-27 | **ROBUST DELETE & EDIT SYSTEM** - Implemented persistent deletion system using localStorage with restoration capabilities. Fixed edit/delete button functionality for all scenario types (custom and extracted). Added management utilities for advanced scenario administration. |
 | 2025-06-27 | **UI/UX ENHANCEMENTS & BUG FIXES** - Fixed database field display in scenario cards, resolved query preservation issues in edit mode, implemented dynamic category dropdown population, and enhanced category name mapping. All edit/save/display functionality now working correctly for both custom and extracted scenarios. |
+| 2025-06-27 | **POLISHED UI/UX - v0.3.1 READY** - Enhanced search experience with preview cards, interactive expand/collapse titles, minimize controls, dynamic quick access with accurate counts, deduplication fixes, and improved "All Scenarios" functionality. Application now provides intuitive, professional user experience. |
 
 ---
 
@@ -123,6 +133,17 @@ This section is maintained by the AI assistant to track important context and de
 ### Project Status: 🚀 **PRODUCTION-READY WITH POLISHED UI/UX - v0.3.1**
 **GitHub Repository**: https://github.com/kayasax/DiagnostIQ.git
 **Latest**: Advanced content extraction with polished UI/UX and complete scenario management
+
+### Recently Completed - v0.3.1 UI/UX Polish:
+- [x] **Enhanced Search Experience** - Preview cards with excerpts and "Open" buttons
+- [x] **Interactive Titles** - Clickable titles in both preview and expanded modes for expand/collapse
+- [x] **Minimize Controls** - Both button and title-click functionality for easy collapse
+- [x] **Dynamic Quick Access** - Smart category-based links with accurate scenario counts
+- [x] **Results Summary** - Clear display of total scenarios found with deduplication
+- [x] **Fixed "All Scenarios"** - Proper filtering and accurate count display
+- [x] **Category Dropdown Accuracy** - Deduplicated scenario counts in category filters
+- [x] **Total Count Accuracy** - Header shows correct unique scenario counts
+- [x] **Deduplication Logic** - Prevents duplicate scenarios in all search results
 
 ### Recently Completed - v0.3.0+ Advanced Features:
 - [x] **Content Extraction System** - Automated extraction from internal documentation sources
@@ -160,8 +181,9 @@ This section is maintained by the AI assistant to track important context and de
 - [x] **✅ Advanced Extraction Complete** - Wiki extraction and scenario management fully functional
 - [x] **✅ Robust Edit/Delete System** - All scenario types can be managed properly
 - [x] **✅ UI/UX Polish Complete** - Database fields, category dropdowns, and query preservation all working
+- [x] **✅ Enhanced Search Experience** - Preview cards, interactive titles, and accurate counting implemented
 - [ ] **Create v0.3.1 Release** - Tag and release the UI/UX enhancement fixes
-- [ ] **Update GitHub Documentation** - Ensure README reflects new extraction capabilities and recent fixes
+- [ ] **Update GitHub Documentation** - Ensure README reflects new UI/UX improvements and polished experience
 - [ ] **Performance Optimization** - Fine-tune loading and search for large scenario collections
 
 ### Future Enhancements (Post v0.3.1):

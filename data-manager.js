@@ -281,23 +281,28 @@ class DataManager {
         console.log('⚠️ No categories index, extracting from scenarios...');
         console.log('📊 All scenarios count:', this.allScenarios.length);
 
-        // Fallback: Extract unique categories from loaded scenarios
+        // Fallback: Extract unique categories from loaded scenarios (deduplicated)
         const categorySet = new Set();
         const categoryData = {};
+        const seenIds = new Set();
 
         this.allScenarios.forEach(scenario => {
-            console.log(`📋 Scenario: "${scenario.title}" - Category: "${scenario.category}"`);
-            if (scenario.category) {
-                categorySet.add(scenario.category);
-                if (!categoryData[scenario.category]) {
-                    categoryData[scenario.category] = { count: 0 };
+            // Only count unique scenarios (avoid duplicates)
+            if (!seenIds.has(scenario.id)) {
+                seenIds.add(scenario.id);
+                console.log(`📋 Scenario: "${scenario.title}" - Category: "${scenario.category}"`);
+                if (scenario.category) {
+                    categorySet.add(scenario.category);
+                    if (!categoryData[scenario.category]) {
+                        categoryData[scenario.category] = { count: 0 };
+                    }
+                    categoryData[scenario.category].count++;
                 }
-                categoryData[scenario.category].count++;
             }
         });
 
         console.log('🏷️ Unique categories found:', Array.from(categorySet));
-        console.log('📊 Category counts:', categoryData);
+        console.log('📊 Category counts (deduplicated):', categoryData);
 
         const result = Array.from(categorySet).map(category => ({
             value: category,
