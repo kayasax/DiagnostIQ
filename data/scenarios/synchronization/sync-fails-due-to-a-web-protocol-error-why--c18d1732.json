@@ -1,0 +1,282 @@
+{
+  "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732",
+  "title": "Sync fails due to a web protocol error. Why?",
+  "description": "Please check the web traffic for the sync operation. Often, this is due to an issue when inviting the B2B user and the root cause is provided by the invitation manager API's response. (Priority: failed)",
+  "aiSummary": {
+    "overview": "Please check the web traffic for the sync operation. Often, this is due to an issue when inviting the B2B user and the root cause is provided by the invitation manager API's response. (Priority: failed) This issue relates to synchronization functionality. The issue typically affects organization-wide.",
+    "keyFindings": [
+      "Error patterns and failure indicators analysis",
+      "Error patterns and failure indicators analysis",
+      "Error patterns and failure indicators analysis",
+      "Expected outcomes include: failed",
+      "Key conditions to consider: when, where"
+    ],
+    "troubleshootingApproach": "Data-driven investigation using KQL queries with targeted filtering",
+    "impactAssessment": "High impact - Organization-wide effects",
+    "recommendedActions": [
+      "Execute the provided KQL queries to gather diagnostic data",
+      "Pay special attention to the actionable content highlighted in this scenario",
+      "Document findings and resolution steps for future reference",
+      "Consider escalation if initial troubleshooting steps do not resolve the issue"
+    ],
+    "prerequisites": [
+      "Appropriate Azure AD permissions",
+      "Access to relevant logs and data"
+    ],
+    "successCriteria": "Successful completion of documented steps",
+    "commonPitfalls": [
+      "Using incorrect time ranges that miss relevant events",
+      "Modifying queries without understanding the full context"
+    ],
+    "relatedScenarios": [
+      "directory sync",
+      "hybrid connectivity",
+      "user provisioning",
+      "B2B collaboration issues"
+    ],
+    "contextualInsights": {
+      "contentStructure": [],
+      "qualityIndicators": [
+        "Content is highly readable and user-friendly"
+      ],
+      "usageGuidance": [],
+      "extractionMetadata": {
+        "sectionLevel": 2,
+        "estimatedImportance": 2,
+        "hasParentContext": false,
+        "contentHints": [],
+        "extractionTimestamp": "2025-06-27T06:02:07.467Z"
+      }
+    }
+  },
+  "category": "synchronization",
+  "cluster": "idsharedwus.kusto.windows.net",
+  "tags": [
+    "sync",
+    "fails",
+    "protocol",
+    "error.",
+    "why?",
+    "api",
+    "graph",
+    "check",
+    "explanatory",
+    "complexity-medium"
+  ],
+  "difficulty": "advanced",
+  "estimatedTime": 21,
+  "priority": "high",
+  "lastUpdated": "2025-06-27T06:02:07.467Z",
+  "source": {
+    "type": "wiki",
+    "path": "",
+    "section": "Sync fails due to a web protocol error. Why?",
+    "extractedAt": "2025-06-27T06:02:07.467Z",
+    "wikiReference": {
+      "originalPath": "",
+      "section": "Sync fails due to a web protocol error. Why?",
+      "lastChecked": "2025-06-27T06:02:07.467Z",
+      "sourceType": "Azure AD Supportability Wiki",
+      "extractionVersion": "2.0",
+      "confidence": 0.9,
+      "recommendations": [
+        "Verify the source wiki is up to date",
+        "Cross-reference with official Azure AD documentation",
+        "Test queries in a safe environment before production use",
+        "Consider reaching out to the original wiki contributors for clarification"
+      ],
+      "contextualMetadata": {
+        "sectionLevel": 2,
+        "contentStructure": "explanatory",
+        "technicalComplexity": "medium",
+        "estimatedImportance": 2
+      }
+    },
+    "sectionMetadata": {
+      "headerStyle": "##",
+      "estimatedImportance": 2,
+      "contentHints": [],
+      "followUpSections": []
+    },
+    "contextualInformation": {
+      "structuralContext": {
+        "sectionLevel": 2,
+        "hasParentSections": false,
+        "siblingCount": 4,
+        "contentStructure": {
+          "hasCodeBlocks": true,
+          "hasLists": false,
+          "hasSubheadings": false,
+          "hasLinks": true,
+          "hasTables": false,
+          "paragraphCount": 23,
+          "primaryContentType": "explanatory"
+        },
+        "informationDensity": "medium"
+      },
+      "semanticContext": {
+        "primaryFocus": "general-troubleshooting",
+        "semanticMarkers": {
+          "urgency": [
+            "failed"
+          ],
+          "actions": [
+            "check"
+          ],
+          "conditions": [
+            "when",
+            "where",
+            "error",
+            "failure"
+          ],
+          "outcomes": [
+            "failed"
+          ],
+          "tools": [
+            "api",
+            "graph",
+            "sync"
+          ],
+          "roles": [
+            "user"
+          ]
+        },
+        "technicalComplexity": "medium",
+        "actionableContent": [
+          "check the"
+        ]
+      },
+      "proceduraContext": {
+        "stepCount": 0,
+        "queryCount": 8,
+        "hasDecisionPoints": true,
+        "hasConditionalLogic": false,
+        "estimatedDuration": 21
+      },
+      "qualityIndicators": {
+        "readabilityScore": "high",
+        "completeness": 60,
+        "clarity": 100,
+        "practicalValue": 60
+      }
+    }
+  },
+  "queries": [
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q1",
+      "title": "ils due to a web protocol error. Why?",
+      "description": "ils due to a web protocol error. Why?",
+      "kql": "GlobalIfxAllTraces\n | where correlationId == \"03717c96-xxxx-xxxx-xxxx\" // Put CorrelationId here\n | where message contains \"Microsoft Graph\" // this condition is looking for request to the Graph endpoint\n //| where message contains \"WebExceptionProtocolError\"// This condition is to look for the error message retrieve\n | project env_time, env_seqNum, message\n | order by env_seqNum asc",
+      "category": "investigation",
+      "complexity": "low",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q2",
+      "title": "dpoint",
+      "description": "//| where message contains \"WebExceptionProtocolError\"// This condition is to look for the error message retrieve",
+      "kql": "//View calls to target tenant to add objects\n\nGlobalIfxAllTraces\n| where correlationId == \"correlationId\" // CorrelationId of Sync cycle\n| where message contains \"Microsoft Graph\"\n| where message contains \"https://graph.microsoft.com/beta/invitations\"\n| parse message with * \"%%pii_\" summary \":\" * \"Request method: \" requestMethod \" \\\\\" * \"Content: {\" content \"}\" *\n| parse message with * \"Response body: \" responseBody \".\\\"\" *\n| project env_seqNum, summary, requestMethod, content, responseBody\n| order by env_seqNum asc",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q3",
+      "title": "ils due to a web protocol error. Why?",
+      "description": "ils due to a web protocol error. Why?",
+      "kql": "GlobalIfxAllTraces\n | where correlationId == \"03717c96-xxxx-xxxx-xxxx\" // Put CorrelationId here\n | where message contains \"Microsoft Graph\" // this condition is looking for request to the Graph endpoint\n //| where message contains \"WebExceptionProtocolError\"// This condition is to look for the error message retrieve\n | project env_time, env_seqNum, message\n | order by env_seqNum asc",
+      "category": "investigation",
+      "complexity": "low",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q4",
+      "title": "dpoint",
+      "description": "//| where message contains \"WebExceptionProtocolError\"// This condition is to look for the error message retrieve",
+      "kql": "//View calls to target tenant to add objects\n\nGlobalIfxAllTraces\n| where correlationId == \"correlationId\" // CorrelationId of Sync cycle\n| where message contains \"Microsoft Graph\"\n| where message contains \"https://graph.microsoft.com/beta/invitations\"\n| parse message with * \"%%pii_\" summary \":\" * \"Request method: \" requestMethod \" \\\\\" * \"Content: {\" content \"}\" *\n| parse message with * \"Response body: \" responseBody \".\\\"\" *\n| project env_seqNum, summary, requestMethod, content, responseBody\n| order by env_seqNum asc",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q5",
+      "title": "due to a web protocol error. Why?",
+      "description": "due to a web protocol error. Why?",
+      "kql": "GlobalIfxAllTraces\n | where correlationId == \"03717c96-xxxx-xxxx-xxxx\" // Put CorrelationId here\n | where message contains \"Microsoft Graph\" // this condition is looking for request to the Graph endpoint\n //| where message contains \"WebExceptionProtocolError\"// This condition is to look for the error message retrieve",
+      "category": "investigation",
+      "complexity": "low",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q6",
+      "title": "rotocolError\"// This condition is to look for the error message retrieve",
+      "description": "rotocolError\"// This condition is to look for the error message retrieve",
+      "kql": "GlobalIfxAllTraces\n| where correlationId == \"correlationId\" // CorrelationId of Sync cycle\n| where message contains \"Microsoft Graph\"\n| where message contains \"https://graph.microsoft.com/beta/invitations\"",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": [
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q7",
+      "title": "due to a web protocol error. Why?",
+      "description": "due to a web protocol error. Why?",
+      "kql": "GlobalIfxAllTraces",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": []
+    },
+    {
+      "id": "sync-fails-due-to-a-web-protocol-error-why--c18d1732_q8",
+      "title": "rotocolError\"// This condition is to look for the error message retrieve",
+      "description": "rotocolError\"// This condition is to look for the error message retrieve",
+      "kql": "GlobalIfxAllTraces",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": []
+    }
+  ],
+  "steps": [],
+  "relatedTopics": [],
+  "troubleshootingTips": [
+    "High priority issue - handle with urgency: failed"
+  ],
+  "prerequisites": [
+    "Appropriate Azure AD permissions",
+    "Access to relevant logs and data"
+  ],
+  "successCriteria": "Successful completion of documented steps",
+  "commonPitfalls": [
+    "Using incorrect time ranges that miss relevant events",
+    "Modifying queries without understanding the full context"
+  ],
+  "qualityMetrics": {
+    "completeness": 60,
+    "clarity": 100,
+    "practicalValue": 60,
+    "technicalAccuracy": 80,
+    "usability": 70,
+    "overallScore": 0
+  },
+  "extractionConfidence": 0.8600000000000001,
+  "database": "AADSFprod"
+}

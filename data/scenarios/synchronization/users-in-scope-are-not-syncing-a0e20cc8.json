@@ -1,0 +1,213 @@
+{
+  "id": "users-in-scope-are-not-syncing-a0e20cc8",
+  "title": "Users in Scope are not Syncing",
+  "description": "For more information about B2B users, properties and some TSG scenarios check this link [Azure B2B - TSG Scenarios](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/183938/Azure-AD-B2B?anchor=tsg-scenarios)",
+  "aiSummary": {
+    "overview": "For more information about B2B users, properties and some TSG scenarios check this link [Azure B2B - TSG Scenarios](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/183938/Azure-AD-B2B?anchor=tsg-scenarios) This issue relates to synchronization functionality. The issue typically affects organization-wide.",
+    "keyFindings": [
+      "Key conditions to consider: if"
+    ],
+    "troubleshootingApproach": "Structured 5-step investigation process",
+    "impactAssessment": "High impact - Organization-wide effects",
+    "recommendedActions": [
+      "Follow the documented troubleshooting steps in sequence",
+      "Document findings and resolution steps for future reference",
+      "Consider escalation if initial troubleshooting steps do not resolve the issue"
+    ],
+    "prerequisites": [
+      "Administrative privileges"
+    ],
+    "successCriteria": "Successful completion of documented steps",
+    "commonPitfalls": [],
+    "relatedScenarios": [
+      "directory sync",
+      "hybrid connectivity",
+      "user provisioning",
+      "B2B collaboration issues"
+    ],
+    "contextualInsights": {
+      "contentStructure": [
+        "This scenario combines executable code with structured procedures"
+      ],
+      "qualityIndicators": [
+        "Content is highly readable and user-friendly"
+      ],
+      "usageGuidance": [],
+      "extractionMetadata": {
+        "sectionLevel": 2,
+        "estimatedImportance": 2,
+        "hasParentContext": false,
+        "contentHints": [],
+        "extractionTimestamp": "2025-06-27T06:02:07.468Z"
+      }
+    }
+  },
+  "category": "synchronization",
+  "cluster": "idsharedwus.kusto.windows.net",
+  "tags": [
+    "users",
+    "scope",
+    "syncing",
+    "aad",
+    "graph",
+    "api",
+    "check",
+    "change",
+    "explanatory",
+    "complexity-medium"
+  ],
+  "difficulty": "beginner",
+  "estimatedTime": 10,
+  "priority": "medium",
+  "lastUpdated": "2025-06-27T06:02:07.468Z",
+  "source": {
+    "type": "wiki",
+    "path": "",
+    "section": "Users in Scope are not Syncing",
+    "extractedAt": "2025-06-27T06:02:07.468Z",
+    "wikiReference": {
+      "originalPath": "",
+      "section": "Users in Scope are not Syncing",
+      "lastChecked": "2025-06-27T06:02:07.468Z",
+      "sourceType": "Azure AD Supportability Wiki",
+      "extractionVersion": "2.0",
+      "confidence": 0.95,
+      "recommendations": [
+        "Verify the source wiki is up to date",
+        "Cross-reference with official Azure AD documentation",
+        "Test queries in a safe environment before production use",
+        "Consider reaching out to the original wiki contributors for clarification"
+      ],
+      "contextualMetadata": {
+        "sectionLevel": 2,
+        "contentStructure": "explanatory",
+        "technicalComplexity": "medium",
+        "estimatedImportance": 2
+      }
+    },
+    "sectionMetadata": {
+      "headerStyle": "##",
+      "estimatedImportance": 2,
+      "contentHints": [],
+      "followUpSections": []
+    },
+    "contextualInformation": {
+      "structuralContext": {
+        "sectionLevel": 2,
+        "hasParentSections": false,
+        "siblingCount": 5,
+        "contentStructure": {
+          "hasCodeBlocks": true,
+          "hasLists": true,
+          "hasSubheadings": false,
+          "hasLinks": true,
+          "hasTables": false,
+          "paragraphCount": 18,
+          "primaryContentType": "explanatory"
+        },
+        "informationDensity": "low"
+      },
+      "semanticContext": {
+        "primaryFocus": "resolution",
+        "semanticMarkers": {
+          "urgency": [],
+          "actions": [
+            "check",
+            "change"
+          ],
+          "conditions": [
+            "if"
+          ],
+          "outcomes": [],
+          "tools": [
+            "aad",
+            "graph",
+            "api",
+            "sync",
+            "connect"
+          ],
+          "roles": [
+            "user",
+            "admin",
+            "support"
+          ]
+        },
+        "technicalComplexity": "medium",
+        "actionableContent": []
+      },
+      "proceduraContext": {
+        "stepCount": 5,
+        "queryCount": 0,
+        "hasDecisionPoints": true,
+        "hasConditionalLogic": false,
+        "estimatedDuration": 10
+      },
+      "qualityIndicators": {
+        "readabilityScore": "high",
+        "completeness": 50,
+        "clarity": 100,
+        "practicalValue": 60
+      }
+    }
+  },
+  "queries": [],
+  "steps": [
+    {
+      "id": "users-in-scope-are-not-syncing-a0e20cc8_s1",
+      "description": "An internal user who has SMS sign-in enabled will have an AltSecId of type 6. They will be skipped from provisioning. SMS Sign-in needs to be disabled to sync the user.",
+      "order": 1,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    },
+    {
+      "id": "users-in-scope-are-not-syncing-a0e20cc8_s2",
+      "description": "The user was previously a B2B / external user and later converted to an internal user through AAD Connect. In that case the altSecId would be present with type 5 and we would skip provisioning the user.",
+      "order": 2,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    },
+    {
+      "id": "users-in-scope-are-not-syncing-a0e20cc8_s3",
+      "description": "If the user has an \"AlternativeSecurityId\" with Type '1', that generally means the object has a relationship connection with a Microsoft Account (MSA).",
+      "order": 3,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    },
+    {
+      "id": "users-in-scope-are-not-syncing-a0e20cc8_s4",
+      "description": "Add another primary SMTP to the MSA account",
+      "order": 4,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    },
+    {
+      "id": "users-in-scope-are-not-syncing-a0e20cc8_s5",
+      "description": "Remove the alias the has a value also used in the Work Account",
+      "order": 5,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    }
+  ],
+  "relatedTopics": [],
+  "troubleshootingTips": [],
+  "prerequisites": [
+    "Administrative privileges"
+  ],
+  "successCriteria": "Successful completion of documented steps",
+  "commonPitfalls": [],
+  "qualityMetrics": {
+    "completeness": 50,
+    "clarity": 100,
+    "practicalValue": 60,
+    "technicalAccuracy": 80,
+    "usability": 55,
+    "overallScore": 0
+  },
+  "extractionConfidence": 0.725,
+  "database": "AADSFprod"
+}

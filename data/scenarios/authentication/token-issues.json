@@ -2,7 +2,7 @@
     {
         "id": "auth-1",
         "title": "Authentication Failures Analysis",
-        "category": "auth",
+        "category": "authentication",
         "cluster": "prod",
         "description": "Analyze authentication failures including sign-in errors, MFA issues, and conditional access blocks.",
         "queries": [

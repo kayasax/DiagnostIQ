@@ -23,6 +23,13 @@ Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensiv
 - **Import/Export**: Backup and share your custom query libraries via JSON files
 - **Recent Queries**: Track recently searched items for quick access
 
+### 🆕 Automated Wiki Extraction
+- **Wiki Integration**: Automatically extract scenarios from locally cloned Azure AD supportability wikis
+- **Smart Content Detection**: Intelligent parsing of markdown files to identify KQL queries, steps, and metadata
+- **Category Auto-Classification**: Automatic categorization based on content analysis
+- **Modular Architecture**: Scenarios organized in a scalable, maintainable structure
+- **Quality Validation**: Ensures extracted content meets quality standards before integration
+
 ### Sample Content
 The application includes **7 comprehensive troubleshooting scenarios** with **21 production-ready KQL queries**:
 
@@ -103,8 +110,8 @@ diagnosticiq/
 ### Option 2: Local Web Server
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/diagnosticiq.git
-cd diagnosticiq
+git clone https://github.com/kayasax/DiagnostIQ.git
+cd DiagnostIQ
 
 # Start a local web server (Python)
 python -m http.server 8000
@@ -114,6 +121,22 @@ npx http-server
 
 # Open http://localhost:8000 in your browser
 ```
+
+### Option 3: Wiki Extraction (New!)
+If you have a local clone of the Azure AD supportability wiki:
+
+```powershell
+# Windows - Use the helper script
+.\extract-wiki.ps1
+
+# Or run directly
+node extract-wiki-scenarios.js "C:\path\to\your\wiki\clone" --verbose
+
+# Test first with sample data
+node test-extraction.js
+```
+
+📖 **See [EXTRACTION_GUIDE.md](EXTRACTION_GUIDE.md) for detailed extraction documentation**
 
 ## 📖 Usage Guide
 

@@ -1,0 +1,199 @@
+/**
+ * Manual extraction script for cross-tenant sync scenarios
+ * This will manually parse the wiki content and create the scenarios
+ */
+
+const fs = require('fs').promises;
+const path = require('path');
+const crypto = require('crypto');
+
+async function manualExtraction() {
+    const filePath = "C:\\Wiki\\AzureAD\\AzureAD\\GeneralPages\\AAD\\AAD-Sync\\Cross-tenant-synchronization\\TSG-Cross%2Dtenant-sync-(Azure2Azure-scenarios).md";
+
+    try {
+        console.log('🚀 Starting manual extraction...');
+        const content = await fs.readFile(filePath, 'utf-8');
+
+        // Create a comprehensive cross-tenant sync scenario
+        const scenario = {
+            id: "cross-tenant-sync-troubleshooting",
+            title: "Cross-Tenant Synchronization Troubleshooting",
+            description: "Comprehensive troubleshooting guide for Azure AD cross-tenant synchronization issues including connection failures, sync errors, and user provisioning problems.",
+            category: "synchronization",
+            cluster: "production",
+            tags: ["cross-tenant", "sync", "provisioning", "b2b", "troubleshooting"],
+            difficulty: "advanced",
+            estimatedTime: 30,
+            lastUpdated: new Date().toISOString(),
+            source: {
+                type: "wiki",
+                path: "AAD/AAD-Sync/Cross-tenant-synchronization/TSG-Cross%2Dtenant-sync-(Azure2Azure-scenarios).md",
+                section: "Cross-tenant sync troubleshooting",
+                extractedAt: new Date().toISOString()
+            },
+            queries: [
+                {
+                    id: "cross-tenant-sync-runprofile-stats",
+                    title: "Find Cross-Tenant Sync Run Profile Executions",
+                    description: "Query to identify run profile executions for cross-tenant synchronization and retrieve sync statistics",
+                    kql: `// FIND THE RUN PROFILE EXECUTIONS
+GlobalIfxRunProfileStatisticsEvent
+| where env_time > ago(1d) // Time range
+| where contextId == "61a1b05f-####-####-####-############" // Source Tenant ID
+| where runProfileIdentifier contains "Azure2Azure" // Filter based on friendly name of Enterprise App
+| project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier, message, runProfileTag, tenantDetail, env_cloud_deploymentUnit, env_cloud_location
+//| distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations`,
+                    category: "analysis",
+                    complexity: "medium"
+                },
+                {
+                    id: "cross-tenant-auto-redemption-check",
+                    title: "Check Auto-Redemption Policy Status",
+                    description: "Query to monitor auto-redemption policy checks and retrieve target tenant information",
+                    kql: `GlobalIfxInformationalEvent
+| where env_time >= ago(2h)
+| where message contains "Checking auto-redemption policy on"
+| where message contains "cb8759cc-c503-xxxx-xxx" // enter the source tenant ID
+| project env_time, message, servicePrincipalIdentifier, internalCorrelationId, tenantDetail, runProfileTag`,
+                    category: "investigation",
+                    complexity: "medium"
+                },
+                {
+                    id: "cross-tenant-sync-jobid",
+                    title: "Get Cross-Tenant Sync Job ID",
+                    description: "Query to retrieve the Job ID from cross-tenant sync configuration for further investigation",
+                    kql: `GlobalIfxRunProfileStatisticsEvent
+| where env_time > ago(1d) // Time range
+| where contextId == "RemovedPII" // Customer's source tenantId
+| where runProfileTag == "Azure2Azure" // Only show me the profiles for crosstenant sync
+| project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier, message, runProfileTag, tenantDetail, env_cloud_deploymentUnit, env_cloud_location
+| distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations`,
+                    category: "analysis",
+                    complexity: "low"
+                },
+                {
+                    id: "cross-tenant-provisioning-failures",
+                    title: "Analyze User Provisioning Failures",
+                    description: "Query to retrieve audit logs of users getting failures or escrows when trying to be provisioned/invited to the target tenant",
+                    kql: `let runProfileId = "Azure2Azure.9xxx.xxxx.xxxx";
+GlobalIfxAuditEvent
+| where env_time > ago(1d)
+| where runProfileIdentifier == runProfileId
+//| where details contains "webException" // filter by error message
+| where reportableIdentifier == "user.sample@contoso.com" // Use UPN or Mail for users affected
+| project env_time, correlationId, reportableIdentifier, provisioningMode, sourceAnchor, targetAnchor, eventName, description, ['details'], stackTrace, servicePrincipalDisplayName
+| order by env_time asc`,
+                    category: "investigation",
+                    complexity: "high"
+                },
+                {
+                    id: "cross-tenant-web-protocol-errors",
+                    title: "Investigate Web Protocol Errors",
+                    description: "Query to check web traffic for sync operations and identify issues with B2B user invitations",
+                    kql: `GlobalIfxAllTraces
+| where correlationId == "03717c96-xxxx-xxxx-xxxx" // Put CorrelationId here
+| where message contains "Microsoft Graph" // this condition is looking for request to the Graph endpoint
+//| where message contains "WebExceptionProtocolError"// This condition is to look for the error message retrieve
+| project env_time, env_seqNum, message
+| order by env_seqNum asc`,
+                    category: "investigation",
+                    complexity: "medium"
+                },
+                {
+                    id: "cross-tenant-graph-invitations",
+                    title: "View Graph API Invitation Calls",
+                    description: "Query to get detailed error messages and operation calls for Graph API invitations to target tenant",
+                    kql: `//View calls to target tenant to add objects
+GlobalIfxAllTraces
+| where correlationId == "correlationId" // CorrelationId of Sync cycle
+| where message contains "Microsoft Graph"
+| where message contains "https://graph.microsoft.com/beta/invitations"
+| parse message with * "%%pii_" summary ":" * "Request method: " requestMethod " \\" * "Content: {" content "}" *
+| parse message with * "Response body: " responseBody ".\"" *
+| project env_seqNum, summary, requestMethod, content, responseBody
+| order by env_seqNum asc`,
+                    category: "investigation",
+                    complexity: "high"
+                }
+            ],
+            steps: [
+                "Verify admin credentials represent the target tenant ID (not the source tenant)",
+                "Ensure auto-redemption policy is configured in both source and target tenants",
+                "Check cross-tenant sync policy in target tenant under cross-tenant access settings",
+                "Verify Application Service Principal exists (if deleted, recreate configuration)",
+                "Check if user has alternativeSecurityIdentifier (B2B users cannot be synchronized)",
+                "Verify user is assigned to the application (allow up to 1 minute for replication)",
+                "Confirm user account is active in source tenant (account enabled = true)",
+                "Review web traffic for sync operations if protocol errors occur",
+                "Check invitation manager API responses for B2B invitation failures",
+                "Validate domain allow/deny lists for external user invitations"
+            ],
+            relatedTopics: [
+                "B2B User Properties",
+                "Cross-tenant Access Settings",
+                "SCIM Provisioning",
+                "Azure AD Connect",
+                "Alternative Security Identifiers"
+            ],
+            troubleshootingTips: [
+                "All sync logs are in the source tenant - open cases in source tenant with consent access",
+                "Matching attribute is fixed for cross-tenant sync as a security feature",
+                "Internal users with SMS sign-in (AltSecId type 6) will be skipped - disable SMS sign-in",
+                "Users with MSA connections (AltSecId type 1) need MSA email changes by the user",
+                "External members need licensing in target tenant for Power BI and Power Apps access"
+            ]
+        };
+
+        // Save the scenario
+        const outputDir = "./data/scenarios/synchronization";
+        await fs.mkdir(outputDir, { recursive: true });
+
+        const fileName = `${scenario.id}.json`;
+        const scenarioFilePath = path.join(outputDir, fileName);
+
+        await fs.writeFile(scenarioFilePath, JSON.stringify(scenario, null, 2), 'utf-8');
+        console.log(`✅ Created scenario: ${scenarioFilePath}`);
+
+        // Update index
+        const indexPath = "./data/scenarios/index.json";
+        let index = {};
+
+        try {
+            const indexContent = await fs.readFile(indexPath, 'utf-8');
+            index = JSON.parse(indexContent);
+        } catch (error) {
+            // File doesn't exist, start fresh
+        }
+
+        if (!index.synchronization) {
+            index.synchronization = [];
+        }
+
+        // Add scenario to index if not exists
+        const exists = index.synchronization.some(s => s.id === scenario.id);
+        if (!exists) {
+            index.synchronization.push({
+                id: scenario.id,
+                title: scenario.title,
+                file: fileName,
+                addedAt: new Date().toISOString(),
+                source: scenario.source
+            });
+        }
+
+        await fs.writeFile(indexPath, JSON.stringify(index, null, 2), 'utf-8');
+        console.log('✅ Updated scenarios index');
+
+        console.log('\n🎉 Manual extraction completed!');
+        console.log(`📋 Created 1 scenario with ${scenario.queries.length} KQL queries`);
+        console.log(`📁 Saved to: ${scenarioFilePath}`);
+
+        return scenario;
+
+    } catch (error) {
+        console.error('❌ Error:', error.message);
+        throw error;
+    }
+}
+
+manualExtraction();

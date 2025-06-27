@@ -1,0 +1,379 @@
+{
+  "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7",
+  "title": "How to retrieve more data about the Cross Tenant sync configuration?",
+  "description": "An important reminder is that all the sync logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+  "category": "synchronization",
+  "cluster": "idsharedwus.kusto.windows.net",
+  "database": "AADSFprod",
+  "aiSummary": {
+    "overview": "An important reminder is that all the sync logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance. This issue relates to synchronization functionality. The issue typically affects organization-wide.",
+    "keyFindings": [
+      "Time-based analysis for pattern identification",
+      "Time-based analysis for pattern identification",
+      "Error patterns and failure indicators analysis",
+      "Time-based analysis for pattern identification",
+      "Time-based analysis for pattern identification",
+      "Time-based analysis for pattern identification"
+    ],
+    "troubleshootingApproach": "Data-driven investigation using KQL queries with targeted filtering. Structured 3-step investigation process with emphasis on data analysis and pattern recognition",
+    "impactAssessment": "Low impact - Primarily affects monitoring or compliance",
+    "recommendedActions": [
+      "Execute the provided KQL queries to gather diagnostic data",
+      "Adjust time ranges in queries based on when the issue was first observed",
+      "Follow the documented troubleshooting steps in sequence",
+      "Verify user permissions and access rights",
+      "Review and validate configuration settings",
+      "Pay special attention to the actionable content highlighted in this scenario",
+      "Document findings and resolution steps for future reference",
+      "Consider escalation if initial troubleshooting steps do not resolve the issue"
+    ],
+    "prerequisites": [
+      "KQL query execution access"
+    ],
+    "successCriteria": "Clear understanding of issue root cause",
+    "commonPitfalls": [
+      "Insufficient permissions to access required data or perform operations",
+      "Using incorrect time ranges that miss relevant events",
+      "Modifying queries without understanding the full context"
+    ],
+    "relatedScenarios": [
+      "directory sync",
+      "hybrid connectivity",
+      "user provisioning"
+    ],
+    "contextualInsights": {
+      "contentStructure": [
+        "This scenario is heavily focused on data analysis and query execution",
+        "This scenario combines executable code with structured procedures"
+      ],
+      "qualityIndicators": [],
+      "usageGuidance": [
+        "Ensure you have appropriate query execution environment set up"
+      ],
+      "extractionMetadata": {
+        "sectionLevel": 2,
+        "estimatedImportance": 2,
+        "hasParentContext": false,
+        "contentHints": [],
+        "extractionTimestamp": "2025-06-27T06:02:07.464Z"
+      }
+    }
+  },
+  "tags": [
+    "retrieve",
+    "more",
+    "data",
+    "about",
+    "cross",
+    "tenant",
+    "sync",
+    "configuration?",
+    "kusto",
+    "run"
+  ],
+  "difficulty": "advanced",
+  "estimatedTime": 34,
+  "priority": "medium",
+  "lastUpdated": "2025-06-27T06:02:07.465Z",
+  "source": {
+    "type": "wiki",
+    "path": "",
+    "section": "How to retrieve more data about the Cross Tenant sync configuration?",
+    "extractedAt": "2025-06-27T06:02:07.465Z",
+    "wikiReference": {
+      "originalPath": "",
+      "section": "How to retrieve more data about the Cross Tenant sync configuration?",
+      "lastChecked": "2025-06-27T06:02:07.464Z",
+      "sourceType": "Azure AD Supportability Wiki",
+      "extractionVersion": "2.0",
+      "confidence": 0.9,
+      "recommendations": [
+        "Verify the source wiki is up to date",
+        "Cross-reference with official Azure AD documentation",
+        "Test queries in a safe environment before production use",
+        "Consider reaching out to the original wiki contributors for clarification"
+      ],
+      "contextualMetadata": {
+        "sectionLevel": 2,
+        "contentStructure": "query-focused",
+        "technicalComplexity": "medium",
+        "estimatedImportance": 2
+      }
+    },
+    "sectionMetadata": {
+      "headerStyle": "##",
+      "estimatedImportance": 2,
+      "contentHints": [],
+      "followUpSections": []
+    },
+    "contextualInformation": {
+      "structuralContext": {
+        "sectionLevel": 2,
+        "hasParentSections": false,
+        "siblingCount": 3,
+        "contentStructure": {
+          "hasCodeBlocks": true,
+          "hasLists": true,
+          "hasSubheadings": false,
+          "hasLinks": true,
+          "hasTables": false,
+          "paragraphCount": 34,
+          "primaryContentType": "query-focused"
+        },
+        "informationDensity": "medium"
+      },
+      "semanticContext": {
+        "primaryFocus": "investigation",
+        "semanticMarkers": {
+          "urgency": [],
+          "actions": [
+            "run",
+            "analyze",
+            "check"
+          ],
+          "conditions": [
+            "where",
+            "if",
+            "when",
+            "error"
+          ],
+          "outcomes": [],
+          "tools": [
+            "kusto",
+            "sync"
+          ],
+          "roles": [
+            "user"
+          ]
+        },
+        "technicalComplexity": "medium",
+        "actionableContent": [
+          "check the"
+        ]
+      },
+      "proceduraContext": {
+        "stepCount": 3,
+        "queryCount": 13,
+        "hasDecisionPoints": true,
+        "hasConditionalLogic": false,
+        "estimatedDuration": 73
+      },
+      "qualityIndicators": {
+        "readabilityScore": "medium",
+        "completeness": 100,
+        "clarity": 100,
+        "practicalValue": 100
+      }
+    }
+  },
+  "queries": [
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q1",
+      "title": "logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "description": "logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "kql": "// FIND THE RUN PROFILE EXECUTIONS\n    GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"61a1b05f-####-####-####-############\" // Source Tenant ID\n    | where runProfileIdentifier contains \"Azure2Azure\" // Filter based on friendly name of Enterprise App\n    | project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier , message , runProfileTag , tenantDetail, env_cloud_deploymentUnit , env_cloud_location\n    //| distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations without any other information",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q2",
+      "title": ", env_cloud_location",
+      "description": ", env_cloud_location",
+      "kql": "GlobalIfxInformationalEvent \n| where env_time >=  ago(2h) \n| where message contains \"Checking auto-redemption policy on\" \n| where message contains \"cb8759cc-c503-xxxx-xxx\"// enter **the** source tenant ID \n| project env_time, message, servicePrincipalIdentifier, internalCorrelationId, tenantDetail,runProfileTag \n```\n\n- [ ] **How to analyze the results of the query:**\n\n1. Check the data retrieve in the **internalCorrelationID** parameter to get more details about the Job ID used for Cross Sync Tenant. Example of a Job ID:  \n\n   - _Azure2Azure.sourcetenantID.appID_\n\n2. To get the target tenant ID you have to open the results from the message parameter. See the below example of a log:\n\n   - Checking auto-redemption policy on target **2xxxxx-axxx-4xxx-bxxx-0xxxxxxx** from source tenant 9xxxx-dxxf-4xxx-bxxx-6xxxx.\n\n\nUse this other query if you'd like to get the Job ID from the cross tenant sync configuration. \n\n```\n GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"RemovedPII\" // Customer's source tenantId\n    | where runProfileTag == \"Azure2Azure\" // Only show me the profiles for crosstenant sync\n    | project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier , message , runProfileTag , tenantDetail, env_cloud_deploymentUnit , env_cloud_location\n    | distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations without any other information",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q3",
+      "title": "trying to be provision/invited to the target tenant (Take into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "description": "trying to be provision/invited to the target tenant (Take into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "kql": "let runProfileId = \"Azure2Azure.9xxx.xxxx.xxxx\"; \nGlobalIfxAuditEvent\n| where env_time > ago(1d)   \n| where runProfileIdentifier == runProfileId     \n//| where details contains \"webException\" // filter by error message\n| where reportableIdentifier == \"user.sample@contoso.com\" // Use UPN or Mail for users affected\n| project env_time, correlationId, reportableIdentifier, provisioningMode , sourceAnchor, targetAnchor, eventName , description , ['details'], stackTrace , servicePrincipalDisplayName\n| order by env_time asc",
+      "category": "investigation",
+      "complexity": "medium",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q4",
+      "title": "logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "description": "logs would be in the **source tenant**, so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "kql": "// FIND THE RUN PROFILE EXECUTIONS\n    GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"61a1b05f-####-####-####-############\" // Source Tenant ID\n    | where runProfileIdentifier contains \"Azure2Azure\" // Filter based on friendly name of Enterprise App\n    | project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier , message , runProfileTag , tenantDetail, env_cloud_deploymentUnit , env_cloud_location\n    //| distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations without any other information",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q5",
+      "title": ", env_cloud_location",
+      "description": ", env_cloud_location",
+      "kql": "GlobalIfxInformationalEvent \n| where env_time >=  ago(2h) \n| where message contains \"Checking auto-redemption policy on\" \n| where message contains \"cb8759cc-c503-xxxx-xxx\"// enter **the** source tenant ID \n| project env_time, message, servicePrincipalIdentifier, internalCorrelationId, tenantDetail,runProfileTag",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q6",
+      "title": "he results from the message parameter. See the below example of a log:",
+      "description": "he results from the message parameter. See the below example of a log:",
+      "kql": "GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"RemovedPII\" // Customer's source tenantId\n    | where runProfileTag == \"Azure2Azure\" // Only show me the profiles for crosstenant sync\n    | project env_time, correlationId, servicePrincipalDisplayName, runProfileIdentifier , message , runProfileTag , tenantDetail, env_cloud_deploymentUnit , env_cloud_location\n    | distinct runProfileIdentifier, servicePrincipalDisplayName // Display list of just unique runProfileId/servicePrincipalDisplayName combinations without any other information",
+      "category": "data-shaping",
+      "complexity": "low",
+      "expectedResults": "Formatted data with specific columns",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q7",
+      "title": "trying to be provision/invited to the target tenant (Take into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "description": "trying to be provision/invited to the target tenant (Take into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "kql": "let runProfileId = \"Azure2Azure.9xxx.xxxx.xxxx\"; \nGlobalIfxAuditEvent\n| where env_time > ago(1d)   \n| where runProfileIdentifier == runProfileId     \n//| where details contains \"webException\" // filter by error message\n| where reportableIdentifier == \"user.sample@contoso.com\" // Use UPN or Mail for users affected\n| project env_time, correlationId, reportableIdentifier, provisioningMode , sourceAnchor, targetAnchor, eventName , description , ['details'], stackTrace , servicePrincipalDisplayName\n| order by env_time asc",
+      "category": "investigation",
+      "complexity": "medium",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q8",
+      "title": "so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "description": "so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "kql": "GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"61a1b05f-####-####-####-############\" // Source Tenant ID\n    | where runProfileIdentifier contains \"Azure2Azure\" // Filter based on friendly name of Enterprise App",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q9",
+      "title": "results from the message parameter. See the below example of a log:",
+      "description": "results from the message parameter. See the below example of a log:",
+      "kql": "GlobalIfxRunProfileStatisticsEvent \n    | where env_time > ago(1d) // Time range\n    | where contextId == \"RemovedPII\" // Customer's source tenantId\n    | where runProfileTag == \"Azure2Azure\" // Only show me the profiles for crosstenant sync",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q10",
+      "title": "ake into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "description": "ake into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "kql": "GlobalIfxAuditEvent\n| where env_time > ago(1d)   \n| where runProfileIdentifier == runProfileId     \n//| where details contains \"webException\" // filter by error message\n| where reportableIdentifier == \"user.sample@contoso.com\" // Use UPN or Mail for users affected",
+      "category": "investigation",
+      "complexity": "low",
+      "expectedResults": "List of error events with relevant details",
+      "usageHints": [
+        "Adjust the time range (ago()) based on when the issue occurred",
+        "Modify filter conditions to match your specific scenario"
+      ]
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q11",
+      "title": "so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "description": "so the queries would rely on the sourceTenantId. This means that the case should be opened in the source tenant and customer should consent the access to the logs. See the below instructions for more guidance.",
+      "kql": "GlobalIfxRunProfileStatisticsEvent",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": []
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q12",
+      "title": "results from the message parameter. See the below example of a log:",
+      "description": "results from the message parameter. See the below example of a log:",
+      "kql": "GlobalIfxRunProfileStatisticsEvent",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": []
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_q13",
+      "title": "ake into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "description": "ake into consideration it's the same query we used for provisioning cases, for more information check this link [Kusto Web Ux - Log Analysis](https://supportability.visualstudio.com/AzureAD/_wiki/wikis/AzureAD/320763/Kusto-Web-Ux-Log-Analysis)",
+      "kql": "GlobalIfxAuditEvent",
+      "category": "query",
+      "complexity": "low",
+      "expectedResults": "Relevant log entries and data points",
+      "usageHints": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_s1",
+      "description": "Check the data retrieve in the **internalCorrelationID** parameter to get more details about the Job ID used for Cross Sync Tenant. Example of a Job ID:",
+      "order": 1,
+      "estimatedDuration": 3,
+      "prerequisites": [],
+      "expectedOutcome": "Confirmation of current state"
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_s2",
+      "description": "To get the target tenant ID you have to open the results from the message parameter. See the below example of a log:",
+      "order": 2,
+      "estimatedDuration": 1,
+      "prerequisites": [],
+      "expectedOutcome": "Step completed successfully"
+    },
+    {
+      "id": "how-to-retrieve-more-data-about-the-cross-tenant-sync-configuration--e8f084e7_s3",
+      "description": "[ ] **How to analyze the results of the query:**",
+      "order": 3,
+      "estimatedDuration": 5,
+      "prerequisites": [
+        "KQL execution access"
+      ],
+      "expectedOutcome": "Understanding of data patterns"
+    }
+  ],
+  "relatedTopics": [],
+  "troubleshootingTips": [],
+  "prerequisites": [
+    "KQL query execution access"
+  ],
+  "successCriteria": "Clear understanding of issue root cause",
+  "commonPitfalls": [
+    "Insufficient permissions to access required data or perform operations",
+    "Using incorrect time ranges that miss relevant events",
+    "Modifying queries without understanding the full context"
+  ],
+  "qualityMetrics": {
+    "completeness": 100,
+    "clarity": 100,
+    "practicalValue": 100,
+    "technicalAccuracy": 80,
+    "usability": 75,
+    "overallScore": 0
+  },
+  "extractionConfidence": 0.95
+}
