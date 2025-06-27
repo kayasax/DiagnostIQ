@@ -23,6 +23,13 @@ Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensiv
 - **Import/Export**: Backup and share your custom query libraries via JSON files
 - **Recent Queries**: Track recently searched items for quick access
 
+### 🆕 Automated Content Extraction
+- **Content Integration**: Automatically extract scenarios from local documentation sources
+- **Smart Content Detection**: Intelligent parsing of markdown files to identify KQL queries, steps, and metadata
+- **Category Auto-Classification**: Automatic categorization based on content analysis
+- **Modular Architecture**: Scenarios organized in a scalable, maintainable structure
+- **Quality Validation**: Ensures extracted content meets quality standards before integration
+
 ### Sample Content
 The application includes **7 comprehensive troubleshooting scenarios** with **21 production-ready KQL queries**:
 
@@ -103,8 +110,8 @@ diagnosticiq/
 ### Option 2: Local Web Server
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/diagnosticiq.git
-cd diagnosticiq
+git clone https://github.com/kayasax/DiagnostIQ.git
+cd DiagnostIQ
 
 # Start a local web server (Python)
 python -m http.server 8000
@@ -114,6 +121,19 @@ npx http-server
 
 # Open http://localhost:8000 in your browser
 ```
+
+### Option 3: Content Extraction (Advanced)
+For advanced users with access to internal documentation:
+
+```powershell
+# Extract content from local documentation sources
+# (Note: Specific extraction tools not included in public repository)
+
+# Test with sample data
+node test-extraction.js
+```
+
+📖 **See documentation for detailed extraction procedures**
 
 ## 📖 Usage Guide
 
@@ -159,13 +179,13 @@ We welcome contributions! Here are ways you can help:
 ### Integration Features
 - SharePoint/OneDrive integration
 - GitHub repository synchronization
-- Azure DevOps wiki integration
+- Enterprise documentation integration
 - Query parameterization
 
 ## 🔮 Roadmap
 
 ### Phase 1: Enhanced Data Integration
-- [ ] Wiki content parser for automatic import
+- [ ] Content parser for automatic import
 - [ ] SharePoint integration for team libraries
 - [ ] GitHub repository synchronization
 - [x] Export/import functionality

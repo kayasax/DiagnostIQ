@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnosticIQ Data Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .scenario { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
+        .queries { margin-left: 20px; }
+        .query { background: #f5f5f5; margin: 5px 0; padding: 5px; }
+        pre { background: #eee; padding: 10px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>DiagnosticIQ Data Debug</h1>
+    <div id="status">Loading...</div>
+    <div id="scenarios"></div>
+
+    <script src="data-manager.js"></script>
+    <script>
+        async function debugData() {
+            const statusDiv = document.getElementById('status');
+            const scenariosDiv = document.getElementById('scenarios');
+
+            try {
+                statusDiv.textContent = 'Initializing DataManager...';
+                const dataManager = new DataManager();
+
+                statusDiv.textContent = 'Loading scenarios...';
+                await dataManager.loadAllScenarios();
+
+                const scenarios = dataManager.getAllScenarios();
+                statusDiv.innerHTML = `✅ Loaded ${scenarios.length} scenarios successfully`;
+
+                // Display scenarios
+                scenarios.forEach(scenario => {
+                    const div = document.createElement('div');
+                    div.className = 'scenario';
+
+                    div.innerHTML = `
+                        <h3>${scenario.title}</h3>
+                        <p><strong>ID:</strong> ${scenario.id}</p>
+                        <p><strong>Category:</strong> ${scenario.category}</p>
+                        <p><strong>Description:</strong> ${scenario.description}</p>
+                        <p><strong>Queries:</strong> ${scenario.queries ? scenario.queries.length : 0}</p>
+                        <div class="queries">
+                            ${scenario.queries ? scenario.queries.map(q => `
+                                <div class="query">
+                                    <strong>${q.title}</strong>: ${q.description}
+                                    <pre>${q.kql}</pre>
+                                </div>
+                            `).join('') : 'No queries'}
+                        </div>
+                    `;
+
+                    scenariosDiv.appendChild(div);
+                });
+
+                // Also show which files were found in synchronization category
+                statusDiv.innerHTML += `<br><br><strong>Synchronization scenarios found:</strong><br>`;
+                const syncScenarios = scenarios.filter(s => s.category === 'synchronization');
+                syncScenarios.forEach(s => {
+                    statusDiv.innerHTML += `• ${s.title} (${s.queries ? s.queries.length : 0} queries)<br>`;
+                });
+
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                console.error('Debug error:', error);
+            }
+        }
+
+        debugData();
+    </script>
+</body>
+</html>

@@ -37,6 +37,22 @@ class QueryLibraryApp {
     onDataLoaded() {
         // Update local reference to all scenarios
         this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
+
+        // Debug: Check what scenarios we have
+        console.log('📊 Total scenarios loaded:', this.allCheatSheets.length);
+        console.log('🏷️ Scenarios by category:');
+        const categoryCount = {};
+        this.allCheatSheets.forEach(sheet => {
+            categoryCount[sheet.category] = (categoryCount[sheet.category] || 0) + 1;
+            if (sheet.category === 'general') {
+                console.log('🎯 General scenario found:', sheet.title);
+            }
+        });
+        console.log('📈 Category counts:', categoryCount);
+
+        // Populate category dropdown dynamically
+        this.populateCategoryDropdown();
+
         this.populateRecentQueries();
         console.log(`📊 DiagnosticIQ initialized with ${this.allCheatSheets.length} scenarios`);
     }
@@ -87,6 +103,10 @@ class QueryLibraryApp {
             return;
         }
 
+        // Debug logging
+        console.log('🔍 Search criteria:', { searchTerm, clusterFilter, categoryFilter });
+        console.log('📊 Total scenarios available:', this.allCheatSheets.length);
+
         // Filter cheat sheets based on search criteria
         let filteredResults = this.allCheatSheets.filter(sheet => {
             const matchesSearch = !searchTerm ||
@@ -95,16 +115,29 @@ class QueryLibraryApp {
                 sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
                 (sheet.query && sheet.query.toLowerCase().includes(searchTerm)) ||
                 (sheet.queries && sheet.queries.some(q =>
-                    q.query.toLowerCase().includes(searchTerm) ||
-                    q.name.toLowerCase().includes(searchTerm) ||
+                    (q.query && q.query.toLowerCase().includes(searchTerm)) ||
+                    (q.kql && q.kql.toLowerCase().includes(searchTerm)) ||
+                    (q.name && q.name.toLowerCase().includes(searchTerm)) ||
+                    (q.title && q.title.toLowerCase().includes(searchTerm)) ||
                     q.description.toLowerCase().includes(searchTerm)
                 ));
 
             const matchesCluster = !clusterFilter || sheet.cluster === clusterFilter;
             const matchesCategory = !categoryFilter || sheet.category === categoryFilter;
 
+            // Debug logging for category filter
+            if (categoryFilter && categoryFilter === 'general') {
+                console.log('🎯 General category filter - checking sheet:', {
+                    title: sheet.title,
+                    category: sheet.category,
+                    matches: matchesCategory
+                });
+            }
+
             return matchesSearch && matchesCluster && matchesCategory;
         });
+
+        console.log(`✅ Filtered results: ${filteredResults.length} scenarios`);
 
         // Add to recent queries if it's a search term
         if (searchTerm) {
@@ -159,15 +192,15 @@ class QueryLibraryApp {
                 return `
                 <div class="query-item">
                     <div class="query-item-header">
-                        <h4>${queryObj.name}</h4>
+                        <h4>${queryObj.name || queryObj.title}</h4>
                         <p class="query-description">${queryObj.description}</p>
                     </div>
                     <div class="query-container">
                         <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
                             <i class="fas fa-copy"></i> Copy
                         </button>
-                        <textarea id="${queryId}" style="display: none;">${queryObj.query}</textarea>
-                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(queryObj.query)}</code></pre>
+                        <textarea id="${queryId}" style="display: none;">${queryObj.query || queryObj.kql}</textarea>
+                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(queryObj.query || queryObj.kql)}</code></pre>
                     </div>
                 </div>
                 `;
@@ -191,19 +224,18 @@ class QueryLibraryApp {
                 <div class="card-header">
                     <div class="card-title">${sheet.title}</div>
                     <div class="card-actions">
-                        <button class="btn-edit" onclick="app.editCheatSheet(${sheet.id})" title="Edit this cheat sheet">
+                        <button class="btn-edit" onclick="editCheatSheet('${sheet.id}')" title="Edit this cheat sheet">
                             <i class="fas fa-edit"></i>
                         </button>
-                        ${sheet.tags && sheet.tags.includes('custom') ? `
-                        <button class="btn-delete" onclick="app.deleteCheatSheet(${sheet.id})" title="Delete this cheat sheet">
+                        <button class="btn-delete" onclick="deleteCheatSheet('${sheet.id}')" title="Delete this cheat sheet">
                             <i class="fas fa-trash"></i>
                         </button>
-                        ` : ''}
                     </div>
                 </div>
                 <div class="card-meta">
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
                     <span><i class="fas fa-server"></i> ${sheet.cluster}</span>
+                    ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
                     <span><i class="fas fa-code"></i> ${sheet.queries ? sheet.queries.length : 1} ${sheet.queries && sheet.queries.length > 1 ? 'queries' : 'query'}</span>
                 </div>
                 <div class="card-content">
@@ -232,11 +264,20 @@ class QueryLibraryApp {
     getCategoryName(category) {
         const categoryNames = {
             'sync': 'Synchronization',
+            'synchronization': 'Synchronization',
             'auth': 'Authentication',
+            'authentication': 'Authentication',
             'provisioning': 'Provisioning',
-            'performance': 'Performance'
+            'performance': 'Performance',
+            'applications': 'Applications',
+            'general': 'General'
         };
-        return categoryNames[category] || category;
+        return categoryNames[category] || this.capitalizeFirst(category);
+    }
+
+    capitalizeFirst(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     escapeHtml(text) {
@@ -372,6 +413,71 @@ class QueryLibraryApp {
         recentQueriesContainer.innerHTML = recentHTML;
     }
 
+    populateCategoryDropdown() {
+        // Populate search filter dropdown
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            // Get available categories from data manager
+            const categories = this.dataManager.getAvailableCategories();
+
+            console.log('🏷️ Available categories:', categories);
+
+            // Clear existing options except "All Categories"
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+            // Add dynamic categories
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.value;
+                option.textContent = `${category.label}${category.count ? ` (${category.count})` : ''}`;
+
+                // Add description as title attribute for tooltip
+                if (category.description) {
+                    option.title = category.description;
+                }
+
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        // Populate modal form dropdown
+        const categoryModal = document.getElementById('category');
+        if (categoryModal) {
+            // Get available categories from data manager
+            const categories = this.dataManager.getAvailableCategories();
+
+            // Clear existing options
+            categoryModal.innerHTML = '';
+
+            // Add dynamic categories
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.value;
+                option.textContent = category.label;
+                categoryModal.appendChild(option);
+            });
+
+            // If no categories are available, add default ones
+            if (categories.length === 0) {
+                const defaultCategories = [
+                    { value: 'synchronization', label: 'Synchronization' },
+                    { value: 'authentication', label: 'Authentication' },
+                    { value: 'provisioning', label: 'Provisioning' },
+                    { value: 'performance', label: 'Performance' },
+                    { value: 'applications', label: 'Applications' },
+                    { value: 'general', label: 'General' }
+                ];
+
+                defaultCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.value;
+                    option.textContent = category.label;
+                    categoryModal.appendChild(option);
+                });
+            }
+        }
+    }
+
     showAddCheatSheet() {
         // Reset editing mode
         this.editingSheetId = null;
@@ -454,6 +560,7 @@ class QueryLibraryApp {
         const title = document.getElementById('title').value;
         const category = document.getElementById('category').value;
         const cluster = document.getElementById('cluster').value || 'custom';
+        const database = document.getElementById('database').value || '';
         const description = document.getElementById('description').value;
         const steps = document.getElementById('steps').value.split('\n').filter(step => step.trim());
 
@@ -480,6 +587,7 @@ class QueryLibraryApp {
             title: title,
             category: category,
             cluster: cluster,
+            database: database,
             description: description,
             queries: validQueries.map(q => ({
                 name: q.name || 'Custom Query',
@@ -491,19 +599,34 @@ class QueryLibraryApp {
         };
 
         if (this.editingSheetId) {
-            // Update existing cheat sheet using data manager
-            if (this.dataManager.updateScenario(this.editingSheetId, cheatSheetData)) {
-                // Also update local storage for persistence
-                const index = this.localCheatSheets.findIndex(s => s.id === this.editingSheetId);
-                if (index !== -1) {
-                    this.localCheatSheets[index] = { ...cheatSheetData, id: this.editingSheetId };
-                    localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+            const originalSheet = this.allCheatSheets.find(s => s.id === this.editingSheetId);
+            const isCustomSheet = originalSheet && originalSheet.tags && originalSheet.tags.includes('custom');
+
+            if (isCustomSheet) {
+                // Update existing custom cheat sheet
+                if (this.dataManager.updateScenario(this.editingSheetId, cheatSheetData)) {
+                    // Also update local storage for persistence
+                    const index = this.localCheatSheets.findIndex(s => s.id === this.editingSheetId);
+                    if (index !== -1) {
+                        this.localCheatSheets[index] = { ...cheatSheetData, id: this.editingSheetId };
+                        localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+                    }
+                    this.refreshData();
+                    alert('Cheat sheet updated successfully!');
+                } else {
+                    alert('Error: Could not find cheat sheet to update.');
+                    return;
                 }
-                this.refreshData();
-                alert('Cheat sheet updated successfully!');
             } else {
-                alert('Error: Could not find cheat sheet to update.');
-                return;
+                // Editing an extracted scenario - create a new custom version
+                const newCheatSheet = this.dataManager.addCustomScenario(cheatSheetData);
+
+                // Also save to local storage for persistence
+                this.localCheatSheets.push(newCheatSheet);
+                localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+
+                this.refreshData();
+                alert('Modified cheat sheet saved as a new custom version!');
             }
         } else {
             // Add new cheat sheet using data manager
@@ -537,6 +660,15 @@ class QueryLibraryApp {
             return;
         }
 
+        console.log('🛠️ Editing sheet:', {
+            id: sheet.id,
+            title: sheet.title,
+            category: sheet.category,
+            cluster: sheet.cluster,
+            database: sheet.database,
+            queries: sheet.queries ? sheet.queries.length : 'N/A'
+        });
+
         // Set editing mode
         this.editingSheetId = sheetId;
 
@@ -544,12 +676,14 @@ class QueryLibraryApp {
         document.getElementById('title').value = sheet.title;
         document.getElementById('category').value = sheet.category;
         document.getElementById('cluster').value = sheet.cluster;
+        document.getElementById('database').value = sheet.database || '';
         document.getElementById('description').value = sheet.description;
         document.getElementById('steps').value = sheet.steps.join('\n');
 
         // Setup queries for editing
         if (sheet.queries && Array.isArray(sheet.queries)) {
             this.currentQueries = [...sheet.queries];
+            console.log('📝 Loaded queries from sheet.queries:', this.currentQueries.length);
         } else if (sheet.query) {
             // Convert old format to new format
             this.currentQueries = [{
@@ -557,9 +691,13 @@ class QueryLibraryApp {
                 description: 'Primary troubleshooting query',
                 query: sheet.query
             }];
+            console.log('📝 Converted single query to array format');
         } else {
             this.currentQueries = [{ name: '', description: '', query: '' }];
+            console.log('⚠️ No queries found, using empty template');
         }
+
+        console.log('📋 Current queries for editing:', this.currentQueries);
 
         this.renderQueryInputs();
 
@@ -571,24 +709,38 @@ class QueryLibraryApp {
     }
 
     deleteCheatSheet(sheetId) {
-        if (!confirm('Are you sure you want to delete this cheat sheet? This action cannot be undone.')) {
-            return;
-        }
-
         const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet || (!sheet.tags || !sheet.tags.includes('custom')) && !sheet.isCustom) {
-            alert('Only custom cheat sheets can be deleted.');
+        if (!sheet) {
+            alert('Cheat sheet not found!');
             return;
         }
 
-        // Remove using data manager
-        if (this.dataManager.removeScenario(sheetId)) {
-            // Also remove from local storage
+        // Check if it's a custom sheet or extracted sheet
+        const isCustomSheet = sheet.tags && sheet.tags.includes('custom');
+
+        const confirmMessage = isCustomSheet
+            ? 'Are you sure you want to delete this custom cheat sheet? This action cannot be undone.'
+            : 'Are you sure you want to delete this scenario? It will be hidden until you refresh the page or restore it from the settings.';
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        if (isCustomSheet) {
+            // Remove custom sheet from localStorage and data manager
             this.localCheatSheets = this.localCheatSheets.filter(s => s.id !== sheetId);
             localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+        }
 
+        // Remove from data manager (works for both custom and extracted scenarios)
+        if (this.dataManager.removeScenario(sheetId)) {
             this.refreshData();
-            alert('Cheat sheet deleted successfully!');
+
+            const successMessage = isCustomSheet
+                ? 'Custom cheat sheet deleted successfully!'
+                : 'Scenario hidden successfully! (Use browser tools console and call app.dataManager.restoreScenario("' + sheetId + '") to restore)';
+
+            alert(successMessage);
 
             // Refresh results if currently searching
             if (document.getElementById('searchResults').style.display === 'block') {
@@ -721,6 +873,10 @@ function deleteCheatSheet(sheetId) {
     app.deleteCheatSheet(sheetId);
 }
 
+function editCheatSheet(sheetId) {
+    app.editCheatSheet(sheetId);
+}
+
 function exportLibrary() {
     app.exportLibrary();
 }
@@ -733,4 +889,6 @@ function importLibrary(event) {
 let app;
 document.addEventListener('DOMContentLoaded', function() {
     app = new QueryLibraryApp();
+    // Make app accessible globally for onclick handlers
+    window.app = app;
 });

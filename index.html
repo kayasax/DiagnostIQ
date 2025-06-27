@@ -55,11 +55,7 @@
                 </select>
                 <select id="categoryFilter" onchange="performSearch()">
                     <option value="">All Categories</option>
-                    <option value="sync">Synchronization</option>
-                    <option value="auth">Authentication</option>
-                    <option value="provisioning">Provisioning</option>
-                    <option value="performance">Performance</option>
-                    <option value="applications">Applications</option>
+                    <!-- Categories will be populated dynamically by app.js -->
                 </select>
             </div>
         </div>
@@ -119,16 +115,16 @@
                     <div class="form-group">
                         <label for="category">Category:</label>
                         <select id="category" required>
-                            <option value="sync">Synchronization</option>
-                            <option value="auth">Authentication</option>
-                            <option value="provisioning">Provisioning</option>
-                            <option value="performance">Performance</option>
-                            <option value="applications">Applications</option>
+                            <!-- Categories will be populated dynamically by app.js -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="cluster">Cluster:</label>
                         <input type="text" id="cluster" placeholder="e.g., prod, staging, dogfood">
+                    </div>
+                    <div class="form-group">
+                        <label for="database">Database:</label>
+                        <input type="text" id="database" placeholder="e.g., AADSFprod (optional)">
                     </div>
                     <div class="form-group">
                         <label for="description">Description:</label>
