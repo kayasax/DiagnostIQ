@@ -1,203 +1,123 @@
 # 🧠 AI Session Starter: Project Memory
-- ✅ **NEW**: Advanced extraction from internal documentation with robust categorizationhis file serves as the persistent memory for # 🧠 AI Session Starter: Project Memory
-This file serves as the persistent memory for the DiagnosticIQ project across sessions in this workspace. It should be updated regularly to reflect the current state, goals, and progress of the project.
-
+This file serves as the persistent memory for the DiagnosticIQ project across sessions in this workspace.
+You must update it regularly with key points
 ---
 
 ## 📘 Project Overview
 **Project Name:** DiagnosticIQ
 
-**Description:** A comprehensive troubleshooting application designed for Azure AD/Entra ID support scenarios. More than just a query collection, it's a searchable library of troubleshooting cheat sheets that include cluster information, KQL queries, and step-by-step troubleshooting procedures. The app focuses on quick access, easy search, and efficient copy/paste workflows for support engineers.
+**Description:** A comprehensive troubleshooting application for Azure AD/Entra ID support scenarios. A searchable library of troubleshooting cheat sheets with cluster information, KQL queries, and step-by-step procedures for support engineers.
 
 **Primary Goals:**
-- Create a fast, searchable interface for troubleshooting scenarios (e.g., Cross Tenant Sync)
-- Support loading common query libraries from online sources (SharePoint, GitHub, etc.)
-- Allow users to store and manage their own local query collections
-- Provide comprehensive cheat sheets with cluster info, queries, and troubleshooting steps
-- Implement syntax highlighting for KQL queries
-- Optimize for usability: quick search, easy copy/paste, intuitive navigation
+- Fast, searchable interface for troubleshooting scenarios
+- Automated extraction from Azure AD documentation
+- Comprehensive cheat sheets with cluster info, queries, and troubleshooting steps
+- Optimized for support engineer workflow: quick search, easy copy/paste
 
-**Key Technologies / Tools:**
+**Key Technologies:**
 - Kusto Query Language (KQL)
 - Azure AD/Entra ID troubleshooting
-- Data sources: Internal documentation, community knowledge base, local storage
-- UI framework: Web-based for cross-platform support
+- GitHub Copilot for content extraction
+- Web-based interface
 
 ---
 
-## 🧠 Assistant Memory
-This section is maintained by the AI assistant to track important context and decisions across sessions.
+## 🎯 CURRENT STATUS: Production Ready ✅
 
-**Current Understanding:**
-- ✅ **PROJECT EVOLVED**: DiagnosticIQ started as functional troubleshooting library, now enhanced with enterprise-scale architecture
-- ✅ **MODULAR REFACTORING COMPLETE**: Addressed scalability concerns with hybrid file structure
-- ✅ **PUBLISHED**: Successfully published to GitHub as open-source project with active development
-- ✅ **EXTRACTION WORKFLOW**: Advanced content extraction and scenario management system implemented
-- ✅ **ROBUST DELETE SYSTEM**: Smart deletion with persistence and restoration capabilities
-- ✅ **UI/UX POLISHED**: Enhanced search experience with preview cards, expand/collapse functionality, and interactive titles
-- ✅ **DYNAMIC NAVIGATION**: Smart quick access, accurate scenario counts, and deduplicated results
-- User works in Azure AD/Entra ID support and needed a specialized troubleshooting tool
-- Primary use case is finding relevant queries and procedures for specific scenarios like Cross Tenant Sync
-- Tool balances comprehensive sample library with local customization capabilities
-- Focus is on support engineer workflow optimization - achieved through smart search, copy-paste, and categorization
-- **NEW**: Modular architecture supports team collaboration and hundreds of scenarios
-- **NEW**: Advanced extraction from Azure AD supportability wiki with robust categorization
-- **NEW**: Polished UI with preview cards, expand/collapse, and intuitive navigation
+### **PROVEN APPROACH: GitHub Copilot Extraction**
 
-**Known Constraints or Requirements:**
-- ✅ KQL syntax highlighting implemented using Prism.js
-- ✅ Both online (import/export) and local query storage supported
-- ✅ Performance optimized - "quick and easy to use" achieved and enhanced
-- ✅ Copy/paste functionality implemented for all queries
-- ✅ Professional UI with responsive design and accessibility features
-- ✅ **NEW**: Scalable architecture supporting hundreds of scenarios without performance degradation
-- ✅ **NEW**: Wiki extraction system with robust KQL parsing and categorization
-- ✅ **NEW**: Smart deletion system with persistence across page refreshes
-- ✅ **NEW**: Edit/delete functionality for both custom and extracted scenarios
-- ✅ **NEW**: Database field display and preservation in scenario cards and edit forms
-- ✅ **NEW**: Dynamic category dropdown population with proper value mapping
-- ✅ **NEW**: Query preservation in edit mode with comprehensive debug logging
-- ✅ **NEW**: Enhanced category name mapping supporting both legacy and current formats
-- ✅ **NEW**: Enhanced search experience with preview cards showing excerpts and "Open" buttons
-- ✅ **NEW**: Interactive titles - clickable in both preview and expanded modes for expand/collapse
-- ✅ **NEW**: Minimize controls with both button and title-click functionality
-- ✅ **NEW**: Dynamic quick access with accurate deduplicated scenario counts
-- ✅ **NEW**: Results summary showing total scenarios found with deduplication
-- ✅ **NEW**: Fixed "All Scenarios" functionality with proper filtering and accurate counts
+**What Works:**
+- ✅ **Generic Copilot Prompts**: Using `#file:` reference for any markdown file
+- ✅ **Automated Import**: `import-scenarios.js` processes Copilot JSON output
+- ✅ **Rich Data Structure**: Detailed steps with description/action/expected results
+- ✅ **DiagnosticIQ Integration**: Web app displays scenarios with proper formatting
+- ✅ **KQL Query Support**: `relatedKQL` array displayed with copy buttons and syntax highlighting
 
-**Pending Questions / Clarifications:**
-- ✅ **RESOLVED**: Web app chosen as preferred technology stack
-- ✅ **RESOLVED**: Local storage with import/export for content management
-- ✅ **RESOLVED**: 7 comprehensive troubleshooting scenarios implemented
-- ✅ **RESOLVED**: JSON-based data synchronization strategy implemented
-- ✅ **RESOLVED**: Individual use with community sharing via GitHub
-- ✅ **RESOLVED**: Content extraction and automatic scenario generation
-- ✅ **RESOLVED**: Edit and delete button functionality for all scenario types
+**Successfully Extracted:**
+- **File**: `TSG-How-to-check-cross-tenant-Deletion-Threshold.md`
+- **Result**: 1 scenario with 4 detailed steps + 1 KQL query
+- **Status**: ✅ Visible and functional in DiagnosticIQ
 
-**Future Considerations:**
-- GitHub Pages deployment for live hosting
-- Advanced authentication for enterprise integration
-- Real-time collaboration features
-- API integration with Azure monitoring tools
-- **NEW**: Community-driven scenario contributions via modular structure
-- **NEW**: Enterprise deployment with centralized scenario management
-- **NEW**: Automated content synchronization and updates
-- **NEW**: Advanced search with semantic matching and AI-powered recommendations
+### **VALIDATED WORKFLOW (MANUAL BUT WORKING):**
+1. **Open** the target wiki markdown page in VS Code
+2. **Use this exact prompt** in Copilot Chat:
+   ```
+   #file: generic_extraction_template.txt
+   
+   Execute instructions in the template
+   ```
+3. **Save** JSON output as `extracted-scenarios.json`
+4. **Run** `node import-scenarios.js extracted-scenarios.json`
+5. **View** in DiagnosticIQ - scenarios appear immediately
 
-**Recent Major Enhancement - Content Extraction & Robust Management:**
-- **Problem Solved**: Manual scenario creation was time-consuming and limited scalability
-- **Solution Implemented**: Advanced content extraction system with robust categorization and KQL parsing
-- **Architecture**: Automated extraction from internal documentation with dynamic index generation
-- **Benefits Achieved**: Rapid scenario population, consistent categorization, robust edit/delete functionality
-- **Smart Deletion**: Persistent hiding of scenarios with restoration capabilities via localStorage
-- **Management Tools**: Browser console utilities for advanced scenario management
-- **Status**: ✅ **PRODUCTION READY** - Fully functional extraction and management workflow
+> **⚠️ Critical**: Must open the wiki page first, then use the exact prompt format above. This is manual but produces consistent results.
+
+### **READY FOR SCALE:**
+- `TSG-Cross-tenant-sync-(Azure2Azure-scenarios).md` (main file, 8-10 scenarios expected)
+- Any other Azure AD TSG markdown files in the wiki
+- Generic prompt works with any documentation format
 
 ---
 
-## 🔄 Update Log
-| Date       | Summary of Update                          |
-|------------|---------------------------------------------|
-| 2025-06-26 | Initial project setup and context defined. User requirements gathered for Azure AD troubleshooting query library app. |
-| 2025-06-26 | **PROTOTYPE COMPLETED** - Created fully functional web-based prototype with search, syntax highlighting, local storage, and 5 sample troubleshooting scenarios. |
-| 2025-06-26 | **ENHANCED PROTOTYPE** - Fixed copy functionality for local files, implemented multiple queries per topic structure, improved UI for multiple queries display. |
-| 2025-06-26 | **FEATURE EXPANSION** - Added delete functionality for custom cheat sheets, import/export capabilities, enhanced sample library with 7 comprehensive troubleshooting scenarios, each with multiple related queries. |
-| 2025-06-26 | **BUG FIXES & POLISH** - Fixed query input form rendering issue, cleaned up debug code, fully functional add/edit/delete operations for cheat sheets with multiple queries. Application is now production-ready. |
-| 2025-06-26 | **PROJECT COMPLETION** - Rebranded to "DiagnosticIQ", added comprehensive documentation (README, CONTRIBUTING, LICENSE), initialized Git repository, and successfully published to GitHub: https://github.com/kayasax/DiagnostIQ.git |
-| 2025-06-26 | **MODULAR ARCHITECTURE REFACTORING** - Implemented hybrid modular data structure (Option C) to solve scalability concerns. Created category-based file organization, DataManager class, and comprehensive architecture documentation. Feature branch ready for PR. |
-| 2025-06-26 | **ARCHITECTURE PR MERGED** - Successfully merged modular data structure enhancement into main branch. DiagnosticIQ now has enterprise-scale architecture supporting hundreds of scenarios. Ready for v0.2.0 release. |
-| 2025-06-27 | **CONTENT EXTRACTION SYSTEM** - Developed robust content extraction workflow with advanced KQL parsing, categorization, and dynamic index generation. Enhanced data manager with sophisticated scenario loading and validation. |
-| 2025-06-27 | **ROBUST DELETE & EDIT SYSTEM** - Implemented persistent deletion system using localStorage with restoration capabilities. Fixed edit/delete button functionality for all scenario types (custom and extracted). Added management utilities for advanced scenario administration. |
-| 2025-06-27 | **UI/UX ENHANCEMENTS & BUG FIXES** - Fixed database field display in scenario cards, resolved query preservation issues in edit mode, implemented dynamic category dropdown population, and enhanced category name mapping. All edit/save/display functionality now working correctly for both custom and extracted scenarios. |
-| 2025-06-27 | **POLISHED UI/UX - v0.3.1 READY** - Enhanced search experience with preview cards, interactive expand/collapse titles, minimize controls, dynamic quick access with accurate counts, deduplication fixes, and improved "All Scenarios" functionality. Application now provides intuitive, professional user experience. |
+## 🔧 Core Features (Completed)
+- ✅ **Web Application**: Fast, responsive interface with search functionality
+- ✅ **KQL Syntax Highlighting**: Professional code display with copy buttons
+- ✅ **Modular Architecture**: Scalable data structure supporting hundreds of scenarios
+- ✅ **Content Extraction**: Automated scenario extraction from documentation
+- ✅ **Import/Export**: JSON-based data management and sharing
+- ✅ **Local Storage**: Persistent user customizations and deleted scenario tracking
+- ✅ **Edit/Delete**: Full CRUD operations for all scenario types
+- ✅ **Category Management**: Dynamic categorization with smart filtering
 
 ---
 
-## ✅ Next Steps
-### Project Status: �️ **MAJOR ENHANCEMENT - MODULAR ARCHITECTURE**
-**GitHub Repository**: https://github.com/kayasax/DiagnostIQ.git
-**Feature Branch**: `feature/modular-data-structure` (ready for PR)
+## 🔍 Next Steps
+### Project Status: 🚀 **EXTRACTION SCALING**
 
-### Recently Completed - v0.2.0 Architecture Refactoring:
-- [x] **Modular Data Structure** - Implemented hybrid architecture (Option C)
-- [x] **DataManager Class** - Centralized async data loading and management
-- [x] **Category Organization** - Scenarios organized by auth/sync/provisioning/performance/applications
-- [x] **Scalability Solution** - Now supports hundreds of scenarios without performance issues
-- [x] **Backward Compatibility** - All existing functionality preserved
-- [x] **Documentation** - Comprehensive ARCHITECTURE.md and technical guides
-- [x] **Pull Request Ready** - Feature branch pushed and ready for review
+**Immediate Goals:**
+1. **Scale Extraction**: Use proven workflow on main TSG file
+2. **Quality Validation**: Verify scenarios render correctly in DiagnosticIQ
+3. **Documentation**: Update extraction guides for production use
+4. **Workspace Cleanup**: Remove obsolete test/demo files
 
----
-
-## ✅ Next Steps
-### Project Status: 🚀 **PRODUCTION-READY WITH POLISHED UI/UX - v0.3.1**
-**GitHub Repository**: https://github.com/kayasax/DiagnostIQ.git
-**Latest**: Advanced content extraction with polished UI/UX and complete scenario management
-
-### Recently Completed - v0.3.1 UI/UX Polish:
-- [x] **Enhanced Search Experience** - Preview cards with excerpts and "Open" buttons
-- [x] **Interactive Titles** - Clickable titles in both preview and expanded modes for expand/collapse
-- [x] **Minimize Controls** - Both button and title-click functionality for easy collapse
-- [x] **Dynamic Quick Access** - Smart category-based links with accurate scenario counts
-- [x] **Results Summary** - Clear display of total scenarios found with deduplication
-- [x] **Fixed "All Scenarios"** - Proper filtering and accurate count display
-- [x] **Category Dropdown Accuracy** - Deduplicated scenario counts in category filters
-- [x] **Total Count Accuracy** - Header shows correct unique scenario counts
-- [x] **Deduplication Logic** - Prevents duplicate scenarios in all search results
-
-### Recently Completed - v0.3.0+ Advanced Features:
-- [x] **Content Extraction System** - Automated extraction from internal documentation sources
-- [x] **Advanced KQL Parsing** - Robust query extraction with encoding and regex handling
-- [x] **Dynamic Categorization** - Intelligent scenario categorization with consistent mapping
-- [x] **Persistent Deletion** - Smart deletion system that persists across page refreshes
-- [x] **Edit/Delete for All Types** - Full CRUD operations for both custom and extracted scenarios
-- [x] **Management Utilities** - Browser console tools for advanced scenario administration
-- [x] **Dynamic Index Generation** - Automatic creation of searchable scenario index
-- [x] **Restoration System** - Ability to restore accidentally deleted scenarios
-- [x] **Database Field Management** - Complete support for database field display, editing, and saving
-- [x] **Dynamic Category Dropdowns** - Automatic population of category selections in both search and edit forms
-- [x] **Query Preservation** - Robust query loading and preservation in edit mode for all scenario types
-- [x] **Enhanced Category Mapping** - Support for both legacy and current category naming conventions
-
-### Core v0.2.0 Features (Completed):
-- [x] **Modular Data Structure** - Implemented hybrid architecture (Option C)
-- [x] **DataManager Class** - Centralized async data loading and management
-- [x] **Category Organization** - Scenarios organized by auth/sync/provisioning/performance/applications
-- [x] **Scalability Solution** - Now supports hundreds of scenarios without performance issues
-- [x] **Backward Compatibility** - All existing functionality preserved
-
-### Core v0.1.0 Features (Completed):
-- [x] Determine optimal technology stack and application architecture - **Web-based app chosen**
-- [x] Design data structure for cheat sheets (queries + cluster info + steps) - **COMPLETED & ENHANCED**
-- [x] Create prototype interface with search functionality - **COMPLETED**
-- [x] Implement KQL syntax highlighting - **COMPLETED**
-- [x] Add delete functionality for custom cheat sheets - **COMPLETED**
-- [x] Implement import/export capabilities - **COMPLETED & ENHANCED**
-- [x] Add comprehensive sample scenarios (7 scenarios with multiple queries each) - **COMPLETED & MODULARIZED**
-- [x] Complete documentation and open-source preparation - **COMPLETED & EXPANDED**
-- [x] Git repository initialization and GitHub publication - **COMPLETED**
-
-### Current Priority:
-- [x] **✅ Advanced Extraction Complete** - Wiki extraction and scenario management fully functional
-- [x] **✅ Robust Edit/Delete System** - All scenario types can be managed properly
-- [x] **✅ UI/UX Polish Complete** - Database fields, category dropdowns, and query preservation all working
-- [x] **✅ Enhanced Search Experience** - Preview cards, interactive titles, and accurate counting implemented
-- [ ] **Create v0.3.1 Release** - Tag and release the UI/UX enhancement fixes
-- [ ] **Update GitHub Documentation** - Ensure README reflects new UI/UX improvements and polished experience
-- [ ] **Performance Optimization** - Fine-tune loading and search for large scenario collections
-
-### Future Enhancements (Post v0.3.1):
-- [ ] **Real-time Content Sync** - Automatic updates from source documentation
-- [ ] **AI-Powered Search** - Semantic search and query recommendations
-- [ ] **Collaboration Features** - Team sharing and scenario approval workflows
-- [ ] **Advanced Analytics** - Usage tracking and scenario effectiveness metrics
-- [ ] **Performance Optimization** - Fine-tune loading and search for large scenario collections
-- [ ] Enable GitHub Pages for live hosting
-- [ ] Add GitHub Actions for CI/CD workflows
-- [ ] Mobile app version with offline capabilities
-- [ ] Enterprise SSO integration
-- [ ] API for external tool integration
+**Extraction Targets:**
+- `TSG-Cross-tenant-sync-(Azure2Azure-scenarios).md` (primary target)
+- Additional Azure AD troubleshooting documentation
+- Validate generic prompt effectiveness across different content types
 
 ---
 
-> _This file is automatically referenced and updated by the AI assistant to maintain continuity across sessions._
+## 🔄 Recent Updates
+| Date       | Summary                          |
+|------------|----------------------------------|
+| 2025-06-28 | **✅ COPILOT EXTRACTION SUCCESS** - Validated GitHub Copilot workflow with `#file:` reference approach. Successfully extracted deletion threshold scenario. Enhanced DiagnosticIQ to support both string and object step formats. Added `relatedKQL` display support. **Workspace cleaned and decluttered.** |
+| 2025-06-27 | **Enhanced DiagnosticIQ Features** - Modular architecture, content extraction system, UI/UX improvements, and comprehensive scenario management. |
+| 2025-06-26 | **Initial Development** - Created DiagnosticIQ prototype, implemented core features, published to GitHub. |
+
+---
+
+## 📁 Essential Files
+**Core Application:**
+- `index.html` - Main DiagnosticIQ web interface
+- `app.js` - Application logic and UI management
+- `data-manager.js` - Data loading and scenario management
+- `styles.css` - Application styling
+
+**Extraction Workflow:**
+- `GENERIC_EXTRACTION_TEMPLATE.txt` - Generic Copilot prompt template
+- `COMPLETE_EXTRACTION_PROMPT.txt` - Ready-to-use prompt for main TSG file
+- `import-scenarios.js` - Import script for Copilot JSON output
+- `AUTOMATED_INSTRUCTIONS.txt` - Step-by-step workflow guide
+
+**Data Structure:**
+- `data/scenarios/` - Organized scenario files by category
+- `data/scenarios/index.json` - Master index for all scenarios
+
+**Documentation:**
+- `README.md` - Project overview and usage guide
+- `ARCHITECTURE.md` - Technical architecture documentation
+- `CONTRIBUTING.md` - Contribution guidelines
+
+---
+
+> **Next Session Goal:** Scale extraction to main TSG file and validate approach across multiple documentation sources.
