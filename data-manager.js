@@ -1,4 +1,4 @@
-// DiagnosticIQ - Modular Data Manager v0.3.2
+// DiagnostIQ - Modular Data Manager v0.3.2
 // Handles loading scenarios from multiple sources: core samples + modular scenario files
 
 class DataManager {
@@ -25,7 +25,7 @@ class DataManager {
 
     async loadAllScenarios() {
         try {
-            console.log('🔄 Loading DiagnosticIQ scenarios...');
+            console.log('🔄 Loading DiagnostIQ scenarios...');
 
             // Load core samples first
             await this.loadCoreSamples();
@@ -376,7 +376,7 @@ class DataManager {
 
         return {
             exportedAt: new Date().toISOString(),
-            source: 'DiagnosticIQ',
+            source: 'DiagnostIQ',
             version: '0.3.1',
             scenarios: scenariosToExport
         };

@@ -58,6 +58,25 @@ body {
     gap: 1rem;
 }
 
+/* App Title Link */
+.app-title {
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.app-title:hover {
+    color: #ffd700;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.app-title:visited {
+    color: white;
+}
+
 /* Buttons */
 .btn {
     padding: 0.5rem 1rem;
@@ -225,6 +244,196 @@ body {
 
 .quick-links a:hover, .recent-list a:hover {
     background-color: #f0f8ff;
+}
+
+/* Enhanced Navigation Styles */
+
+/* Category Navigation */
+.category-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.category-item:hover {
+    background-color: #f0f8ff;
+    border-color: #e1ecf7;
+}
+
+.category-item.active {
+    background-color: #0078d4;
+    color: white;
+    border-color: #106ebe;
+}
+
+.category-item.active:hover {
+    background-color: #106ebe;
+}
+
+.category-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.category-label i {
+    width: 16px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.category-count {
+    background: rgba(0, 120, 212, 0.1);
+    color: #0078d4;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.category-item.active .category-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Tag Cloud */
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    line-height: 1.4;
+}
+
+.cloud-tag {
+    padding: 0.4rem 0.8rem;
+    background: #f0f8ff;
+    color: #0078d4;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #e1ecf7;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cloud-tag:hover {
+    background: #0078d4;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+.cloud-tag.active {
+    background: #0078d4;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+/* Tag sizes based on frequency */
+.cloud-tag.size-xs { font-size: 0.75rem; }
+.cloud-tag.size-sm { font-size: 0.8rem; }
+.cloud-tag.size-md { font-size: 0.85rem; }
+.cloud-tag.size-lg { font-size: 0.9rem; }
+.cloud-tag.size-xl { font-size: 0.95rem; }
+
+/* Quick Filters */
+.quick-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+}
+
+.filter-btn:hover {
+    border-color: #0078d4;
+    color: #0078d4;
+    background: #f0f8ff;
+}
+
+.filter-btn.active {
+    background: #0078d4;
+    color: white;
+    border-color: #106ebe;
+}
+
+.filter-btn i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Statistics Display */
+.stats-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #0078d4;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Active filter indicators */
+.sidebar-section.has-active-filters h3::after {
+    content: " •";
+    color: #0078d4;
+    font-weight: bold;
+}
+
+/* Sidebar section icons */
+.sidebar-section h3 i {
+    margin-right: 0.5rem;
+    color: #0078d4;
+    width: 16px;
+    text-align: center;
 }
 
 /* Content Area */
@@ -771,6 +980,90 @@ body {
 
 .wiki-indicator a:hover {
     text-decoration: underline;
+}
+
+/* Vertical-based Navigation Styles */
+.vertical-section {
+    margin-bottom: 5px;
+}
+
+.vertical-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: linear-gradient(45deg, #2c3e50, #34495e);
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.vertical-header:hover {
+    background: linear-gradient(45deg, #34495e, #3c5470);
+    transform: translateX(2px);
+}
+
+.vertical-arrow {
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    font-size: 0.8em;
+}
+
+.vertical-icon {
+    margin-right: 8px;
+    opacity: 0.9;
+}
+
+.vertical-name {
+    flex-grow: 1;
+}
+
+.vertical-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.vertical-categories {
+    padding-left: 8px;
+    border-left: 2px solid #e9ecef;
+    margin-left: 16px;
+}
+
+.category-item.subcategory {
+    margin: 2px 0;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.category-item.subcategory:hover {
+    background: #e9ecef;
+    transform: translateX(2px);
+}
+
+.category-item.all-categories {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.category-item.all-categories:hover {
+    background: linear-gradient(45deg, #2980b9, #1f6391);
+}
+
+.nav-divider {
+    height: 1px;
+    background: #dee2e6;
+    margin: 8px 0;
 }
 
 /* Responsive Design */

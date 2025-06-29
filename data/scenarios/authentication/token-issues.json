@@ -1,36 +1,41 @@
 [
-    {
-        "id": "auth-1",
-        "title": "Authentication Failures Analysis",
-        "category": "authentication",
-        "cluster": "prod",
-        "description": "Analyze authentication failures including sign-in errors, MFA issues, and conditional access blocks.",
-        "queries": [
-            {
-                "name": "Overall Authentication Failures",
-                "description": "Get a high-level view of authentication failures by error code and application",
-                "query": "// Authentication Failures - Overview\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"  // Non-successful sign-ins\n| extend ErrorCode = tostring(Status.errorCode)\n| extend FailureReason = tostring(Status.failureReason)\n| extend ConditionalAccessStatus = tostring(ConditionalAccessStatus)\n| summarize FailureCount = count() by ErrorCode, FailureReason, ConditionalAccessStatus, AppDisplayName\n| order by FailureCount desc"
-            },
-            {
-                "name": "MFA-Related Failures",
-                "description": "Focus on Multi-Factor Authentication related sign-in issues",
-                "query": "// Authentication Failures - MFA specific\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"\n| where Status.failureReason contains \"MFA\" or Status.failureReason contains \"authentication\"\n| extend MFAMethod = tostring(AuthenticationDetails[0].authenticationMethod)\n| extend MFAResult = tostring(AuthenticationDetails[0].succeeded)\n| project TimeGenerated, UserPrincipalName, AppDisplayName, MFAMethod, MFAResult, Status\n| order by TimeGenerated desc"
-            },
-            {
-                "name": "Conditional Access Blocks",
-                "description": "Analyze sign-ins blocked by conditional access policies",
-                "query": "// Authentication Failures - Conditional Access\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ConditionalAccessStatus == \"failure\"\n| mv-expand ConditionalAccessPolicies\n| extend PolicyName = tostring(ConditionalAccessPolicies.displayName)\n| extend PolicyResult = tostring(ConditionalAccessPolicies.result)\n| where PolicyResult == \"failure\"\n| project TimeGenerated, UserPrincipalName, AppDisplayName, PolicyName, PolicyResult\n| summarize BlockCount = count() by PolicyName, AppDisplayName\n| order by BlockCount desc"
-            }
-        ],
-        "steps": [
-            "Run the overview query to identify the most common authentication failures",
-            "Check if failures are related to conditional access policies",
-            "Use the MFA query to verify MFA configuration if MFA-related errors appear",
-            "Review conditional access policies that are blocking users",
-            "Check user risk policies if risk-based failures occur",
-            "Validate user account status and licensing",
-            "Review application-specific authentication requirements"
-        ],
-        "tags": ["authentication", "signin", "mfa", "conditional-access"]
-    }
+  {
+    "id": "auth-1",
+    "title": "Authentication Failures Analysis",
+    "category": "authentication",
+    "cluster": "prod",
+    "description": "Analyze authentication failures including sign-in errors, MFA issues, and conditional access blocks.",
+    "queries": [
+      {
+        "name": "Overall Authentication Failures",
+        "description": "Get a high-level view of authentication failures by error code and application",
+        "query": "// Authentication Failures - Overview\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"  // Non-successful sign-ins\n| extend ErrorCode = tostring(Status.errorCode)\n| extend FailureReason = tostring(Status.failureReason)\n| extend ConditionalAccessStatus = tostring(ConditionalAccessStatus)\n| summarize FailureCount = count() by ErrorCode, FailureReason, ConditionalAccessStatus, AppDisplayName\n| order by FailureCount desc"
+      },
+      {
+        "name": "MFA-Related Failures",
+        "description": "Focus on Multi-Factor Authentication related sign-in issues",
+        "query": "// Authentication Failures - MFA specific\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"\n| where Status.failureReason contains \"MFA\" or Status.failureReason contains \"authentication\"\n| extend MFAMethod = tostring(AuthenticationDetails[0].authenticationMethod)\n| extend MFAResult = tostring(AuthenticationDetails[0].succeeded)\n| project TimeGenerated, UserPrincipalName, AppDisplayName, MFAMethod, MFAResult, Status\n| order by TimeGenerated desc"
+      },
+      {
+        "name": "Conditional Access Blocks",
+        "description": "Analyze sign-ins blocked by conditional access policies",
+        "query": "// Authentication Failures - Conditional Access\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ConditionalAccessStatus == \"failure\"\n| mv-expand ConditionalAccessPolicies\n| extend PolicyName = tostring(ConditionalAccessPolicies.displayName)\n| extend PolicyResult = tostring(ConditionalAccessPolicies.result)\n| where PolicyResult == \"failure\"\n| project TimeGenerated, UserPrincipalName, AppDisplayName, PolicyName, PolicyResult\n| summarize BlockCount = count() by PolicyName, AppDisplayName\n| order by BlockCount desc"
+      }
+    ],
+    "steps": [
+      "Run the overview query to identify the most common authentication failures",
+      "Check if failures are related to conditional access policies",
+      "Use the MFA query to verify MFA configuration if MFA-related errors appear",
+      "Review conditional access policies that are blocking users",
+      "Check user risk policies if risk-based failures occur",
+      "Validate user account status and licensing",
+      "Review application-specific authentication requirements"
+    ],
+    "tags": [
+      "authentication",
+      "signin",
+      "mfa",
+      "conditional-access"
+    ]
+  }
 ]

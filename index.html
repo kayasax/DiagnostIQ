@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DiagnosticIQ - Azure AD Troubleshooting</title>
+    <title>DiagnostIQ - Azure AD Troubleshooting</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -13,7 +13,7 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1><i class="fas fa-search"></i> DiagnosticIQ <span class="version">v0.3.1</span></h1>
+                <h1><a href="#" onclick="goHome()" class="app-title"><i class="fas fa-search"></i> DiagnostIQ <span class="version">v0.3.2</span></a></h1>
                 <div class="header-actions">
                     <input type="file" id="importFile" accept=".json" class="hidden-file-input" onchange="importLibrary(event)">
                     <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">
@@ -64,20 +64,28 @@
         <div class="main-content">
             <!-- Sidebar -->
             <aside class="sidebar">
+                <!-- Category Navigation -->
                 <div class="sidebar-section">
-                    <h3>Quick Access</h3>
-                    <ul class="quick-links">
-                        <li><a href="#" onclick="searchFor('Cross Tenant Sync')">Cross Tenant Sync</a></li>
-                        <li><a href="#" onclick="searchFor('Authentication Issues')">Authentication Issues</a></li>
-                        <li><a href="#" onclick="searchFor('Provisioning Errors')">Provisioning Errors</a></li>
-                        <li><a href="#" onclick="searchFor('Performance Issues')">Performance Issues</a></li>
-                    </ul>
+                    <h3><i class="fas fa-folder-open"></i> Categories</h3>
+                    <div id="categoryNavigation" class="category-navigation">
+                        <!-- Categories will be populated by JavaScript -->
+                    </div>
                 </div>
+
+                <!-- Tag Cloud -->
                 <div class="sidebar-section">
-                    <h3>Recent Queries</h3>
-                    <ul id="recentQueries" class="recent-list">
-                        <!-- Populated by JavaScript -->
-                    </ul>
+                    <h3><i class="fas fa-tags"></i> Tag Cloud</h3>
+                    <div id="tagCloud" class="tag-cloud">
+                        <!-- Tags will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+                    <div id="statsDisplay" class="stats-display">
+                        <!-- Statistics will be populated by JavaScript -->
+                    </div>
                 </div>
             </aside>
 
@@ -90,7 +98,7 @@
                 <div id="welcomeMessage" class="welcome-message">
                     <div class="welcome-content">
                         <i class="fas fa-rocket"></i>
-                        <h2>Welcome to DiagnosticIQ</h2>
+                        <h2>Welcome to DiagnostIQ</h2>
                         <p>Your intelligent companion for Azure AD troubleshooting scenarios, KQL queries, and step-by-step procedures.</p>
                         <p>Try searching for: <strong>"Cross Tenant Sync"</strong> or <strong>"Authentication"</strong></p>
                     </div>
@@ -153,7 +161,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="data-manager.js"></script>
-    <script src="ai-scenario-loader.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Initialize DiagnostIQ when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing DiagnostIQ...');
+
+            // Initialize data manager first
+            window.dataManager = new DataManager();
+
+            // Initialize app
+            window.app = new QueryLibraryApp();
+
+            // Make app functions globally available for onclick handlers
+            window.performSearch = () => window.app.performSearch();
+            window.clearAllFilters = () => window.app.clearAllFilters();
+            window.filterByCategory = (category) => window.app.filterByCategory(category);
+            window.clearCategoryFilter = () => window.app.clearCategoryFilter();
+            window.filterByTag = (tag) => window.app.filterByTag(tag);
+            window.goHome = () => window.app.goHome();
+            window.expandCheatSheet = (id) => window.app.expandCheatSheet(id);
+            window.collapseCheatSheet = (id) => window.app.collapseCheatSheet(id);
+            window.editCheatSheet = (id) => window.app.editCheatSheet(id);
+            window.deleteCheatSheet = (id) => window.app.deleteCheatSheet(id);
+            window.saveCheatSheet = () => window.app.saveCheatSheet();
+            window.closeModal = () => window.app.closeModal();
+
+            console.log('✅ DiagnostIQ initialized successfully');
+        });
+    </script>
 </body>
 </html>

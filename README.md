@@ -1,8 +1,8 @@
-# 🧠 DiagnosticIQ
+# 🧠 DiagnostIQ
 
 Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensive web-based application designed for support engineers to quickly find, manage, and share troubleshooting queries and procedures.
 
-![DiagnosticIQ](https://img.shields.io/badge/DiagnosticIQ-Azure%20AD%20Troubleshooting-blue)
+![DiagnostIQ](https://img.shields.io/badge/DiagnostIQ-Azure%20AD%20Troubleshooting-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
@@ -70,7 +70,7 @@ The application includes **7 comprehensive troubleshooting scenarios** with **21
 
 ## 🏗️ Architecture
 
-DiagnosticIQ uses a **modular hybrid architecture** designed for scalability:
+DiagnostIQ uses a **modular hybrid architecture** designed for scalability:
 
 - **Core Samples**: Quick-start scenarios for immediate use
 - **Modular Scenarios**: Organized by category in individual JSON files
@@ -90,7 +90,7 @@ DiagnosticIQ uses a **modular hybrid architecture** designed for scalability:
 ## 📁 Project Structure
 
 ```
-diagnosticiq/
+diagnostiq/
 ├── index.html              # Main application interface
 ├── styles.css              # Application styling and responsive design
 ├── app.js                  # Core application logic and interactions

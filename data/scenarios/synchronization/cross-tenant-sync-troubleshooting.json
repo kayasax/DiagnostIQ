@@ -14,7 +14,7 @@
   ],
   "difficulty": "advanced",
   "estimatedTime": 30,
-  "lastUpdated": "2025-06-26T19:17:12.275Z",
+  "lastUpdated": "2025-06-29T18:12:28.167Z",
   "source": {
     "type": "wiki",
     "path": "AAD/AAD-Sync/Cross-tenant-synchronization/TSG-Cross%2Dtenant-sync-(Azure2Azure-scenarios).md",
@@ -96,5 +96,6 @@
     "Internal users with SMS sign-in (AltSecId type 6) will be skipped - disable SMS sign-in",
     "Users with MSA connections (AltSecId type 1) need MSA email changes by the user",
     "External members need licensing in target tenant for Power BI and Power Apps access"
-  ]
+  ],
+  "vertical": "Sync"
 }
