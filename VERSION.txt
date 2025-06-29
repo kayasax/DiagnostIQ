@@ -1,19 +1,20 @@
-DiagnosticIQ Version 0.3.1
+DiagnosticIQ Version 0.3.2
 
-Milestone: Production-Ready Extraction & Enhanced UI
+Milestone: Streamlined Batch Processing & Auto-Detection
 
-This version marks a major milestone with:
-- Robust, scalable wiki extraction workflow using Copilot Chat
-- Generic, reusable extraction templates for any Azure AD markdown documentation  
-- Enhanced UI with tags display, wiki source indicators, and accurate query counts
-- Production-ready import pipeline for automated scenario ingestion
-- Comprehensive documentation and workflow automation
+This version delivers the ultimate extraction efficiency with:
+- Ultra-efficient batch processor: 2 commands + 1 prompt = extracted scenario
+- Smart auto-detection with filename matching (handles URL encoding issues)
+- Seamless auto-import and processed file management
+- Non-blocking workflow with on-demand detection
+- Production-ready for large-scale TSG processing
 
 Key Features:
-- Manual Copilot Chat extraction workflow with GENERIC_EXTRACTION_TEMPLATE.txt
-- Automated import via import-scenarios.js
-- Enhanced DiagnosticIQ web app with tags, wiki indicators, and improved metadata
-- Robust data validation and error handling
-- Ready for scaling to additional Azure AD documentation
+- Batch processor with smart auto-detection and auto-import
+- Processed file management (temp/processed/ directory)
+- Enhanced filename matching with URL encoding support
+- Streamlined workflow: --next --open for maximum efficiency
+- Robust queue management and progress tracking
+- Ready for mass extraction from Azure AD wiki (244+ files)
 
 Release Date: $(Get-Date -Format "yyyy-MM-dd")

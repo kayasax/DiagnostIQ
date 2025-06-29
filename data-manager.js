@@ -1,4 +1,4 @@
-// DiagnosticIQ - Modular Data Manager
+// DiagnosticIQ - Modular Data Manager v0.3.2
 // Handles loading scenarios from multiple sources: core samples + modular scenario files
 
 class DataManager {
