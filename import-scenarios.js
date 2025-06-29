@@ -73,6 +73,12 @@ class ScenarioImporter {
                 return false;
             }
 
+            // Add import timestamp if not already present
+            if (!scenario.lastUpdated && !scenario.source?.extractedAt) {
+                scenario.lastUpdated = new Date().toISOString();
+                console.log(`🕒 Added timestamp to scenario: ${scenario.id}`);
+            }
+
             // Create category directory
             const categoryDir = path.join(this.dataDir, scenario.category);
             if (!fs.existsSync(categoryDir)) {

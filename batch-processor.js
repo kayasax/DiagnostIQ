@@ -95,6 +95,18 @@ class BatchProcessor {
         try {
             const content = fs.readFileSync(filePath, 'utf8').toLowerCase();
 
+            // Skip empty files
+            if (content.trim().length === 0) {
+                console.log(`⏭️ Skipping empty file: ${filename}`);
+                return false;
+            }
+
+            // Skip very small files (less than 50 characters, likely empty or just metadata)
+            if (content.trim().length < 50) {
+                console.log(`⏭️ Skipping too small file: ${filename} (${content.trim().length} chars)`);
+                return false;
+            }
+
             // Exclude common non-TSG patterns
             const excludePatterns = [
                 '.templates',
@@ -463,7 +475,7 @@ class BatchProcessor {
     autoImport(outputFile) {
         if (!fs.existsSync(outputFile)) {
             console.log(`⚠️ Output file not found for auto-import: ${outputFile}`);
-            return;
+            return false;
         }
 
         try {
@@ -483,9 +495,11 @@ class BatchProcessor {
                     fs.writeFileSync(this.queueFile, JSON.stringify(queue, null, 2));
                 }
             }
+            return true;
         } catch (error) {
             console.log(`❌ Auto-import failed: ${error.message}`);
             console.log(`💡 Run manually: node import-scenarios.js "${outputFile}"`);
+            return false;
         }
     }
 
@@ -538,6 +552,71 @@ ALTERNATIVE:
     }
 
     /**
+     * Process all JSON files from temp/tobeprocessed folder
+     */
+    processToBeProcessedFiles() {
+        const tobeprocessedDir = './temp/tobeprocessed';
+
+        if (!fs.existsSync(tobeprocessedDir)) {
+            console.log('📁 Creating temp/tobeprocessed directory...');
+            fs.mkdirSync(tobeprocessedDir, { recursive: true });
+            console.log('ℹ️ No files found in temp/tobeprocessed. Place JSON files there to process them.');
+            return;
+        }
+
+        const jsonFiles = fs.readdirSync(tobeprocessedDir).filter(f => f.endsWith('.json'));
+
+        if (jsonFiles.length === 0) {
+            console.log('ℹ️ No JSON files found in temp/tobeprocessed directory.');
+            return;
+        }
+
+        console.log(`🔄 Processing ${jsonFiles.length} files from temp/tobeprocessed...`);
+
+        let processed = 0;
+        let errors = 0;
+
+        for (const filename of jsonFiles) {
+            const filePath = path.join(tobeprocessedDir, filename);
+
+            try {
+                console.log(`📥 Processing: ${filename}`);
+
+                // Count scenarios
+                const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const scenarioCount = Array.isArray(data) ? data.length : 1;
+
+                // Auto-import
+                const success = this.autoImport(filePath);
+
+                if (success) {
+                    // Move to processed directory
+                    const processedPath = path.join(this.processedDir, filename);
+                    fs.renameSync(filePath, processedPath);
+
+                    console.log(`✅ Processed: ${filename} (${scenarioCount} scenarios)`);
+                    console.log(`📁 Moved to processed: ${filename}`);
+                    processed++;
+                } else {
+                    console.log(`❌ Failed to import: ${filename}`);
+                    errors++;
+                }
+
+            } catch (error) {
+                console.log(`❌ Error processing ${filename}: ${error.message}`);
+                errors++;
+            }
+        }
+
+        console.log(`\n📊 PROCESSING SUMMARY:`);
+        console.log(`✅ Successfully processed: ${processed} files`);
+        if (errors > 0) {
+            console.log(`❌ Errors: ${errors} files`);
+        }
+        console.log(`📁 All processed files moved to: ${this.processedDir}`);
+    }
+
+    /**
      * Main entry point
      */
     run(args) {
@@ -561,6 +640,11 @@ ALTERNATIVE:
             // Check for completed files first, then open next
             this.checkForCompletedFiles();
             this.openNextFile();
+            return;
+        }
+
+        if (args.includes('--process-all')) {
+            this.processToBeProcessedFiles();
             return;
         }
 
@@ -602,23 +686,30 @@ ALTERNATIVE:
 🎯 DiagnostIQ Batch Processor v0.3.2
 
 USAGE:
-  node batch-processor.js <directory>     Create batch from directory
-  node batch-processor.js --status        Show current batch progress + auto-detect
-  node batch-processor.js --next          Auto-detect completed files + show next
-  node batch-processor.js --next --open   Auto-detect + show next + open in VS Code
-  node batch-processor.js --open          Auto-detect + open next file in VS Code
+  node batch-processor.js <directory>       Create batch from directory
+  node batch-processor.js --status          Show current batch progress + auto-detect
+  node batch-processor.js --next            Auto-detect completed files + show next
+  node batch-processor.js --next --open     Auto-detect + show next + open in VS Code
+  node batch-processor.js --open            Auto-detect + open next file in VS Code
+  node batch-processor.js --process-all     Process all JSON files from temp/tobeprocessed/
   node batch-processor.js --completed <file>  Mark file as completed (manual)
 
 EXAMPLES:
   node batch-processor.js ./Wiki/AzureAD
   node batch-processor.js "C:\\Wiki\\AzureAD\\GeneralPages"
-  node batch-processor.js --next --open   (recommended workflow)
+  node batch-processor.js --next --open     (recommended workflow)
+  node batch-processor.js --process-all     (process any JSON files)
 
 IMPROVED WORKFLOW:
 1. Run with directory path to discover TSG files
 2. Extract scenarios with Copilot and save JSON to temp/
 3. Run --next --open to auto-detect, import, and open next file
 4. Repeat until all files processed
+
+FLEXIBLE PROCESSING:
+- Place ANY JSON files in temp/tobeprocessed/ folder
+- Run --process-all to import them all, regardless of filename
+- Files will be imported and moved to temp/processed/
 
 AUTO-FEATURES:
 - Auto-detects completed JSON files in temp/

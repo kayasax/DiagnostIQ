@@ -1,36 +1,41 @@
 [
-    {
-        "id": "app-1",
-        "title": "Application Integration Issues",
-        "category": "applications",
-        "cluster": "prod",
-        "description": "Troubleshoot application registration and integration problems with Azure AD.",
-        "queries": [
-            {
-                "name": "Application Authentication Failures",
-                "description": "Identify applications experiencing authentication issues",
-                "query": "// Application Issues - Authentication failures\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"\n| summarize FailureCount = count() by AppDisplayName, Status.errorCode, Status.failureReason\n| order by FailureCount desc\n| take 20"
-            },
-            {
-                "name": "Service Principal Issues",
-                "description": "Review service principal related problems",
-                "query": "// Application Issues - Service Principal problems\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where Category == \"ApplicationManagement\"\n| where Result == \"failure\"\n| where OperationName contains \"ServicePrincipal\"\n| project TimeGenerated, OperationName, ResultReason, TargetResources\n| order by TimeGenerated desc"
-            },
-            {
-                "name": "Consent Issues",
-                "description": "Analyze application consent problems",
-                "query": "// Application Issues - Consent problems\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where OperationName contains \"Consent\"\n| where Result == \"failure\"\n| extend App = tostring(TargetResources[0].displayName)\n| extend User = tostring(InitiatedBy.user.userPrincipalName)\n| project TimeGenerated, OperationName, App, User, ResultReason\n| order by TimeGenerated desc"
-            }
-        ],
-        "steps": [
-            "Check application authentication failures for patterns",
-            "Review service principal permissions and configuration",
-            "Analyze consent workflow issues",
-            "Verify application registration settings",
-            "Check redirect URIs and reply URLs",
-            "Review API permissions and scopes",
-            "Validate certificates and secrets expiration"
-        ],
-        "tags": ["applications", "service-principal", "consent", "registration"]
-    }
+  {
+    "id": "app-1",
+    "title": "Application Integration Issues",
+    "category": "applications",
+    "cluster": "prod",
+    "description": "Troubleshoot application registration and integration problems with Azure AD.",
+    "queries": [
+      {
+        "name": "Application Authentication Failures",
+        "description": "Identify applications experiencing authentication issues",
+        "query": "// Application Issues - Authentication failures\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ResultType != \"0\"\n| summarize FailureCount = count() by AppDisplayName, Status.errorCode, Status.failureReason\n| order by FailureCount desc\n| take 20"
+      },
+      {
+        "name": "Service Principal Issues",
+        "description": "Review service principal related problems",
+        "query": "// Application Issues - Service Principal problems\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where Category == \"ApplicationManagement\"\n| where Result == \"failure\"\n| where OperationName contains \"ServicePrincipal\"\n| project TimeGenerated, OperationName, ResultReason, TargetResources\n| order by TimeGenerated desc"
+      },
+      {
+        "name": "Consent Issues",
+        "description": "Analyze application consent problems",
+        "query": "// Application Issues - Consent problems\nAuditLogs\n| where TimeGenerated > ago(24h)\n| where OperationName contains \"Consent\"\n| where Result == \"failure\"\n| extend App = tostring(TargetResources[0].displayName)\n| extend User = tostring(InitiatedBy.user.userPrincipalName)\n| project TimeGenerated, OperationName, App, User, ResultReason\n| order by TimeGenerated desc"
+      }
+    ],
+    "steps": [
+      "Check application authentication failures for patterns",
+      "Review service principal permissions and configuration",
+      "Analyze consent workflow issues",
+      "Verify application registration settings",
+      "Check redirect URIs and reply URLs",
+      "Review API permissions and scopes",
+      "Validate certificates and secrets expiration"
+    ],
+    "tags": [
+      "applications",
+      "service-principal",
+      "consent",
+      "registration"
+    ]
+  }
 ]

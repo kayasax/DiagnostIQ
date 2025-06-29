@@ -982,6 +982,90 @@ body {
     text-decoration: underline;
 }
 
+/* Vertical-based Navigation Styles */
+.vertical-section {
+    margin-bottom: 5px;
+}
+
+.vertical-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: linear-gradient(45deg, #2c3e50, #34495e);
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.vertical-header:hover {
+    background: linear-gradient(45deg, #34495e, #3c5470);
+    transform: translateX(2px);
+}
+
+.vertical-arrow {
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    font-size: 0.8em;
+}
+
+.vertical-icon {
+    margin-right: 8px;
+    opacity: 0.9;
+}
+
+.vertical-name {
+    flex-grow: 1;
+}
+
+.vertical-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.vertical-categories {
+    padding-left: 8px;
+    border-left: 2px solid #e9ecef;
+    margin-left: 16px;
+}
+
+.category-item.subcategory {
+    margin: 2px 0;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.category-item.subcategory:hover {
+    background: #e9ecef;
+    transform: translateX(2px);
+}
+
+.category-item.all-categories {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.category-item.all-categories:hover {
+    background: linear-gradient(45deg, #2980b9, #1f6391);
+}
+
+.nav-divider {
+    height: 1px;
+    background: #dee2e6;
+    margin: 8px 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .main-content {

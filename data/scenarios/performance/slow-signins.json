@@ -1,36 +1,41 @@
 [
-    {
-        "id": "perf-1",
-        "title": "Performance Issues - Slow Sign-ins",
-        "category": "performance",
-        "cluster": "prod",
-        "description": "Analyze slow authentication performance and identify bottlenecks in the sign-in process.",
-        "queries": [
-            {
-                "name": "Slow Sign-ins Overview",
-                "description": "Identify sign-ins taking longer than expected",
-                "query": "// Performance Analysis - Slow Sign-ins\nSigninLogs\n| where TimeGenerated > ago(2h)\n| where ProcessingTimeInMilliseconds > 5000  // Sign-ins taking more than 5 seconds\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| project TimeGenerated, UserPrincipalName, AppDisplayName, ProcessingTimeSeconds,\n          LocationDetails, DeviceDetail, ConditionalAccessStatus\n| order by ProcessingTimeSeconds desc"
-            },
-            {
-                "name": "Performance by Location",
-                "description": "Analyze performance issues by geographic location",
-                "query": "// Performance Analysis - By location\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ProcessingTimeInMilliseconds > 3000\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| extend Country = tostring(LocationDetails.countryOrRegion)\n| extend City = tostring(LocationDetails.city)\n| summarize AvgProcessingTime = avg(ProcessingTimeSeconds), Count = count() by Country, City\n| where Count > 5\n| order by AvgProcessingTime desc"
-            },
-            {
-                "name": "Conditional Access Performance Impact",
-                "description": "Measure the performance impact of conditional access policies",
-                "query": "// Performance Analysis - Conditional Access impact\nSigninLogs\n| where TimeGenerated > ago(2h)\n| where isnotempty(ConditionalAccessPolicies)\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| extend PolicyCount = array_length(ConditionalAccessPolicies)\n| summarize AvgProcessingTime = avg(ProcessingTimeSeconds) by PolicyCount\n| order by PolicyCount desc"
-            }
-        ],
-        "steps": [
-            "Run the slow sign-ins query to identify users and applications with consistently slow sign-ins",
-            "Use the location analysis to check if delays are location-specific (network latency)",
-            "Review conditional access policy evaluation times using the CA impact query",
-            "Analyze device-based authentication factors",
-            "Check if MFA methods are causing delays",
-            "Monitor for patterns in slow authentication times",
-            "Consider geographic distribution of authentication endpoints"
-        ],
-        "tags": ["performance", "latency", "signin", "optimization"]
-    }
+  {
+    "id": "perf-1",
+    "title": "Performance Issues - Slow Sign-ins",
+    "category": "performance",
+    "cluster": "prod",
+    "description": "Analyze slow authentication performance and identify bottlenecks in the sign-in process.",
+    "queries": [
+      {
+        "name": "Slow Sign-ins Overview",
+        "description": "Identify sign-ins taking longer than expected",
+        "query": "// Performance Analysis - Slow Sign-ins\nSigninLogs\n| where TimeGenerated > ago(2h)\n| where ProcessingTimeInMilliseconds > 5000  // Sign-ins taking more than 5 seconds\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| project TimeGenerated, UserPrincipalName, AppDisplayName, ProcessingTimeSeconds,\n          LocationDetails, DeviceDetail, ConditionalAccessStatus\n| order by ProcessingTimeSeconds desc"
+      },
+      {
+        "name": "Performance by Location",
+        "description": "Analyze performance issues by geographic location",
+        "query": "// Performance Analysis - By location\nSigninLogs\n| where TimeGenerated > ago(4h)\n| where ProcessingTimeInMilliseconds > 3000\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| extend Country = tostring(LocationDetails.countryOrRegion)\n| extend City = tostring(LocationDetails.city)\n| summarize AvgProcessingTime = avg(ProcessingTimeSeconds), Count = count() by Country, City\n| where Count > 5\n| order by AvgProcessingTime desc"
+      },
+      {
+        "name": "Conditional Access Performance Impact",
+        "description": "Measure the performance impact of conditional access policies",
+        "query": "// Performance Analysis - Conditional Access impact\nSigninLogs\n| where TimeGenerated > ago(2h)\n| where isnotempty(ConditionalAccessPolicies)\n| extend ProcessingTimeSeconds = ProcessingTimeInMilliseconds / 1000.0\n| extend PolicyCount = array_length(ConditionalAccessPolicies)\n| summarize AvgProcessingTime = avg(ProcessingTimeSeconds) by PolicyCount\n| order by PolicyCount desc"
+      }
+    ],
+    "steps": [
+      "Run the slow sign-ins query to identify users and applications with consistently slow sign-ins",
+      "Use the location analysis to check if delays are location-specific (network latency)",
+      "Review conditional access policy evaluation times using the CA impact query",
+      "Analyze device-based authentication factors",
+      "Check if MFA methods are causing delays",
+      "Monitor for patterns in slow authentication times",
+      "Consider geographic distribution of authentication endpoints"
+    ],
+    "tags": [
+      "performance",
+      "latency",
+      "signin",
+      "optimization"
+    ]
+  }
 ]

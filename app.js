@@ -35,20 +35,71 @@ class QueryLibraryApp {
     }
 
     onDataLoaded() {
-        // Update local reference to all scenarios
-        this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
+        // Combine all scenarios from different sources
+        const allSources = [...(window.cheatSheets || []), ...this.localCheatSheets];
+
+        // Deduplicate scenarios by ID
+        const uniqueScenarios = [];
+        const seenIds = new Set();
+
+        allSources.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+
+                // Normalize category to lowercase for consistency and handle edge cases
+                if (sheet.category) {
+                    const originalCategory = sheet.category;
+                    sheet.category = sheet.category.toLowerCase().trim();
+
+                    // Handle specific category mappings
+                    const categoryMappings = {
+                        'auth': 'authentication',
+                        'sync': 'synchronization',
+                        'password-protection': 'authentication', // Group password-protection with authentication
+                        'conditional-access': 'authentication',   // Group conditional-access with authentication
+                        'provisioning': 'provisioning',
+                        'performance': 'performance',
+                        'applications': 'applications',
+                        'general': 'general'
+                    };
+
+                    if (categoryMappings[sheet.category]) {
+                        sheet.category = categoryMappings[sheet.category];
+                    }
+
+                    if (originalCategory !== sheet.category) {
+                        console.log(`📝 Category normalized: "${originalCategory}" → "${sheet.category}" for "${sheet.title}"`);
+                    }
+                }
+
+                uniqueScenarios.push(sheet);
+            } else {
+                console.log(`🔄 Duplicate scenario removed: ${sheet.title} (ID: ${sheet.id})`);
+            }
+        });
+
+        this.allCheatSheets = uniqueScenarios;
 
         // Debug: Check what scenarios we have
         console.log('📊 Total scenarios loaded:', this.allCheatSheets.length);
+        console.log(`📊 Deduplicated from ${allSources.length} total sources`);
+        console.log('🔍 Categories after normalization:', [...new Set(this.allCheatSheets.map(s => s.category))].sort());
         console.log('🏷️ Scenarios by category:');
         const categoryCount = {};
+        const syncScenarios = [];
+
         this.allCheatSheets.forEach(sheet => {
             categoryCount[sheet.category] = (categoryCount[sheet.category] || 0) + 1;
             if (sheet.category === 'general') {
                 console.log('🎯 General scenario found:', sheet.title);
             }
+            if (sheet.category === 'synchronization') {
+                syncScenarios.push(sheet.title);
+            }
         });
+
         console.log('📈 Category counts:', categoryCount);
+        console.log('🔄 Synchronization scenarios found:', syncScenarios.length, syncScenarios.slice(0, 5)); // Show first 5
 
         // Populate category dropdown dynamically
         this.populateCategoryDropdown();
@@ -123,22 +174,44 @@ class QueryLibraryApp {
             const matchesSearch = !searchTerm ||
                 sheet.title.toLowerCase().includes(searchTerm) ||
                 sheet.description.toLowerCase().includes(searchTerm) ||
-                sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
+                (sheet.tags && sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
                 (sheet.query && sheet.query.toLowerCase().includes(searchTerm)) ||
                 (sheet.queries && sheet.queries.some(q =>
                     (q.query && q.query.toLowerCase().includes(searchTerm)) ||
                     (q.kql && q.kql.toLowerCase().includes(searchTerm)) ||
                     (q.name && q.name.toLowerCase().includes(searchTerm)) ||
                     (q.title && q.title.toLowerCase().includes(searchTerm)) ||
-                    q.description.toLowerCase().includes(searchTerm)
+                    (q.description && q.description.toLowerCase().includes(searchTerm))
                 ));
 
             const matchesCluster = !clusterFilter || sheet.cluster === clusterFilter;
-            const matchesCategory = !categoryFilter || sheet.category === categoryFilter;
 
-            // Debug logging for category filter
-            if (categoryFilter && categoryFilter === 'general') {
-                console.log('🎯 General category filter - checking sheet:', {
+            // Category matching with normalization support
+            const normalizeCategoryForFilter = (category) => {
+                if (!category) return 'general';
+                const normalized = category.toLowerCase().trim();
+
+                const categoryMappings = {
+                    'auth': 'authentication',
+                    'sync': 'synchronization',
+                    'password-protection': 'authentication',
+                    'conditional-access': 'authentication',
+                    'provisioning': 'provisioning',
+                    'performance': 'performance',
+                    'applications': 'applications',
+                    'general': 'general'
+                };
+
+                return categoryMappings[normalized] || normalized;
+            };
+
+            const normalizedSheetCategory = normalizeCategoryForFilter(sheet.category);
+            const normalizedFilterCategory = normalizeCategoryForFilter(categoryFilter);
+            const matchesCategory = !categoryFilter || normalizedSheetCategory === normalizedFilterCategory;
+
+            // Debug logging for synchronization category filter
+            if (categoryFilter === 'synchronization') {
+                console.log('🔄 Synchronization category filter - checking sheet:', {
                     title: sheet.title,
                     category: sheet.category,
                     matches: matchesCategory
@@ -171,7 +244,7 @@ class QueryLibraryApp {
         this.displayResults(uniqueResults);
     }
 
-    displayResults(results) {
+    displayResults(results, customMessage = null) {
         const welcomeMessage = document.getElementById('welcomeMessage');
         const searchResults = document.getElementById('searchResults');
 
@@ -192,7 +265,7 @@ class QueryLibraryApp {
         // Add summary header
         const summaryHTML = `
             <div class="results-summary">
-                <h3><i class="fas fa-search"></i> Search Results</h3>
+                <h3><i class="fas fa-search"></i> ${customMessage || 'Search Results'}</h3>
                 <p>Found <strong>${results.length}</strong> troubleshooting scenario${results.length > 1 ? 's' : ''}</p>
             </div>
         `;
@@ -287,11 +360,12 @@ class QueryLibraryApp {
                     </div>
                 </div>
                 <div class="card-meta">
+                    ${sheet.vertical ? `<span><i class="fas fa-layer-group"></i> ${sheet.vertical}</span>` : ''}
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
                     <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
                     ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
                     <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
-                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> <a href="#" onclick="app.openWikiLink('${sheet.source}')" title="View source wiki page">Wiki Source</a></span>` : ''}
+                    ${this.isWikiSource(sheet) ? `<span class="wiki-indicator"><i class="fas fa-book"></i> <a href="#" onclick="app.openWikiLink('${this.getSourcePath(sheet)}')" title="View source wiki page">Wiki Source</a></span>` : ''}
                 </div>
                 ${sheet.tags && sheet.tags.length > 0 ? `
                 <div class="card-tags">
@@ -355,12 +429,13 @@ class QueryLibraryApp {
                     </div>
                 </div>
                 <div class="preview-meta">
+                    ${sheet.vertical ? `<span><i class="fas fa-layer-group"></i> ${sheet.vertical}</span>` : ''}
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
                     <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
                     ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
                     <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
                     <span><i class="fas fa-list-ol"></i> ${sheet.steps ? sheet.steps.length : 0} steps</span>
-                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> Wiki</span>` : ''}
+                    ${this.isWikiSource(sheet) ? `<span class="wiki-indicator"><i class="fas fa-book"></i> Wiki</span>` : ''}
                 </div>
                 ${sheet.tags && sheet.tags.length > 0 ? `
                 <div class="preview-tags">
@@ -570,6 +645,12 @@ class QueryLibraryApp {
 
     populateRecentQueries() {
         const recentQueriesContainer = document.getElementById('recentQueries');
+
+        // Handle case where recent queries element doesn't exist (removed from sidebar)
+        if (!recentQueriesContainer) {
+            console.log('ℹ️ Recent queries container not found - feature disabled');
+            return;
+        }
 
         if (this.recentQueries.length === 0) {
             recentQueriesContainer.innerHTML = '<li><em>No recent queries</em></li>';
@@ -820,12 +901,55 @@ class QueryLibraryApp {
 
     refreshData() {
         // Refresh the local reference to all scenarios
-        this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
+        const allSources = [...(window.cheatSheets || []), ...this.localCheatSheets];
+
+        // Apply category normalization (same as loadData)
+        const uniqueScenarios = [];
+        const seenIds = new Set();
+
+        allSources.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+
+                // Normalize category to lowercase for consistency and handle edge cases
+                if (sheet.category) {
+                    const originalCategory = sheet.category;
+                    sheet.category = sheet.category.toLowerCase().trim();
+
+                    // Handle specific category mappings
+                    const categoryMappings = {
+                        'auth': 'authentication',
+                        'sync': 'synchronization',
+                        'password-protection': 'authentication', // Group password-protection with authentication
+                        'conditional-access': 'authentication',   // Group conditional-access with authentication
+                        'provisioning': 'provisioning',
+                        'performance': 'performance',
+                        'applications': 'applications',
+                        'general': 'general'
+                    };
+
+                    if (categoryMappings[sheet.category]) {
+                        sheet.category = categoryMappings[sheet.category];
+                    }
+
+                    if (originalCategory !== sheet.category) {
+                        console.log(`📝 Category normalized in refresh: "${originalCategory}" → "${sheet.category}" for "${sheet.title}"`);
+                    }
+                }
+
+                uniqueScenarios.push(sheet);
+            }
+        });
+
+        this.allCheatSheets = uniqueScenarios;
+        console.log(`🔄 Data refreshed: ${this.allCheatSheets.length} scenarios`);
 
         // Update dynamic elements
         this.populateQuickAccess();
         this.updateTotalCount();
         this.populateCategoryDropdown();
+        this.populateCategoryNavigation();
+        this.populateTagCloud();
     }
 
     editCheatSheet(sheetId) {
@@ -1055,12 +1179,17 @@ class QueryLibraryApp {
     }
 
     showAllScenarios() {
-        // Clear all filters
+        console.log('🎯 Showing all scenarios...');
+
+        // Clear all filters (don't call other methods to avoid loops)
         document.getElementById('categoryFilter').value = '';
         document.getElementById('searchInput').value = '';
 
+        // Hide welcome message and show search results
+        document.getElementById('welcomeMessage').style.display = 'none';
+        document.getElementById('searchResults').style.display = 'block';
+
         // Reset current results and display all scenarios (apply deduplication)
-        console.log('🎯 Showing all scenarios...');
         const uniqueResults = [];
         const seenIds = new Set();
 
@@ -1069,10 +1198,44 @@ class QueryLibraryApp {
                 seenIds.add(sheet.id);
                 uniqueResults.push(sheet);
             }
+        });        // Sort scenarios from recent to oldest
+        uniqueResults.sort((a, b) => {
+            // Get the most recent date for each scenario
+            const getScenarioDate = (scenario) => {
+                // Priority: lastUpdated > source.extractedAt > id-based date heuristic for newer scenarios
+                if (scenario.lastUpdated) {
+                    return new Date(scenario.lastUpdated);
+                }
+                if (scenario.source && scenario.source.extractedAt) {
+                    return new Date(scenario.source.extractedAt);
+                }
+
+                // For scenarios with modern-style IDs (like our newly extracted ones),
+                // assume they're more recent than legacy scenarios
+                if (scenario.id && scenario.id.includes('-') && scenario.id.length > 10) {
+                    return new Date('2025-06-28'); // Recent but not today
+                }
+
+                // Fallback for older scenarios without date info
+                return new Date('2020-01-01');
+            };
+
+            const dateA = getScenarioDate(a);
+            const dateB = getScenarioDate(b);
+
+            // Sort descending (most recent first)
+            return dateB - dateA;
         });
 
-        console.log(`✅ Displaying ${uniqueResults.length} unique scenarios out of ${this.allCheatSheets.length} total`);
-        this.displayResults(uniqueResults);
+        // Debug: Show first few scenarios with their dates
+        console.log('📅 Top 10 scenarios after sorting:');
+        uniqueResults.slice(0, 10).forEach((scenario, index) => {
+            const date = scenario.lastUpdated || (scenario.source && scenario.source.extractedAt) || 'No date';
+            console.log(`${index + 1}. ${scenario.title} - ${date} (vertical: ${scenario.vertical || 'none'}, category: ${scenario.category || 'none'})`);
+        });
+
+        console.log(`✅ Displaying ${uniqueResults.length} unique scenarios out of ${this.allCheatSheets.length} total (sorted by most recent)`);
+        this.displayResults(uniqueResults, 'All Scenarios');
     }
 
     updateTotalCount() {
@@ -1102,49 +1265,94 @@ class QueryLibraryApp {
         const categoryNav = document.getElementById('categoryNavigation');
         if (!categoryNav) return;
 
-        // Get category counts
-        const categoryStats = {};
+        console.log('🏗️ Populating vertical-based category navigation...');
+
+        // Get vertical and category counts (deduplicated and normalized)
+        const verticalStats = {};
         const seenIds = new Set();
 
         this.allCheatSheets.forEach(sheet => {
             if (!seenIds.has(sheet.id)) {
                 seenIds.add(sheet.id);
-                categoryStats[sheet.category] = (categoryStats[sheet.category] || 0) + 1;
+                const vertical = sheet.vertical || 'General';
+                const category = sheet.category || 'general';
+
+                if (!verticalStats[vertical]) {
+                    verticalStats[vertical] = {
+                        count: 0,
+                        categories: {}
+                    };
+                }
+
+                verticalStats[vertical].count++;
+                verticalStats[vertical].categories[category] = (verticalStats[vertical].categories[category] || 0) + 1;
             }
         });
 
-        // Create category navigation items
-        const categories = Object.entries(categoryStats)
-            .sort(([,a], [,b]) => b - a); // Sort by count
+        console.log('📊 Vertical stats for navigation:', verticalStats);
 
-        const categoryHTML = categories.map(([category, count]) => {
-            const displayName = this.getCategoryName(category);
-            const icon = this.getCategoryIcon(category);
-
-            return `
-                <div class="category-item" onclick="app.filterByCategory('${category}')" data-category="${category}">
-                    <div class="category-label">
-                        <i class="${icon}"></i>
-                        <span>${displayName}</span>
-                    </div>
-                    <span class="category-count">${count}</span>
-                </div>
-            `;
-        }).join('');
-
-        // Add "All Categories" option
+        // Create navigation HTML with collapsible verticals
         const totalCount = seenIds.size;
-        const allCategoriesHTML = `
-            <div class="category-item active" onclick="app.clearCategoryFilter()" data-category="">
+
+        // Add "All Categories" option at the top
+        let navigationHTML = `
+            <div class="category-item all-categories" onclick="app.showAllScenarios()" data-category="">
                 <div class="category-label">
                     <i class="fas fa-th-list"></i>
-                    <span>All Categories</span>
+                    <span>All Scenarios</span>
                 </div>
                 <span class="category-count">${totalCount}</span>
             </div>
+            <div class="nav-divider"></div>
         `;
 
-        categoryNav.innerHTML = allCategoriesHTML + categoryHTML;
+        // Sort verticals by count (highest first)
+        const sortedVerticals = Object.entries(verticalStats)
+            .sort(([,a], [,b]) => b.count - a.count);
+
+        sortedVerticals.forEach(([vertical, data]) => {
+            const verticalId = `vertical-${vertical.toLowerCase().replace(/\s+/g, '-')}`;
+            const verticalIcon = this.getVerticalIcon(vertical);
+
+            // Vertical header (collapsible)
+            navigationHTML += `
+                <div class="vertical-section">
+                    <div class="vertical-header" onclick="app.toggleVertical('${verticalId}')" data-vertical="${vertical}">
+                        <i class="fas fa-chevron-right vertical-arrow" id="${verticalId}-arrow"></i>
+                        <i class="${verticalIcon} vertical-icon"></i>
+                        <span class="vertical-name">${vertical}</span>
+                        <span class="vertical-count">${data.count}</span>
+                    </div>
+                    <div class="vertical-categories" id="${verticalId}" style="display: none;">
+            `;
+
+            // Sort categories within this vertical
+            const sortedCategories = Object.entries(data.categories)
+                .sort(([,a], [,b]) => b - a);
+
+            sortedCategories.forEach(([category, count]) => {
+                const displayName = this.getCategoryName(category);
+                const categoryIcon = this.getCategoryIcon(category);
+
+                navigationHTML += `
+                    <div class="category-item subcategory" onclick="app.filterByCategory('${category}')" data-category="${category}">
+                        <div class="category-label">
+                            <i class="${categoryIcon}"></i>
+                            <span>${displayName}</span>
+                        </div>
+                        <span class="category-count">${count}</span>
+                    </div>
+                `;
+            });
+
+            navigationHTML += `
+                    </div>
+                </div>
+            `;
+        });
+
+        categoryNav.innerHTML = navigationHTML;
+        console.log('✅ Vertical-based navigation populated with', sortedVerticals.length, 'verticals');
     }
 
     populateTagCloud() {
@@ -1181,7 +1389,7 @@ class QueryLibraryApp {
         const tagHTML = sortedTags.map(([tag, count]) => {
             const sizeClass = this.getTagSizeClass(count, minCount, maxCount);
             return `
-                <span class="cloud-tag ${sizeClass}" onclick="app.filterByTag('${tag}')"
+                <span class="cloud-tag ${sizeClass}" onclick="filterByTag('${tag}')"
                       title="${tag} (${count} scenarios)" data-tag="${tag}">
                     ${tag}
                 </span>
@@ -1214,7 +1422,7 @@ class QueryLibraryApp {
                     scenariosWithKQL++;
                 }
 
-                if (sheet.source && sheet.source.endsWith('.md')) {
+                if (this.isWikiSource(sheet)) {
                     wikiExtracted++;
                 }
 
@@ -1277,6 +1485,18 @@ class QueryLibraryApp {
         return iconMap[category] || 'fas fa-folder';
     }
 
+    getVerticalIcon(vertical) {
+        const iconMap = {
+            'Auth': 'fas fa-shield-alt',
+            'Account Management': 'fas fa-users',
+            'Sync': 'fas fa-sync-alt',
+            'Applications': 'fas fa-cube',
+            'Performance': 'fas fa-tachometer-alt',
+            'General': 'fas fa-cog'
+        };
+        return iconMap[vertical] || 'fas fa-folder';
+    }
+
     getTagSizeClass(count, minCount, maxCount) {
         if (maxCount === minCount) return 'size-md';
 
@@ -1290,14 +1510,39 @@ class QueryLibraryApp {
         return 'size-xl';
     }
 
+    toggleVertical(verticalId) {
+        const verticalElement = document.getElementById(verticalId);
+        const arrowElement = document.getElementById(`${verticalId}-arrow`);
+
+        if (!verticalElement || !arrowElement) return;
+
+        const isVisible = verticalElement.style.display !== 'none';
+
+        if (isVisible) {
+            verticalElement.style.display = 'none';
+            arrowElement.classList.remove('fa-chevron-down');
+            arrowElement.classList.add('fa-chevron-right');
+        } else {
+            verticalElement.style.display = 'block';
+            arrowElement.classList.remove('fa-chevron-right');
+            arrowElement.classList.add('fa-chevron-down');
+        }
+    }
+
     // Enhanced filtering methods
 
     filterByCategory(category) {
+        console.log(`🏷️ Filtering by category: ${category}`);
+
         // Update UI to show active category
         document.querySelectorAll('.category-item').forEach(item => {
             item.classList.remove('active');
         });
         document.querySelector(`[data-category="${category}"]`)?.classList.add('active');
+
+        // Hide welcome message and show search results
+        document.getElementById('welcomeMessage').style.display = 'none';
+        document.getElementById('searchResults').style.display = 'block';
 
         // Update search
         document.getElementById('categoryFilter').value = category;
@@ -1306,45 +1551,36 @@ class QueryLibraryApp {
     }
 
     filterByTag(tag) {
+        console.log(`🏷️ Filtering by tag: ${tag}`);
+
         // Update UI to show active tag
         document.querySelectorAll('.cloud-tag').forEach(item => {
             item.classList.remove('active');
         });
         document.querySelector(`[data-tag="${tag}"]`)?.classList.add('active');
 
-        // Search for the tag
-        document.getElementById('searchInput').value = tag;
+        // Hide welcome message and show search results
+        document.getElementById('welcomeMessage').style.display = 'none';
+        document.getElementById('searchResults').style.display = 'block';
+
+        // Clear search inputs
+        document.getElementById('searchInput').value = '';
         document.getElementById('categoryFilter').value = '';
-        this.performSearch();
-    }
 
-    filterBySeverity(severity) {
-        this.updateFilterButtons('severity', severity);
-        this.currentResults = this.allCheatSheets.filter(sheet => sheet.severity === severity);
-        this.displayResults(this.currentResults, `${severity} severity scenarios`);
-    }
-
-    filterByKQL(hasKQL) {
-        this.updateFilterButtons('kql', hasKQL);
-        this.currentResults = this.allCheatSheets.filter(sheet => {
-            const hasQueries = (sheet.queries && sheet.queries.length > 0) ||
-                             (sheet.relatedKQL && sheet.relatedKQL.length > 0);
-            return hasKQL ? hasQueries : !hasQueries;
-        });
-        this.displayResults(this.currentResults, hasKQL ? 'Scenarios with KQL queries' : 'Scenarios without KQL queries');
-    }
-
-    filterBySource(source) {
-        this.updateFilterButtons('source', source);
-        if (source === 'wiki') {
-            this.currentResults = this.allCheatSheets.filter(sheet =>
-                sheet.source && sheet.source.endsWith('.md')
+        // Filter scenarios by exact tag match
+        const filteredResults = this.allCheatSheets.filter(sheet => {
+            return sheet.tags && sheet.tags.some(sheetTag =>
+                sheetTag.toLowerCase() === tag.toLowerCase()
             );
-            this.displayResults(this.currentResults, 'Wiki-extracted scenarios');
-        }
+        });
+
+        console.log(`🏷️ Found ${filteredResults.length} scenarios with tag "${tag}"`);
+        this.displayResults(filteredResults, `Scenarios tagged with "${tag}"`);
     }
 
     clearCategoryFilter() {
+        console.log('🧹 Clearing category filter');
+
         // Update UI to show "All Categories" as active
         document.querySelectorAll('.category-item').forEach(item => {
             item.classList.remove('active');
@@ -1354,59 +1590,91 @@ class QueryLibraryApp {
         // Clear filters
         document.getElementById('categoryFilter').value = '';
         document.getElementById('searchInput').value = '';
-        this.performSearch();
+
+        // Show all scenarios instead of calling performSearch which might show welcome message
+        this.showAllScenarios();
     }
 
     clearAllFilters() {
-        // Clear category selection
-        this.clearCategoryFilter();
+        console.log('🧹 Clearing all filters');
+
+        // Clear category selection but don't call clearCategoryFilter to avoid double processing
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector('[data-category=""]')?.classList.add('active');
 
         // Clear tag selection
         document.querySelectorAll('.cloud-tag').forEach(item => {
             item.classList.remove('active');
         });
 
-        // Update filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector('.filter-btn[onclick="clearAllFilters()"]')?.classList.add('active');
+        // Clear form inputs
+        document.getElementById('categoryFilter').value = '';
+        document.getElementById('searchInput').value = '';
 
         // Show all scenarios
         this.showAllScenarios();
-    }
-
-    updateFilterButtons(type, value) {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        // Find and activate the appropriate button based on onclick attribute
-        const buttons = document.querySelectorAll('.filter-btn');
-        buttons.forEach(btn => {
-            const onclick = btn.getAttribute('onclick');
-            if (onclick && onclick.includes(value)) {
-                btn.classList.add('active');
-            }
-        });
     }
 
     goHome() {
         // Clear all filters and search
         document.getElementById('searchInput').value = '';
         document.getElementById('categoryFilter').value = '';
-        this.clearAllFilters();
-        
+
+        // Clear all visual indicators
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector('[data-category=""]')?.classList.add('active'); // Activate "All Categories"
+
+        document.querySelectorAll('.cloud-tag').forEach(item => {
+            item.classList.remove('active');
+        });
+
         // Show welcome message
         document.getElementById('searchResults').style.display = 'none';
         document.getElementById('welcomeMessage').style.display = 'block';
-        
+
         // Clear recent queries selection
         document.querySelectorAll('#recentQueries a').forEach(a => {
             a.classList.remove('active');
         });
-        
+
         console.log('🏠 Returned to home');
+    }
+
+    isWikiSource(sheet) {
+        if (!sheet.source) return false;
+
+        // Handle both string and object formats
+        if (typeof sheet.source === 'string') {
+            return sheet.source.endsWith('.md');
+        }
+
+        // Handle object format with path property
+        if (typeof sheet.source === 'object') {
+            return (sheet.source.type === 'wiki') ||
+                   (sheet.source.path && sheet.source.path.endsWith('.md'));
+        }
+
+        return false;
+    }
+
+    getSourcePath(sheet) {
+        if (!sheet.source) return '';
+
+        // Handle string format
+        if (typeof sheet.source === 'string') {
+            return sheet.source;
+        }
+
+        // Handle object format
+        if (typeof sheet.source === 'object') {
+            return sheet.source.path || sheet.source.url || '';
+        }
+
+        return '';
     }
 }
 
@@ -1466,6 +1734,23 @@ function collapseCheatSheet(sheetId) {
 // Global function to go home
 function goHome() {
     app.goHome();
+}
+
+// Global functions for enhanced navigation
+function filterByCategory(category) {
+    app.filterByCategory(category);
+}
+
+function filterByTag(tag) {
+    app.filterByTag(tag);
+}
+
+function clearCategoryFilter() {
+    app.clearCategoryFilter();
+}
+
+function clearAllFilters() {
+    app.clearAllFilters();
 }
 
 // Initialize the application when the page loads

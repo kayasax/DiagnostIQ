@@ -9,6 +9,7 @@ RETURN ONLY a JSON array in this exact format:
     "id": "scenario-id-kebab-case",
     "title": "Descriptive Scenario Title",
     "description": "Detailed problem description",
+    "vertical": "DETERMINE_FROM_WIKI_PATH",
     "category": "DETERMINE_FROM_CONTENT",
     "tags": ["relevant", "tags", "for", "search"],
     "cluster": "EXTRACT_FROM_DOCS_OR_BLANK",
@@ -28,20 +29,39 @@ RETURN ONLY a JSON array in this exact format:
 EXTRACTION RULES:
 1. Extract ALL troubleshooting scenarios from the referenced file
 2. Create unique IDs using kebab-case format
-3. **CATEGORY**: Determine category based on the scenario content and page context:
-   - Extract from page title/section headings (e.g., B2B, B2C, RBAC, Domain Services, etc.)
-   - Common categories: synchronization|authentication|provisioning|general|performance|applications|b2b|b2c|rbac|domain-services|conditional-access|mfa|pim|governance
+3. **VERTICAL**: Determine high-level business vertical from wiki path structure:
+   - **"Account Management"** - User lifecycle, B2B, B2C, Identity, PIM, Governance
+   - **"Auth"** - Authentication, MFA, Conditional Access, Sign-in issues, FIDO2
+   - **"Sync"** - Cross-tenant sync, AAD Connect, Provisioning, Directory sync
+   - **"Applications"** - App integration, SSO, App proxy, Enterprise apps
+   - **"Performance"** - Slow sign-ins, latency, optimization
+   - **"General"** - Fallback for misc scenarios
+
+4. **CATEGORY**: Determine specific sub-category based on folder structure and content:
+   - **Use SPECIFIC sub-categories** based on folder structure and content:
+     * Multi-Factor-Authentication folder → "mfa"
+     * Conditional-Access folder → "conditional-access"
+     * B2B folder → "b2b"
+     * B2C folder → "b2c"
+     * Domain-Services folder → "domain-services"
+     * PIM folder → "pim"
+     * Sync/Synchronization folder → "synchronization"
+     * Provisioning folder → "provisioning"
+     * Performance folder → "performance"
+     * Applications folder → "applications"
+   - **Avoid generic categories** like "authentication" - use specific ones like "mfa", "conditional-access", "b2b", etc.
    - Use kebab-case format for multi-word categories
-   - Prefer specific categories over generic ones when applicable
-4. Include relevant tags for searchability
-5. Format steps as an array of concise, action-oriented strings (not objects)
-6. Each step should be a complete instruction including commands, queries, or actions
-7. **CLUSTER & DATABASE**: Search the documentation for Kusto cluster and database information:
+   - **Priority**: Wiki folder structure > Content analysis > Generic fallback
+5. Include relevant tags for searchability
+6. Format steps as an array of concise, action-oriented strings (not objects)
+7. Each step should be a complete instruction including commands, queries, or actions
+8. **CLUSTER & DATABASE**: Search the documentation for Kusto cluster and database information:
    - Look for URLs like "https://[clustername].kusto.windows.net" or Kusto cluster tables
    - Look for "Database Name:" or similar references
    - Common patterns: aadb2bprod.westus2.kusto.windows.net/aadb2b, idsharedwus.kusto.windows.net/AADSFprod
    - If no specific cluster/database found, use empty strings "" (blank values)
-8. Assess severity: high for critical failures, medium for provisioning issues, low for informational
-9. Include the source filename
+9. Assess severity: high for critical failures, medium for provisioning issues, low for informational
+10. Include the source filename
 
 EXTRACT ALL SCENARIOS AND RETURN ONLY THE JSON ARRAY, NO OTHER TEXT.
+save this json in a file in temp/tobeprocessed folder.

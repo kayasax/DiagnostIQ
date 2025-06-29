@@ -5,7 +5,7 @@ const coreSamples = [
     {
         id: 'core-1',
         title: "Quick Authentication Check",
-        category: "auth",
+        category: "authentication",
         cluster: "prod",
         description: "Basic authentication failure analysis for quick troubleshooting.",
         queries: [
@@ -31,7 +31,7 @@ SigninLogs
     {
         id: 'core-2',
         title: "Basic Sync Status Check",
-        category: "sync",
+        category: "synchronization",
         cluster: "prod",
         description: "Quick overview of synchronization status and recent operations.",
         queries: [

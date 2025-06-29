@@ -1,20 +1,38 @@
-DiagnostIQ Version 0.3.2
+DiagnostIQ Version 0.4.0
 
-Milestone: Streamlined Batch Processing & Auto-Detection
+Milestone: Enhanced Navigation & Smart Categorization
 
-This version delivers the ultimate extraction efficiency with:
-- Ultra-efficient batch processor: 2 commands + 1 prompt = extracted scenario
-- Smart auto-detection with filename matching (handles URL encoding issues)
-- Seamless auto-import and processed file management
-- Non-blocking workflow with on-demand detection
-- Production-ready for large-scale TSG processing
+This version delivers major UX improvements and intelligent organization:
 
-Key Features:
-- Batch processor with smart auto-detection and auto-import
-- Processed file management (temp/processed/ directory)
-- Enhanced filename matching with URL encoding support
-- Streamlined workflow: --next --open for maximum efficiency
-- Robust queue management and progress tracking
-- Ready for mass extraction from Azure AD wiki (244+ files)
+🎯 KEY FEATURES:
+- ✅ Collapsible Vertical Navigation (Auth, Account Management, Sync, Applications, Performance, General)
+- ✅ Hierarchical Category Organization with visual indicators and counters
+- ✅ Smart Sorting: "All Scenarios" sorted by most recent to oldest
+- ✅ Improved Vertical Categorization with content-based analysis
+- ✅ Enhanced Timestamp Management for new scenarios
 
-Release Date: $(Get-Date -Format "yyyy-MM-dd")
+🚀 NAVIGATION ENHANCEMENTS:
+- Expandable/collapsible vertical sections with arrow indicators
+- Color-coded navigation with gradient backgrounds and hover effects
+- Category counts and visual hierarchy for better user orientation
+- Proper indentation and smooth transitions
+
+🧠 SMART CATEGORIZATION:
+- Automated vertical assignment based on content analysis
+- Improved category mapping (Auth → conditional-access, mfa, risk-policies)
+- Bulk categorization fixes (moved 16+ scenarios to proper verticals)
+- Timestamp injection for proper chronological sorting
+
+⚡ TECHNICAL IMPROVEMENTS:
+- Enhanced data deduplication at load time
+- Improved error handling and debug logging
+- Better date detection logic for sorting
+- Repository cleanup (removed 69+ legacy files)
+
+📊 IMPACT:
+- Significantly reduced scenarios in "General" vertical
+- Better organization of Auth, Sync, and Account Management scenarios
+- Improved user experience with intuitive navigation
+- Streamlined codebase ready for future enhancements
+
+Release Date: 2025-06-29
