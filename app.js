@@ -199,9 +199,19 @@ class QueryLibraryApp {
     }
 
     createCheatSheetCard(sheet) {
-        const stepsHtml = sheet.steps.map((step, index) =>
-            `<li>${step}</li>`
-        ).join('');
+        // Handle both string array and object array formats for steps
+        const stepsHtml = sheet.steps.map((step, index) => {
+            if (typeof step === 'string') {
+                // Simple string format
+                return `<li>${step}</li>`;
+            } else if (typeof step === 'object' && step.action) {
+                // Detailed object format
+                return `<li><strong>${step.description || `Step ${step.step || index + 1}`}:</strong> ${step.action}${step.expected ? ` <em>(Expected: ${step.expected})</em>` : ''}</li>`;
+            } else {
+                // Fallback for unknown format
+                return `<li>${step}</li>`;
+            }
+        }).join('');
 
         // Handle both old format (single query) and new format (multiple queries)
         let queriesHtml = '';
@@ -221,6 +231,22 @@ class QueryLibraryApp {
                         </button>
                         <textarea id="${queryId}" style="display: none;">${queryObj.query || queryObj.kql}</textarea>
                         <pre class="query-code"><code class="language-kql">${this.escapeHtml(queryObj.query || queryObj.kql)}</code></pre>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        } else if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
+            // Handle relatedKQL format from extracted scenarios
+            queriesHtml = sheet.relatedKQL.map((query, index) => {
+                const queryId = `query_${sheet.id}_kql_${index}`;
+                return `
+                <div class="query-item">
+                    <div class="query-container">
+                        <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                        <textarea id="${queryId}" style="display: none;">${query}</textarea>
+                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(query)}</code></pre>
                     </div>
                 </div>
                 `;
@@ -257,10 +283,16 @@ class QueryLibraryApp {
                 </div>
                 <div class="card-meta">
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
-                    <span><i class="fas fa-server"></i> ${sheet.cluster}</span>
+                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
                     ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
-                    <span><i class="fas fa-code"></i> ${sheet.queries ? sheet.queries.length : 1} ${sheet.queries && sheet.queries.length > 1 ? 'queries' : 'query'}</span>
+                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
+                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> <a href="#" onclick="app.openWikiLink('${sheet.source}')" title="View source wiki page">Wiki Source</a></span>` : ''}
                 </div>
+                ${sheet.tags && sheet.tags.length > 0 ? `
+                <div class="card-tags">
+                    <i class="fas fa-tags"></i>
+                    ${sheet.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>` : ''}
                 <div class="card-content">
                     <div class="card-description">${sheet.description}</div>
 
@@ -319,11 +351,18 @@ class QueryLibraryApp {
                 </div>
                 <div class="preview-meta">
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
-                    <span><i class="fas fa-server"></i> ${sheet.cluster}</span>
+                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
                     ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
-                    <span><i class="fas fa-code"></i> ${sheet.queries ? sheet.queries.length : 1} ${sheet.queries && sheet.queries.length > 1 ? 'queries' : 'query'}</span>
+                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
                     <span><i class="fas fa-list-ol"></i> ${sheet.steps ? sheet.steps.length : 0} steps</span>
+                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> Wiki</span>` : ''}
                 </div>
+                ${sheet.tags && sheet.tags.length > 0 ? `
+                <div class="preview-tags">
+                    <i class="fas fa-tags"></i>
+                    ${sheet.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    ${sheet.tags.length > 3 ? `<span class="tag-more">+${sheet.tags.length - 3} more</span>` : ''}
+                </div>` : ''}
                 <div class="preview-content">
                     <div class="preview-description">${descriptionExcerpt}</div>
                     ${queryPreview}
@@ -384,6 +423,26 @@ class QueryLibraryApp {
     capitalizeFirst(str) {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    getQueryCount(sheet) {
+        // Count queries from different possible sources
+        if (sheet.queries && Array.isArray(sheet.queries)) {
+            return sheet.queries.length;
+        }
+        if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
+            return sheet.relatedKQL.length;
+        }
+        if (sheet.query) {
+            return 1;
+        }
+        return 0;
+    }
+
+    openWikiLink(source) {
+        // For now, show an alert with the source information
+        // In the future, this could link to the actual wiki page
+        alert(`This scenario was extracted from: ${source}\n\nThis troubleshooting scenario comes from the internal wiki documentation.`);
     }
 
     escapeHtml(text) {

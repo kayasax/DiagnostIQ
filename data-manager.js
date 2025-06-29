@@ -377,7 +377,7 @@ class DataManager {
         return {
             exportedAt: new Date().toISOString(),
             source: 'DiagnosticIQ',
-            version: '1.0',
+            version: '0.3.1',
             scenarios: scenariosToExport
         };
     }
@@ -447,6 +447,91 @@ class DataManager {
 
     getTotalScenarioCount() {
         return this.allScenarios.length;
+    }
+
+    /**
+     * Add AI-extracted scenario to the collection
+     */
+    addAIExtractedScenario(scenario) {
+        // Validate the scenario
+        if (!this.validateScenario(scenario)) {
+            throw new Error('Invalid scenario format');
+        }
+
+        // Ensure unique ID
+        if (this.allScenarios.find(s => s.id === scenario.id)) {
+            scenario.id = `${scenario.id}-${Date.now()}`;
+        }
+
+        // Add to collection
+        this.allScenarios.push(scenario);
+
+        // Update global reference
+        window.cheatSheets = this.allScenarios;
+
+        // Save to localStorage as custom scenario
+        this.saveCustomScenario(scenario);
+
+        console.log(`✅ Added AI scenario: "${scenario.title}" (${scenario.category})`);
+        return scenario;
+    }
+
+    /**
+     * Process wiki content using AI extraction
+     */
+    async processWikiWithAI(wikiContent, options = {}) {
+        try {
+            // Import AI integration (dynamic import for browser compatibility)
+            if (typeof require === 'undefined') {
+                throw new Error('AI extraction requires Node.js environment');
+            }
+
+            const AIScenarioIntegration = require('./ai-scenario-integration');
+            const aiIntegration = new AIScenarioIntegration({
+                verbose: true,
+                outputDir: './data/scenarios/ai-generated'
+            });
+
+            const result = await aiIntegration.processWikiContent(wikiContent, options);
+
+            if (result.success) {
+                // Add the scenario to our collection
+                this.addAIExtractedScenario(result.scenario);
+                return result;
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error('❌ Wiki AI processing failed:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Save custom scenario to localStorage
+     */
+    saveCustomScenario(scenario) {
+        const customScenarios = JSON.parse(localStorage.getItem('customScenarios')) || [];
+
+        // Remove existing version if updating
+        const existingIndex = customScenarios.findIndex(s => s.id === scenario.id);
+        if (existingIndex >= 0) {
+            customScenarios[existingIndex] = scenario;
+        } else {
+            customScenarios.push(scenario);
+        }
+
+        localStorage.setItem('customScenarios', JSON.stringify(customScenarios));
+    }
+
+    /**
+     * Load custom scenarios from localStorage
+     */
+    loadCustomScenarios() {
+        const customScenarios = JSON.parse(localStorage.getItem('customScenarios')) || [];
+        console.log(`📂 Loaded ${customScenarios.length} custom scenarios from localStorage`);
+        return customScenarios;
     }
 
     getStatistics() {
