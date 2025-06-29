@@ -53,6 +53,12 @@ class QueryLibraryApp {
         // Populate category dropdown dynamically
         this.populateCategoryDropdown();
 
+        // Populate quick access links dynamically
+        this.populateQuickAccess();
+
+        // Update total count in header
+        this.updateTotalCount();
+
         this.populateRecentQueries();
         console.log(`📊 DiagnosticIQ initialized with ${this.allCheatSheets.length} scenarios`);
     }
@@ -137,14 +143,27 @@ class QueryLibraryApp {
             return matchesSearch && matchesCluster && matchesCategory;
         });
 
-        console.log(`✅ Filtered results: ${filteredResults.length} scenarios`);
+        // Remove duplicates based on ID (in case there are any)
+        const uniqueResults = [];
+        const seenIds = new Set();
+
+        filteredResults.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+                uniqueResults.push(sheet);
+            } else {
+                console.warn('🔄 Duplicate scenario found and removed:', sheet.title, sheet.id);
+            }
+        });
+
+        console.log(`✅ Filtered results: ${uniqueResults.length} scenarios (${filteredResults.length - uniqueResults.length} duplicates removed)`);
 
         // Add to recent queries if it's a search term
         if (searchTerm) {
             this.addToRecentQueries(searchTerm);
         }
 
-        this.displayResults(filteredResults);
+        this.displayResults(uniqueResults);
     }
 
     displayResults(results) {
@@ -165,23 +184,34 @@ class QueryLibraryApp {
             return;
         }
 
-        const resultsHTML = results.map(sheet => this.createCheatSheetCard(sheet)).join('');
-        searchResults.innerHTML = resultsHTML;
+        // Add summary header
+        const summaryHTML = `
+            <div class="results-summary">
+                <h3><i class="fas fa-search"></i> Search Results</h3>
+                <p>Found <strong>${results.length}</strong> troubleshooting scenario${results.length > 1 ? 's' : ''}</p>
+            </div>
+        `;
 
-        // Apply syntax highlighting after content is loaded
-        setTimeout(() => {
-            if (typeof Prism !== 'undefined') {
-                Prism.highlightAll();
-            }
-        }, 100);
+        const resultsHTML = results.map(sheet => this.createCheatSheetPreview(sheet)).join('');
+        searchResults.innerHTML = summaryHTML + resultsHTML;
 
         this.currentResults = results;
     }
 
     createCheatSheetCard(sheet) {
-        const stepsHtml = sheet.steps.map((step, index) =>
-            `<li>${step}</li>`
-        ).join('');
+        // Handle both string array and object array formats for steps
+        const stepsHtml = sheet.steps.map((step, index) => {
+            if (typeof step === 'string') {
+                // Simple string format
+                return `<li>${step}</li>`;
+            } else if (typeof step === 'object' && step.action) {
+                // Detailed object format
+                return `<li><strong>${step.description || `Step ${step.step || index + 1}`}:</strong> ${step.action}${step.expected ? ` <em>(Expected: ${step.expected})</em>` : ''}</li>`;
+            } else {
+                // Fallback for unknown format
+                return `<li>${step}</li>`;
+            }
+        }).join('');
 
         // Handle both old format (single query) and new format (multiple queries)
         let queriesHtml = '';
@@ -205,6 +235,22 @@ class QueryLibraryApp {
                 </div>
                 `;
             }).join('');
+        } else if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
+            // Handle relatedKQL format from extracted scenarios
+            queriesHtml = sheet.relatedKQL.map((query, index) => {
+                const queryId = `query_${sheet.id}_kql_${index}`;
+                return `
+                <div class="query-item">
+                    <div class="query-container">
+                        <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                        <textarea id="${queryId}" style="display: none;">${query}</textarea>
+                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(query)}</code></pre>
+                    </div>
+                </div>
+                `;
+            }).join('');
         } else if (sheet.query) {
             // Old format with single query - maintain backwards compatibility
             const queryId = `query_${sheet.id}_single`;
@@ -222,8 +268,11 @@ class QueryLibraryApp {
         }        return `
             <div class="cheat-sheet-card" data-sheet-id="${sheet.id}">
                 <div class="card-header">
-                    <div class="card-title">${sheet.title}</div>
+                    <div class="card-title" onclick="collapseCheatSheet('${sheet.id}')" title="Click to minimize to preview">${sheet.title}</div>
                     <div class="card-actions">
+                        <button class="btn-minimize" onclick="collapseCheatSheet('${sheet.id}')" title="Minimize to preview">
+                            <i class="fas fa-compress"></i>
+                        </button>
                         <button class="btn-edit" onclick="editCheatSheet('${sheet.id}')" title="Edit this cheat sheet">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -234,10 +283,16 @@ class QueryLibraryApp {
                 </div>
                 <div class="card-meta">
                     <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
-                    <span><i class="fas fa-server"></i> ${sheet.cluster}</span>
+                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
                     ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
-                    <span><i class="fas fa-code"></i> ${sheet.queries ? sheet.queries.length : 1} ${sheet.queries && sheet.queries.length > 1 ? 'queries' : 'query'}</span>
+                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
+                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> <a href="#" onclick="app.openWikiLink('${sheet.source}')" title="View source wiki page">Wiki Source</a></span>` : ''}
                 </div>
+                ${sheet.tags && sheet.tags.length > 0 ? `
+                <div class="card-tags">
+                    <i class="fas fa-tags"></i>
+                    ${sheet.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>` : ''}
                 <div class="card-content">
                     <div class="card-description">${sheet.description}</div>
 
@@ -261,6 +316,96 @@ class QueryLibraryApp {
         `;
     }
 
+    createCheatSheetPreview(sheet) {
+        // Create a preview card with excerpt and expand option
+        const firstQuery = sheet.queries && sheet.queries.length > 0
+            ? sheet.queries[0]
+            : (sheet.query ? { name: 'Main Query', query: sheet.query } : null);
+
+        const descriptionExcerpt = sheet.description.length > 150
+            ? sheet.description.substring(0, 150) + '...'
+            : sheet.description;
+
+        const queryPreview = firstQuery
+            ? `<div class="query-preview">
+                <strong>${firstQuery.name || 'Query'}:</strong>
+                <code>${(firstQuery.query || firstQuery.kql || '').substring(0, 100)}${(firstQuery.query || firstQuery.kql || '').length > 100 ? '...' : ''}</code>
+               </div>`
+            : '';
+
+        return `
+            <div class="cheat-sheet-preview" data-sheet-id="${sheet.id}">
+                <div class="preview-header">
+                    <div class="preview-title" onclick="expandCheatSheet('${sheet.id}')" title="Click to expand">${sheet.title}</div>
+                    <div class="preview-actions">
+                        <button class="btn-expand" onclick="expandCheatSheet('${sheet.id}')" title="View full details">
+                            <i class="fas fa-expand"></i> Open
+                        </button>
+                        <button class="btn-edit" onclick="editCheatSheet('${sheet.id}')" title="Edit this cheat sheet">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" onclick="deleteCheatSheet('${sheet.id}')" title="Delete this cheat sheet">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-meta">
+                    <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
+                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
+                    ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
+                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
+                    <span><i class="fas fa-list-ol"></i> ${sheet.steps ? sheet.steps.length : 0} steps</span>
+                    ${sheet.source && sheet.source.endsWith('.md') ? `<span class="wiki-indicator"><i class="fas fa-book"></i> Wiki</span>` : ''}
+                </div>
+                ${sheet.tags && sheet.tags.length > 0 ? `
+                <div class="preview-tags">
+                    <i class="fas fa-tags"></i>
+                    ${sheet.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    ${sheet.tags.length > 3 ? `<span class="tag-more">+${sheet.tags.length - 3} more</span>` : ''}
+                </div>` : ''}
+                <div class="preview-content">
+                    <div class="preview-description">${descriptionExcerpt}</div>
+                    ${queryPreview}
+                </div>
+            </div>
+        `;
+    }
+
+    expandCheatSheet(sheetId) {
+        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
+        if (!sheet) {
+            alert('Scenario not found!');
+            return;
+        }
+
+        // Replace the preview with the full card
+        const previewElement = document.querySelector(`[data-sheet-id="${sheetId}"]`);
+        if (previewElement) {
+            previewElement.outerHTML = this.createCheatSheetCard(sheet);
+
+            // Apply syntax highlighting to the new content
+            setTimeout(() => {
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightAll();
+                }
+            }, 100);
+        }
+    }
+
+    collapseCheatSheet(sheetId) {
+        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
+        if (!sheet) {
+            alert('Scenario not found!');
+            return;
+        }
+
+        // Replace the full card with the preview
+        const cardElement = document.querySelector(`[data-sheet-id="${sheetId}"]`);
+        if (cardElement) {
+            cardElement.outerHTML = this.createCheatSheetPreview(sheet);
+        }
+    }
+
     getCategoryName(category) {
         const categoryNames = {
             'sync': 'Synchronization',
@@ -278,6 +423,26 @@ class QueryLibraryApp {
     capitalizeFirst(str) {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    getQueryCount(sheet) {
+        // Count queries from different possible sources
+        if (sheet.queries && Array.isArray(sheet.queries)) {
+            return sheet.queries.length;
+        }
+        if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
+            return sheet.relatedKQL.length;
+        }
+        if (sheet.query) {
+            return 1;
+        }
+        return 0;
+    }
+
+    openWikiLink(source) {
+        // For now, show an alert with the source information
+        // In the future, this could link to the actual wiki page
+        alert(`This scenario was extracted from: ${source}\n\nThis troubleshooting scenario comes from the internal wiki documentation.`);
     }
 
     escapeHtml(text) {
@@ -651,6 +816,11 @@ class QueryLibraryApp {
     refreshData() {
         // Refresh the local reference to all scenarios
         this.allCheatSheets = [...(window.cheatSheets || []), ...this.localCheatSheets];
+
+        // Update dynamic elements
+        this.populateQuickAccess();
+        this.updateTotalCount();
+        this.populateCategoryDropdown();
     }
 
     editCheatSheet(sheetId) {
@@ -838,6 +1008,88 @@ class QueryLibraryApp {
         // Placeholder for library synchronization
         alert('DiagnosticIQ sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
     }
+
+    populateQuickAccess() {
+        const quickLinksContainer = document.querySelector('.quick-links');
+        if (!quickLinksContainer) return;
+
+        // Get category counts (deduplicated)
+        const categoryStats = {};
+        const seenIds = new Set();
+
+        this.allCheatSheets.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+                categoryStats[sheet.category] = (categoryStats[sheet.category] || 0) + 1;
+            }
+        });
+
+        console.log('📊 Quick Access - Category counts (deduplicated):', categoryStats);
+
+        // Create dynamic quick access based on most popular categories
+        const sortedCategories = Object.entries(categoryStats)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5); // Top 5 categories
+
+        const quickAccessHTML = sortedCategories.map(([category, count]) => {
+            const displayName = this.getCategoryName(category);
+            return `<li><a href="#" onclick="app.searchForCategory('${category}')">${displayName} (${count})</a></li>`;
+        }).join('');
+
+        // Calculate total unique scenarios for "Show All"
+        const totalUniqueScenarios = seenIds.size;
+        const showAllHTML = `<li><a href="#" onclick="app.showAllScenarios()"><i class="fas fa-th-list"></i> All Scenarios (${totalUniqueScenarios})</a></li>`;
+
+        quickLinksContainer.innerHTML = quickAccessHTML + showAllHTML;
+    }
+
+    searchForCategory(category) {
+        document.getElementById('categoryFilter').value = category;
+        document.getElementById('searchInput').value = '';
+        this.performSearch();
+    }
+
+    showAllScenarios() {
+        // Clear all filters
+        document.getElementById('categoryFilter').value = '';
+        document.getElementById('searchInput').value = '';
+
+        // Reset current results and display all scenarios (apply deduplication)
+        console.log('🎯 Showing all scenarios...');
+        const uniqueResults = [];
+        const seenIds = new Set();
+
+        this.allCheatSheets.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+                uniqueResults.push(sheet);
+            }
+        });
+
+        console.log(`✅ Displaying ${uniqueResults.length} unique scenarios out of ${this.allCheatSheets.length} total`);
+        this.displayResults(uniqueResults);
+    }
+
+    updateTotalCount() {
+        // Add total count to the header (deduplicated)
+        const headerContent = document.querySelector('.header-content h1');
+        if (headerContent) {
+            const existingCount = headerContent.querySelector('.scenario-count');
+            if (existingCount) {
+                existingCount.remove();
+            }
+
+            // Calculate unique scenario count
+            const seenIds = new Set();
+            this.allCheatSheets.forEach(sheet => seenIds.add(sheet.id));
+            const uniqueCount = seenIds.size;
+
+            const countSpan = document.createElement('span');
+            countSpan.className = 'scenario-count';
+            countSpan.innerHTML = ` <small>(${uniqueCount} scenarios)</small>`;
+            headerContent.appendChild(countSpan);
+        }
+    }
 }
 
 // Global functions for HTML onclick events
@@ -883,6 +1135,14 @@ function exportLibrary() {
 
 function importLibrary(event) {
     app.importLibrary(event);
+}
+
+function expandCheatSheet(sheetId) {
+    app.expandCheatSheet(sheetId);
+}
+
+function collapseCheatSheet(sheetId) {
+    app.collapseCheatSheet(sheetId);
 }
 
 // Initialize the application when the page loads

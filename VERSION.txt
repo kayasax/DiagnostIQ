@@ -1,0 +1,20 @@
+DiagnosticIQ Version 0.3.2
+
+Milestone: Streamlined Batch Processing & Auto-Detection
+
+This version delivers the ultimate extraction efficiency with:
+- Ultra-efficient batch processor: 2 commands + 1 prompt = extracted scenario
+- Smart auto-detection with filename matching (handles URL encoding issues)
+- Seamless auto-import and processed file management
+- Non-blocking workflow with on-demand detection
+- Production-ready for large-scale TSG processing
+
+Key Features:
+- Batch processor with smart auto-detection and auto-import
+- Processed file management (temp/processed/ directory)
+- Enhanced filename matching with URL encoding support
+- Streamlined workflow: --next --open for maximum efficiency
+- Robust queue management and progress tracking
+- Ready for mass extraction from Azure AD wiki (244+ files)
+
+Release Date: $(Get-Date -Format "yyyy-MM-dd")

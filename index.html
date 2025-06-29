@@ -13,7 +13,7 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1><i class="fas fa-search"></i> DiagnosticIQ</h1>
+                <h1><i class="fas fa-search"></i> DiagnosticIQ <span class="version">v0.3.1</span></h1>
                 <div class="header-actions">
                     <input type="file" id="importFile" accept=".json" class="hidden-file-input" onchange="importLibrary(event)">
                     <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">
@@ -153,6 +153,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="data-manager.js"></script>
+    <script src="ai-scenario-loader.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

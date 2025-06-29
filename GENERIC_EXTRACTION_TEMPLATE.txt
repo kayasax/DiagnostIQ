@@ -1,0 +1,47 @@
+Extract troubleshooting scenarios from Azure AD documentation and convert them to JSON format for DiagnosticIQ.
+TASK: Analyze the markdown file and extract ALL troubleshooting scenarios. Each scenario should represent a specific problem/solution pair.
+
+RETURN ONLY a JSON array in this exact format:
+
+```json
+[
+  {
+    "id": "scenario-id-kebab-case",
+    "title": "Descriptive Scenario Title",
+    "description": "Detailed problem description",
+    "category": "DETERMINE_FROM_CONTENT",
+    "tags": ["relevant", "tags", "for", "search"],
+    "cluster": "EXTRACT_FROM_DOCS_OR_BLANK",
+    "database": "EXTRACT_FROM_DOCS_OR_BLANK",
+    "steps": [
+      "Action-oriented step description that includes specific commands or queries",
+      "Another concise step with clear instructions",
+      "Final step with expected outcome"
+    ],
+    "relatedKQL": [],
+    "severity": "high|medium|low",
+    "source": "source-filename.md"
+  }
+]
+```
+
+EXTRACTION RULES:
+1. Extract ALL troubleshooting scenarios from the referenced file
+2. Create unique IDs using kebab-case format
+3. **CATEGORY**: Determine category based on the scenario content and page context:
+   - Extract from page title/section headings (e.g., B2B, B2C, RBAC, Domain Services, etc.)
+   - Common categories: synchronization|authentication|provisioning|general|performance|applications|b2b|b2c|rbac|domain-services|conditional-access|mfa|pim|governance
+   - Use kebab-case format for multi-word categories
+   - Prefer specific categories over generic ones when applicable
+4. Include relevant tags for searchability
+5. Format steps as an array of concise, action-oriented strings (not objects)
+6. Each step should be a complete instruction including commands, queries, or actions
+7. **CLUSTER & DATABASE**: Search the documentation for Kusto cluster and database information:
+   - Look for URLs like "https://[clustername].kusto.windows.net" or Kusto cluster tables
+   - Look for "Database Name:" or similar references
+   - Common patterns: aadb2bprod.westus2.kusto.windows.net/aadb2b, idsharedwus.kusto.windows.net/AADSFprod
+   - If no specific cluster/database found, use empty strings "" (blank values)
+8. Assess severity: high for critical failures, medium for provisioning issues, low for informational
+9. Include the source filename
+
+EXTRACT ALL SCENARIOS AND RETURN ONLY THE JSON ARRAY, NO OTHER TEXT.

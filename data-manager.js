@@ -1,4 +1,4 @@
-// DiagnosticIQ - Modular Data Manager
+// DiagnosticIQ - Modular Data Manager v0.3.2
 // Handles loading scenarios from multiple sources: core samples + modular scenario files
 
 class DataManager {
@@ -281,23 +281,28 @@ class DataManager {
         console.log('⚠️ No categories index, extracting from scenarios...');
         console.log('📊 All scenarios count:', this.allScenarios.length);
 
-        // Fallback: Extract unique categories from loaded scenarios
+        // Fallback: Extract unique categories from loaded scenarios (deduplicated)
         const categorySet = new Set();
         const categoryData = {};
+        const seenIds = new Set();
 
         this.allScenarios.forEach(scenario => {
-            console.log(`📋 Scenario: "${scenario.title}" - Category: "${scenario.category}"`);
-            if (scenario.category) {
-                categorySet.add(scenario.category);
-                if (!categoryData[scenario.category]) {
-                    categoryData[scenario.category] = { count: 0 };
+            // Only count unique scenarios (avoid duplicates)
+            if (!seenIds.has(scenario.id)) {
+                seenIds.add(scenario.id);
+                console.log(`📋 Scenario: "${scenario.title}" - Category: "${scenario.category}"`);
+                if (scenario.category) {
+                    categorySet.add(scenario.category);
+                    if (!categoryData[scenario.category]) {
+                        categoryData[scenario.category] = { count: 0 };
+                    }
+                    categoryData[scenario.category].count++;
                 }
-                categoryData[scenario.category].count++;
             }
         });
 
         console.log('🏷️ Unique categories found:', Array.from(categorySet));
-        console.log('📊 Category counts:', categoryData);
+        console.log('📊 Category counts (deduplicated):', categoryData);
 
         const result = Array.from(categorySet).map(category => ({
             value: category,
@@ -372,7 +377,7 @@ class DataManager {
         return {
             exportedAt: new Date().toISOString(),
             source: 'DiagnosticIQ',
-            version: '1.0',
+            version: '0.3.1',
             scenarios: scenariosToExport
         };
     }
@@ -442,6 +447,91 @@ class DataManager {
 
     getTotalScenarioCount() {
         return this.allScenarios.length;
+    }
+
+    /**
+     * Add AI-extracted scenario to the collection
+     */
+    addAIExtractedScenario(scenario) {
+        // Validate the scenario
+        if (!this.validateScenario(scenario)) {
+            throw new Error('Invalid scenario format');
+        }
+
+        // Ensure unique ID
+        if (this.allScenarios.find(s => s.id === scenario.id)) {
+            scenario.id = `${scenario.id}-${Date.now()}`;
+        }
+
+        // Add to collection
+        this.allScenarios.push(scenario);
+
+        // Update global reference
+        window.cheatSheets = this.allScenarios;
+
+        // Save to localStorage as custom scenario
+        this.saveCustomScenario(scenario);
+
+        console.log(`✅ Added AI scenario: "${scenario.title}" (${scenario.category})`);
+        return scenario;
+    }
+
+    /**
+     * Process wiki content using AI extraction
+     */
+    async processWikiWithAI(wikiContent, options = {}) {
+        try {
+            // Import AI integration (dynamic import for browser compatibility)
+            if (typeof require === 'undefined') {
+                throw new Error('AI extraction requires Node.js environment');
+            }
+
+            const AIScenarioIntegration = require('./ai-scenario-integration');
+            const aiIntegration = new AIScenarioIntegration({
+                verbose: true,
+                outputDir: './data/scenarios/ai-generated'
+            });
+
+            const result = await aiIntegration.processWikiContent(wikiContent, options);
+
+            if (result.success) {
+                // Add the scenario to our collection
+                this.addAIExtractedScenario(result.scenario);
+                return result;
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error('❌ Wiki AI processing failed:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Save custom scenario to localStorage
+     */
+    saveCustomScenario(scenario) {
+        const customScenarios = JSON.parse(localStorage.getItem('customScenarios')) || [];
+
+        // Remove existing version if updating
+        const existingIndex = customScenarios.findIndex(s => s.id === scenario.id);
+        if (existingIndex >= 0) {
+            customScenarios[existingIndex] = scenario;
+        } else {
+            customScenarios.push(scenario);
+        }
+
+        localStorage.setItem('customScenarios', JSON.stringify(customScenarios));
+    }
+
+    /**
+     * Load custom scenarios from localStorage
+     */
+    loadCustomScenarios() {
+        const customScenarios = JSON.parse(localStorage.getItem('customScenarios')) || [];
+        console.log(`📂 Loaded ${customScenarios.length} custom scenarios from localStorage`);
+        return customScenarios;
     }
 
     getStatistics() {

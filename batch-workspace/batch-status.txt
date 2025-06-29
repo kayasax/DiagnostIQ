@@ -1,0 +1,22 @@
+DiagnosticIQ Batch Processor - Current Status
+Generated: 2025-06-29T10:48:37.823Z
+
+NEXT FILE TO PROCESS:
+📄 Control-for-'Azure-ad-join-device'-in-Conditional-access-policy.md
+📂 Wiki\AzureAD\AzureAD\ACE-Identity-TSGs\Identity-Technical-Wiki\Conditional-Access\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy.md
+💾 Save JSON as: temp\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy-extracted-scenarios.json
+
+COPILOT INSTRUCTIONS:
+1. Open the file above in VS Code
+2. Use this exact prompt in Copilot Chat:
+
+#file: generic_extraction_template.txt
+
+Execute instructions in the template and save the json in temp
+
+3. Save the JSON with the exact filename shown above
+4. Run: node batch-processor.js --completed "temp\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy-extracted-scenarios.json"
+
+ALTERNATIVE:
+- Run: node batch-processor.js --next (to see this again)
+- Run: node batch-processor.js --status (to see full progress)

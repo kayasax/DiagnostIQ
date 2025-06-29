@@ -67,3 +67,5 @@ update-cross-tenant-clusters.js
 
 # Browser cache
 .cache/
+wiki/
+temp/
