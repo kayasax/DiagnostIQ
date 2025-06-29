@@ -36,11 +36,11 @@
       "fullPath": "Wiki\\AzureAD\\AzureAD\\ACE-Identity-TSGs\\Identity-Technical-Wiki\\Conditional-Access\\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy.md",
       "relativePath": "Wiki\\AzureAD\\AzureAD\\ACE-Identity-TSGs\\Identity-Technical-Wiki\\Conditional-Access\\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy.md",
       "directory": "Wiki\\AzureAD\\AzureAD\\ACE-Identity-TSGs\\Identity-Technical-Wiki\\Conditional-Access",
-      "status": "pending",
+      "status": "completed",
       "outputFile": "temp\\Control-for-'Azure-ad-join-device'-in-Conditional-access-policy-extracted-scenarios.json",
-      "processedAt": null,
+      "processedAt": "2025-06-29T11:12:35.708Z",
       "importedAt": null,
-      "scenarioCount": null,
+      "scenarioCount": 1,
       "notes": null
     },
     {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DiagnosticIQ - Azure AD Troubleshooting</title>
+    <title>DiagnostIQ - Azure AD Troubleshooting</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -13,7 +13,7 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1><i class="fas fa-search"></i> DiagnosticIQ <span class="version">v0.3.1</span></h1>
+                <h1><a href="#" onclick="goHome()" class="app-title"><i class="fas fa-search"></i> DiagnostIQ <span class="version">v0.3.2</span></a></h1>
                 <div class="header-actions">
                     <input type="file" id="importFile" accept=".json" class="hidden-file-input" onchange="importLibrary(event)">
                     <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">
@@ -64,20 +64,47 @@
         <div class="main-content">
             <!-- Sidebar -->
             <aside class="sidebar">
+                <!-- Category Navigation -->
                 <div class="sidebar-section">
-                    <h3>Quick Access</h3>
-                    <ul class="quick-links">
-                        <li><a href="#" onclick="searchFor('Cross Tenant Sync')">Cross Tenant Sync</a></li>
-                        <li><a href="#" onclick="searchFor('Authentication Issues')">Authentication Issues</a></li>
-                        <li><a href="#" onclick="searchFor('Provisioning Errors')">Provisioning Errors</a></li>
-                        <li><a href="#" onclick="searchFor('Performance Issues')">Performance Issues</a></li>
-                    </ul>
+                    <h3><i class="fas fa-folder-open"></i> Categories</h3>
+                    <div id="categoryNavigation" class="category-navigation">
+                        <!-- Categories will be populated by JavaScript -->
+                    </div>
                 </div>
+
+                <!-- Tag Cloud -->
                 <div class="sidebar-section">
-                    <h3>Recent Queries</h3>
-                    <ul id="recentQueries" class="recent-list">
-                        <!-- Populated by JavaScript -->
-                    </ul>
+                    <h3><i class="fas fa-tags"></i> Tag Cloud</h3>
+                    <div id="tagCloud" class="tag-cloud">
+                        <!-- Tags will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-filter"></i> Quick Filters</h3>
+                    <div class="quick-filters">
+                        <button class="filter-btn" onclick="filterBySeverity('high')" title="High severity scenarios">
+                            <i class="fas fa-exclamation-triangle"></i> Critical
+                        </button>
+                        <button class="filter-btn" onclick="filterByKQL(true)" title="Scenarios with KQL queries">
+                            <i class="fas fa-code"></i> Has KQL
+                        </button>
+                        <button class="filter-btn" onclick="filterBySource('wiki')" title="Wiki-extracted scenarios">
+                            <i class="fas fa-book"></i> Wiki Source
+                        </button>
+                        <button class="filter-btn active" onclick="clearAllFilters()" title="Clear all filters">
+                            <i class="fas fa-refresh"></i> Show All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+                    <div id="statsDisplay" class="stats-display">
+                        <!-- Statistics will be populated by JavaScript -->
+                    </div>
                 </div>
             </aside>
 
@@ -90,7 +117,7 @@
                 <div id="welcomeMessage" class="welcome-message">
                     <div class="welcome-content">
                         <i class="fas fa-rocket"></i>
-                        <h2>Welcome to DiagnosticIQ</h2>
+                        <h2>Welcome to DiagnostIQ</h2>
                         <p>Your intelligent companion for Azure AD troubleshooting scenarios, KQL queries, and step-by-step procedures.</p>
                         <p>Try searching for: <strong>"Cross Tenant Sync"</strong> or <strong>"Authentication"</strong></p>
                     </div>

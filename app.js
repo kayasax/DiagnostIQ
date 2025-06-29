@@ -1,4 +1,4 @@
-// DiagnosticIQ - Main Application Logic
+// DiagnostIQ - Main Application Logic
 
 class QueryLibraryApp {
     constructor() {
@@ -53,6 +53,11 @@ class QueryLibraryApp {
         // Populate category dropdown dynamically
         this.populateCategoryDropdown();
 
+        // Populate new enhanced navigation
+        this.populateCategoryNavigation();
+        this.populateTagCloud();
+        this.populateStatistics();
+
         // Populate quick access links dynamically
         this.populateQuickAccess();
 
@@ -60,7 +65,7 @@ class QueryLibraryApp {
         this.updateTotalCount();
 
         this.populateRecentQueries();
-        console.log(`📊 DiagnosticIQ initialized with ${this.allCheatSheets.length} scenarios`);
+        console.log(`📊 DiagnostIQ initialized with ${this.allCheatSheets.length} scenarios`);
     }
 
     setupEventListeners() {
@@ -933,7 +938,7 @@ class QueryLibraryApp {
 
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
-        link.download = `diagnosticiq-export-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `diagnostiq-export-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1006,7 +1011,7 @@ class QueryLibraryApp {
 
     syncLibrary() {
         // Placeholder for library synchronization
-        alert('DiagnosticIQ sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
+        alert('DiagnostIQ sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
     }
 
     populateQuickAccess() {
@@ -1090,6 +1095,319 @@ class QueryLibraryApp {
             headerContent.appendChild(countSpan);
         }
     }
+
+    // Enhanced Navigation Methods
+
+    populateCategoryNavigation() {
+        const categoryNav = document.getElementById('categoryNavigation');
+        if (!categoryNav) return;
+
+        // Get category counts
+        const categoryStats = {};
+        const seenIds = new Set();
+
+        this.allCheatSheets.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+                categoryStats[sheet.category] = (categoryStats[sheet.category] || 0) + 1;
+            }
+        });
+
+        // Create category navigation items
+        const categories = Object.entries(categoryStats)
+            .sort(([,a], [,b]) => b - a); // Sort by count
+
+        const categoryHTML = categories.map(([category, count]) => {
+            const displayName = this.getCategoryName(category);
+            const icon = this.getCategoryIcon(category);
+
+            return `
+                <div class="category-item" onclick="app.filterByCategory('${category}')" data-category="${category}">
+                    <div class="category-label">
+                        <i class="${icon}"></i>
+                        <span>${displayName}</span>
+                    </div>
+                    <span class="category-count">${count}</span>
+                </div>
+            `;
+        }).join('');
+
+        // Add "All Categories" option
+        const totalCount = seenIds.size;
+        const allCategoriesHTML = `
+            <div class="category-item active" onclick="app.clearCategoryFilter()" data-category="">
+                <div class="category-label">
+                    <i class="fas fa-th-list"></i>
+                    <span>All Categories</span>
+                </div>
+                <span class="category-count">${totalCount}</span>
+            </div>
+        `;
+
+        categoryNav.innerHTML = allCategoriesHTML + categoryHTML;
+    }
+
+    populateTagCloud() {
+        const tagCloud = document.getElementById('tagCloud');
+        if (!tagCloud) return;
+
+        // Collect all tags and their frequencies
+        const tagStats = {};
+        const seenIds = new Set();
+
+        this.allCheatSheets.forEach(sheet => {
+            if (!seenIds.has(sheet.id) && sheet.tags) {
+                seenIds.add(sheet.id);
+                sheet.tags.forEach(tag => {
+                    tagStats[tag] = (tagStats[tag] || 0) + 1;
+                });
+            }
+        });
+
+        // Sort tags by frequency and take top 20
+        const sortedTags = Object.entries(tagStats)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 20);
+
+        if (sortedTags.length === 0) {
+            tagCloud.innerHTML = '<p class="text-muted">No tags available</p>';
+            return;
+        }
+
+        // Calculate tag sizes based on frequency
+        const maxCount = Math.max(...sortedTags.map(([,count]) => count));
+        const minCount = Math.min(...sortedTags.map(([,count]) => count));
+
+        const tagHTML = sortedTags.map(([tag, count]) => {
+            const sizeClass = this.getTagSizeClass(count, minCount, maxCount);
+            return `
+                <span class="cloud-tag ${sizeClass}" onclick="app.filterByTag('${tag}')"
+                      title="${tag} (${count} scenarios)" data-tag="${tag}">
+                    ${tag}
+                </span>
+            `;
+        }).join('');
+
+        tagCloud.innerHTML = tagHTML;
+    }
+
+    populateStatistics() {
+        const statsDisplay = document.getElementById('statsDisplay');
+        if (!statsDisplay) return;
+
+        const seenIds = new Set();
+        let totalScenarios = 0;
+        let scenariosWithKQL = 0;
+        let wikiExtracted = 0;
+        let highSeverity = 0;
+
+        this.allCheatSheets.forEach(sheet => {
+            if (!seenIds.has(sheet.id)) {
+                seenIds.add(sheet.id);
+                totalScenarios++;
+
+                if (sheet.queries && sheet.queries.length > 0) {
+                    scenariosWithKQL++;
+                }
+
+                if (sheet.relatedKQL && sheet.relatedKQL.length > 0) {
+                    scenariosWithKQL++;
+                }
+
+                if (sheet.source && sheet.source.endsWith('.md')) {
+                    wikiExtracted++;
+                }
+
+                if (sheet.severity === 'high') {
+                    highSeverity++;
+                }
+            }
+        });
+
+        const categoryCount = new Set(this.allCheatSheets.map(s => s.category)).size;
+        const totalTags = new Set(this.allCheatSheets.flatMap(s => s.tags || [])).size;
+
+        const statsHTML = `
+            <div class="stat-item">
+                <span class="stat-label">Total Scenarios</span>
+                <span class="stat-value">${totalScenarios}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Categories</span>
+                <span class="stat-value">${categoryCount}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Tags</span>
+                <span class="stat-value">${totalTags}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">With KQL</span>
+                <span class="stat-value">${scenariosWithKQL}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Wiki Extracted</span>
+                <span class="stat-value">${wikiExtracted}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Critical</span>
+                <span class="stat-value">${highSeverity}</span>
+            </div>
+        `;
+
+        statsDisplay.innerHTML = statsHTML;
+    }
+
+    // Helper methods for enhanced navigation
+
+    getCategoryIcon(category) {
+        const iconMap = {
+            'authentication': 'fas fa-key',
+            'synchronization': 'fas fa-sync',
+            'provisioning': 'fas fa-user-plus',
+            'conditional-access': 'fas fa-shield-alt',
+            'performance': 'fas fa-tachometer-alt',
+            'applications': 'fas fa-cube',
+            'general': 'fas fa-info-circle',
+            'b2b': 'fas fa-handshake',
+            'b2c': 'fas fa-users',
+            'mfa': 'fas fa-mobile-alt',
+            'governance': 'fas fa-gavel',
+            'domain-services': 'fas fa-server'
+        };
+        return iconMap[category] || 'fas fa-folder';
+    }
+
+    getTagSizeClass(count, minCount, maxCount) {
+        if (maxCount === minCount) return 'size-md';
+
+        const range = maxCount - minCount;
+        const normalized = (count - minCount) / range;
+
+        if (normalized < 0.2) return 'size-xs';
+        if (normalized < 0.4) return 'size-sm';
+        if (normalized < 0.6) return 'size-md';
+        if (normalized < 0.8) return 'size-lg';
+        return 'size-xl';
+    }
+
+    // Enhanced filtering methods
+
+    filterByCategory(category) {
+        // Update UI to show active category
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[data-category="${category}"]`)?.classList.add('active');
+
+        // Update search
+        document.getElementById('categoryFilter').value = category;
+        document.getElementById('searchInput').value = '';
+        this.performSearch();
+    }
+
+    filterByTag(tag) {
+        // Update UI to show active tag
+        document.querySelectorAll('.cloud-tag').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[data-tag="${tag}"]`)?.classList.add('active');
+
+        // Search for the tag
+        document.getElementById('searchInput').value = tag;
+        document.getElementById('categoryFilter').value = '';
+        this.performSearch();
+    }
+
+    filterBySeverity(severity) {
+        this.updateFilterButtons('severity', severity);
+        this.currentResults = this.allCheatSheets.filter(sheet => sheet.severity === severity);
+        this.displayResults(this.currentResults, `${severity} severity scenarios`);
+    }
+
+    filterByKQL(hasKQL) {
+        this.updateFilterButtons('kql', hasKQL);
+        this.currentResults = this.allCheatSheets.filter(sheet => {
+            const hasQueries = (sheet.queries && sheet.queries.length > 0) ||
+                             (sheet.relatedKQL && sheet.relatedKQL.length > 0);
+            return hasKQL ? hasQueries : !hasQueries;
+        });
+        this.displayResults(this.currentResults, hasKQL ? 'Scenarios with KQL queries' : 'Scenarios without KQL queries');
+    }
+
+    filterBySource(source) {
+        this.updateFilterButtons('source', source);
+        if (source === 'wiki') {
+            this.currentResults = this.allCheatSheets.filter(sheet =>
+                sheet.source && sheet.source.endsWith('.md')
+            );
+            this.displayResults(this.currentResults, 'Wiki-extracted scenarios');
+        }
+    }
+
+    clearCategoryFilter() {
+        // Update UI to show "All Categories" as active
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector('[data-category=""]')?.classList.add('active');
+
+        // Clear filters
+        document.getElementById('categoryFilter').value = '';
+        document.getElementById('searchInput').value = '';
+        this.performSearch();
+    }
+
+    clearAllFilters() {
+        // Clear category selection
+        this.clearCategoryFilter();
+
+        // Clear tag selection
+        document.querySelectorAll('.cloud-tag').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Update filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('.filter-btn[onclick="clearAllFilters()"]')?.classList.add('active');
+
+        // Show all scenarios
+        this.showAllScenarios();
+    }
+
+    updateFilterButtons(type, value) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Find and activate the appropriate button based on onclick attribute
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => {
+            const onclick = btn.getAttribute('onclick');
+            if (onclick && onclick.includes(value)) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    goHome() {
+        // Clear all filters and search
+        document.getElementById('searchInput').value = '';
+        document.getElementById('categoryFilter').value = '';
+        this.clearAllFilters();
+        
+        // Show welcome message
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('welcomeMessage').style.display = 'block';
+        
+        // Clear recent queries selection
+        document.querySelectorAll('#recentQueries a').forEach(a => {
+            a.classList.remove('active');
+        });
+        
+        console.log('🏠 Returned to home');
+    }
 }
 
 // Global functions for HTML onclick events
@@ -1143,6 +1461,11 @@ function expandCheatSheet(sheetId) {
 
 function collapseCheatSheet(sheetId) {
     app.collapseCheatSheet(sheetId);
+}
+
+// Global function to go home
+function goHome() {
+    app.goHome();
 }
 
 // Initialize the application when the page loads

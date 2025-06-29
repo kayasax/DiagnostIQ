@@ -1,10 +1,10 @@
 # 🧠 AI Session Starter: Project Memory
-This file serves as the persistent memory for the DiagnosticIQ project across sessions in this workspace.
+This file serves as the persistent memory for the DiagnostIQ project across sessions in this workspace.
 You must update it regularly with key points
 ---
 
 ## 📘 Project Overview
-**Project Name:** DiagnosticIQ
+**Project Name:** DiagnostIQ
 
 **Description:** A comprehensive troubleshooting application for Azure AD/Entra ID support scenarios. A searchable library of troubleshooting cheat sheets with cluster information, KQL queries, and step-by-step procedures for support engineers.
 
@@ -89,7 +89,7 @@ You must update it regularly with key points
 
 **Immediate Goals:**
 1. **Navigation Overhaul**: Replace quick navigation with category-based navigation and tag cloud
-2. **Continue Extraction**: Scale proven workflow to remaining 240+ Azure AD TSG files  
+2. **Continue Extraction**: Scale proven workflow to remaining 240+ Azure AD TSG files
 3. **User Experience**: Improve discoverability and browsing experience
 4. **Search Enhancement**: Advanced filtering by categories and tags
 
@@ -121,10 +121,10 @@ You must update it regularly with key points
 |------------|----------------------------------|
 | 2025-06-29 | **🚀 ULTRA-EFFICIENT WORKFLOW** - Achieved 2-command workflow: `--next --open` + Copilot prompt = extracted scenario! Smart auto-detection with URL encoding support, seamless auto-import, and processed file management. **4/244 files completed with streamlined batch processing.** Next: App navigation overhaul with categories and tag cloud. |
 | 2025-06-29 | **🎯 BATCH PROCESSOR OPTIMIZED** - Enhanced batch processor with smart filename matching, auto-detection, and non-blocking workflow. Successfully processed multiple TSG files with automatic import and file management. **Ready for mass extraction of 244+ Azure AD wiki files.** |
-| 2025-06-29 | **🎨 UI ENHANCEMENTS COMPLETE** - Added tags display with blue styling, wiki source indicators with green badges, fixed query count bug (shows 0 when no queries), enhanced metadata display with N/A fallbacks. Successfully extracted 15 Azure AD Password Protection scenarios. **DiagnosticIQ now production-ready with full feature set.** |
-| 2025-06-28 | **✅ COPILOT EXTRACTION SUCCESS** - Validated GitHub Copilot workflow with `#file:` reference approach. Successfully extracted deletion threshold scenario. Enhanced DiagnosticIQ to support both string and object step formats. Added `relatedKQL` display support. **Workspace cleaned and decluttered.** |
-| 2025-06-27 | **Enhanced DiagnosticIQ Features** - Modular architecture, content extraction system, UI/UX improvements, and comprehensive scenario management. |
-| 2025-06-26 | **Initial Development** - Created DiagnosticIQ prototype, implemented core features, published to GitHub. |
+| 2025-06-29 | **🎨 UI ENHANCEMENTS COMPLETE** - Added tags display with blue styling, wiki source indicators with green badges, fixed query count bug (shows 0 when no queries), enhanced metadata display with N/A fallbacks. Successfully extracted 15 Azure AD Password Protection scenarios. **DiagnostIQ now production-ready with full feature set.** |
+| 2025-06-28 | **✅ COPILOT EXTRACTION SUCCESS** - Validated GitHub Copilot workflow with `#file:` reference approach. Successfully extracted deletion threshold scenario. Enhanced DiagnostIQ to support both string and object step formats. Added `relatedKQL` display support. **Workspace cleaned and decluttered.** |
+| 2025-06-27 | **Enhanced DiagnostIQ Features** - Modular architecture, content extraction system, UI/UX improvements, and comprehensive scenario management. |
+| 2025-06-26 | **Initial Development** - Created DiagnostIQ prototype, implemented core features, published to GitHub. |
 
 ---
 

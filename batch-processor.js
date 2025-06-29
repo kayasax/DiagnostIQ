@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * DiagnosticIQ Batch Processor v0.3.1
+ * DiagnostIQ Batch Processor v0.3.2
  *
  * Discovers TSG markdown files in a directory and creates an organized
  * batch processing workflow for Copilot extraction.
@@ -212,7 +212,7 @@ class BatchProcessor {
         const pending = queue.files.filter(f => f.status === 'pending').length;
         const processing = queue.files.filter(f => f.status === 'processing').length;
 
-        console.log(`\n🎯 DiagnosticIQ Batch Processor v0.3.1`);
+        console.log(`\n🎯 DiagnostIQ Batch Processor v0.3.2`);
         console.log(`📊 Batch: ${queue.batchId}`);
         console.log(`📈 Progress: ${completed}/${queue.totalFiles} files completed`);
         console.log(`⏳ Status: ${completed} completed, ${processing} processing, ${pending} pending\n`);
@@ -493,7 +493,7 @@ class BatchProcessor {
      * Write status file for easy reference
      */
     writeStatusFile(nextFile) {
-        const statusContent = `DiagnosticIQ Batch Processor - Current Status
+        const statusContent = `DiagnostIQ Batch Processor - Current Status
 Generated: ${new Date().toISOString()}
 
 NEXT FILE TO PROCESS:
@@ -599,7 +599,7 @@ ALTERNATIVE:
 
     showHelp() {
         console.log(`
-🎯 DiagnosticIQ Batch Processor v0.3.1
+🎯 DiagnostIQ Batch Processor v0.3.2
 
 USAGE:
   node batch-processor.js <directory>     Create batch from directory
@@ -622,7 +622,7 @@ IMPROVED WORKFLOW:
 
 AUTO-FEATURES:
 - Auto-detects completed JSON files in temp/
-- Auto-imports scenarios to DiagnosticIQ
+- Auto-imports scenarios to DiagnostIQ
 - Moves processed files to temp/processed/
 - Opens next file in VS Code automatically
 - No blocking file watchers - use commands when ready

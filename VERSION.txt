@@ -1,4 +1,4 @@
-DiagnosticIQ Version 0.3.2
+DiagnostIQ Version 0.3.2
 
 Milestone: Streamlined Batch Processing & Auto-Detection
 

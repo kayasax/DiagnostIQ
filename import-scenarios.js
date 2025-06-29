@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Import Scenarios to DiagnosticIQ
+ * Import Scenarios to DiagnostIQ
  *
  * This script takes extracted scenarios from Copilot and imports them
- * into the DiagnosticIQ data structure.
+ * into the DiagnostIQ data structure.
  */
 
 const fs = require('fs');
@@ -18,7 +18,7 @@ class ScenarioImporter {
     }
 
     async importScenarios(jsonFilePath) {
-        console.log('🔄 IMPORTING SCENARIOS TO DIAGNOSTICIQ');
+        console.log('🔄 IMPORTING SCENARIOS TO DIAGNOSTIQ');
         console.log('=====================================');
         console.log(`📁 Reading: ${path.basename(jsonFilePath)}`);
 
@@ -39,7 +39,7 @@ class ScenarioImporter {
             this.updateIndex();
 
             console.log(`✅ Successfully imported ${imported} scenarios`);
-            console.log('✅ DiagnosticIQ data updated');
+            console.log('✅ DiagnostIQ data updated');
             console.log('\n🎉 Open index.html to see your new scenarios!');
 
             return { imported, total: scenarios.length };
