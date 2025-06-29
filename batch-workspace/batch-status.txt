@@ -1,0 +1,22 @@
+DiagnostIQ Batch Processor - Current Status
+Generated: 2025-06-29T20:53:12.065Z
+
+NEXT FILE TO PROCESS:
+📄 Azure-AD-B2B-TSG-%3A-Guest-user-can't-leave-an-organization.md
+📂 Wiki\AzureAD\AzureAD\GeneralPages\AAD\AAD-Account-Management\Azure-AD-B2B\Azure-AD-B2B-TSG-%3A-Guest-user-can't-leave-an-organization.md
+💾 Save JSON as: temp\Azure-AD-B2B-TSG-%3A-Guest-user-can't-leave-an-organization-extracted-scenarios.json
+
+COPILOT INSTRUCTIONS:
+1. Open the file above in VS Code
+2. Use this exact prompt in Copilot Chat:
+
+#file: generic_extraction_template.txt
+
+Execute instructions in the template and save the json in temp
+
+3. Save the JSON with the exact filename shown above
+4. Run: node batch-processor.js --completed "temp\Azure-AD-B2B-TSG-%3A-Guest-user-can't-leave-an-organization-extracted-scenarios.json"
+
+ALTERNATIVE:
+- Run: node batch-processor.js --next (to see this again)
+- Run: node batch-processor.js --status (to see full progress)
