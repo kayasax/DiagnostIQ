@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .scenario-preview { max-height: 200px; overflow-y: auto; background: #f9f9f9; padding: 10px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>Search Debug Test</h1>
+
+    <div class="debug-section">
+        <h3>Test Search for "adfs"</h3>
+        <div id="search-debug"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Category "azure-ad-domain-name-management" Scenarios</h3>
+        <div id="category-debug"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Sample Scenario Structure</h3>
+        <div id="structure-debug" class="scenario-preview"></div>
+    </div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script>
+        async function debugSearch() {
+            try {
+                const dataManager = new DataManager();
+                await dataManager.loadAllScenarios();
+                const scenarios = dataManager.getAllScenarios();
+
+                console.log('Total scenarios loaded:', scenarios.length);
+
+                // Debug category filtering
+                const categoryScenarios = scenarios.filter(s => s.category === 'azure-ad-domain-name-management');
+                document.getElementById('category-debug').innerHTML =
+                    `<p>Found ${categoryScenarios.length} scenarios in "azure-ad-domain-name-management" category</p>` +
+                    categoryScenarios.map(s => `<div>- ${s.title || s.id}</div>`).join('');
+
+                // Debug search for "adfs"
+                const searchTerm = 'adfs';
+                const adfsResults = categoryScenarios.filter(sheet => {
+                    const matchTitle = sheet.title && sheet.title.toLowerCase().includes(searchTerm);
+                    const matchDescription = sheet.description && sheet.description.toLowerCase().includes(searchTerm);
+                    const matchCategory = sheet.category && sheet.category.toLowerCase().includes(searchTerm);
+                    const matchTags = sheet.tags && sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                    const matchQueries = sheet.queries && sheet.queries.some(q =>
+                        (q.query && q.query.toLowerCase().includes(searchTerm)) ||
+                        (q.description && q.description.toLowerCase().includes(searchTerm))
+                    );
+                    const matchKqlQueries = sheet.kqlQueries && sheet.kqlQueries.some(q =>
+                        (q.query && q.query.toLowerCase().includes(searchTerm)) ||
+                        (q.description && q.description.toLowerCase().includes(searchTerm))
+                    );
+
+                    console.log(`Checking scenario "${sheet.title}":`, {
+                        matchTitle, matchDescription, matchCategory, matchTags, matchQueries, matchKqlQueries
+                    });
+
+                    return matchTitle || matchDescription || matchCategory || matchTags || matchQueries || matchKqlQueries;
+                });
+
+                document.getElementById('search-debug').innerHTML =
+                    `<p>Search for "${searchTerm}" in category scenarios: ${adfsResults.length} results</p>` +
+                    adfsResults.map(s => `<div>- ${s.title || s.id}</div>`).join('');
+
+                // Show structure of first scenario
+                if (scenarios.length > 0) {
+                    const firstScenario = scenarios[0];
+                    document.getElementById('structure-debug').innerHTML =
+                        `<pre>${JSON.stringify(firstScenario, null, 2)}</pre>`;
+                }
+
+            } catch (error) {
+                console.error('Debug error:', error);
+                document.getElementById('search-debug').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', debugSearch);
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Click Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Card Click Test</h1>
+
+        <div id="test-output"></div>
+
+        <!-- Manual test card -->
+        <div class="cheat-sheet-card" data-category="test">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title" onclick="testClick()">Test Card Title (Click Me)</h3>
+                    <div class="card-meta">
+                        <span class="category">Test Category</span>
+                        <span class="queries">1 Query</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-content">
+                <p class="card-description">This is a test card to verify styling and click functionality.</p>
+
+                <div class="query-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-code"></i>
+                        Query 1: Test Query
+                    </h4>
+                    <div class="query-container">
+                        <pre><code class="language-kql query-code">SigninLogs | where TimeGenerated > ago(1h) | take 10</code></pre>
+                        <button class="copy-btn" onclick="testCopy()">📋 Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dynamic-card-area">
+            <h2>Dynamic Card Test</h2>
+            <div id="dynamic-cards"></div>
+        </div>
+    </div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script src="app.js"></script>
+    <script>
+        function testClick() {
+            alert('Test card clicked! This means the click handler is working.');
+        }
+
+        function testCopy() {
+            alert('Copy button clicked!');
+        }
+
+        async function loadAndTestCards() {
+            const output = document.getElementById('test-output');
+            const dynamicArea = document.getElementById('dynamic-cards');
+
+            try {
+                output.innerHTML += '<p>🚀 Loading app...</p>';
+
+                // Initialize data manager and app
+                window.dataManager = new DataManager();
+                await window.dataManager.loadAllScenarios();
+
+                window.app = new QueryLibraryApp();
+                await window.app.initializeApp();
+
+                output.innerHTML += '<p>✅ App loaded successfully</p>';
+                output.innerHTML += `<p>📊 Total scenarios: ${window.app.allCheatSheets.length}</p>`;
+
+                if (window.app.allCheatSheets.length > 0) {
+                    // Create a dynamic card from real data
+                    const firstScenario = window.app.allCheatSheets[0];
+                    output.innerHTML += `<p>🎴 Creating card for: ${firstScenario.title}</p>`;
+
+                    const cardHTML = window.app.createScenarioCard(firstScenario);
+                    dynamicArea.innerHTML = cardHTML;
+
+                    output.innerHTML += '<p>✅ Dynamic card created. Try clicking on the title!</p>';
+
+                    // Apply syntax highlighting
+                    if (typeof Prism !== 'undefined') {
+                        Prism.highlightAll();
+                    }
+                } else {
+                    output.innerHTML += '<p>❌ No scenarios available to test</p>';
+                }
+
+            } catch (error) {
+                output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadAndTestCards);
+    </script>
+</body>
+</html>

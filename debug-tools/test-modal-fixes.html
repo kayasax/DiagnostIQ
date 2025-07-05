@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnostIQ Modal Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-controls {
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        .test-btn {
+            margin: 10px;
+            padding: 10px 15px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-btn:hover {
+            background: #106ebe;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>DiagnostIQ Modal & Function Test</h1>
+
+        <div class="test-controls">
+            <h3>Function Tests</h3>
+            <button class="test-btn" onclick="testGoHome()">Test goHome()</button>
+            <button class="test-btn" onclick="testSaveCheatSheet()">Test saveCheatSheet()</button>
+            <button class="test-btn" onclick="testCloseModal()">Test closeModal()</button>
+            <button class="test-btn" onclick="testEditScenario()">Test editScenario()</button>
+
+            <h3>Modal Tests</h3>
+            <button class="test-btn" onclick="openScenarioModal()">Open Scenario Modal</button>
+            <button class="test-btn" onclick="openEditModal()">Open Edit Modal</button>
+            <button class="test-btn" onclick="testZIndex()">Test Z-Index Stacking</button>
+
+            <div id="testStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div id="searchResults" class="search-results">
+            <!-- Test cards will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Modal for Add Cheat Sheet -->
+    <div id="addCheatSheetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Test Edit Modal</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>This is the edit modal that should appear above scenario modals.</p>
+                <form id="cheatSheetForm">
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" value="Test Scenario">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select id="category">
+                            <option value="test">Test Category</option>
+                        </select>
+                    </div>
+                    <div id="queryInputs">
+                        <!-- Query inputs will be here -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCheatSheet()">Save Cheat Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data-manager-optimized.js"></script>
+    <script src="js/ui/modals.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('testStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function testGoHome() {
+            try {
+                if (typeof window.goHome === 'function') {
+                    window.goHome();
+                    showStatus('✅ goHome() function called successfully', 'success');
+                } else {
+                    showStatus('❌ goHome() function not found', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Error calling goHome(): ' + error.message, 'error');
+            }
+        }
+
+        function testSaveCheatSheet() {
+            try {
+                if (typeof window.saveCheatSheet === 'function') {
+                    window.saveCheatSheet();
+                    showStatus('✅ saveCheatSheet() function called successfully', 'success');
+                } else {
+                    showStatus('❌ saveCheatSheet() function not found', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Error calling saveCheatSheet(): ' + error.message, 'error');
+            }
+        }
+
+        function testCloseModal() {
+            try {
+                if (typeof window.closeModal === 'function') {
+                    window.closeModal();
+                    showStatus('✅ closeModal() function called successfully', 'success');
+                } else {
+                    showStatus('❌ closeModal() function not found', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Error calling closeModal(): ' + error.message, 'error');
+            }
+        }
+
+        function testEditScenario() {
+            try {
+                if (typeof window.editScenario === 'function') {
+                    window.editScenario('test-scenario-id');
+                    showStatus('✅ editScenario() function called successfully', 'success');
+                } else {
+                    showStatus('❌ editScenario() function not found', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Error calling editScenario(): ' + error.message, 'error');
+            }
+        }
+
+        function openScenarioModal() {
+            if (window.app && window.app.modalHandler) {
+                // Create a test scenario
+                const testScenario = {
+                    id: 'test-scenario',
+                    title: 'Test Scenario Modal',
+                    description: 'This is a test scenario to check modal functionality',
+                    category: 'Test',
+                    vertical: 'Testing',
+                    kqlQueries: [
+                        {
+                            name: 'Test Query',
+                            description: 'A test KQL query',
+                            query: 'print "Hello, World!"'
+                        }
+                    ],
+                    isLoaded: true
+                };
+
+                window.app.modalHandler.showScenarioModal(testScenario);
+                showStatus('✅ Scenario modal opened', 'success');
+            } else {
+                showStatus('❌ App or modal handler not available', 'error');
+            }
+        }
+
+        function openEditModal() {
+            const modal = document.getElementById('addCheatSheetModal');
+            if (modal) {
+                modal.classList.add('edit-mode');
+                modal.style.display = 'block';
+                showStatus('✅ Edit modal opened with edit-mode class', 'success');
+            } else {
+                showStatus('❌ Edit modal not found', 'error');
+            }
+        }
+
+        function testZIndex() {
+            // Open scenario modal first
+            openScenarioModal();
+
+            // Then open edit modal
+            setTimeout(() => {
+                openEditModal();
+                showStatus('✅ Both modals opened - check z-index stacking', 'success');
+            }, 500);
+        }
+
+        // Wait for app to initialize and show status
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🧪 Modal test page loaded');
+
+            // Wait a moment for scripts to load
+            setTimeout(() => {
+                const appStatus = window.app ? '✅ Available' : '❌ Not Available';
+                const dataManagerStatus = window.dataManager ? '✅ Available' : '❌ Not Available';
+                const modalHandlerStatus = window.app?.modalHandler ? '✅ Available' : '❌ Not Available';
+
+                const functionsStatus = {
+                    goHome: typeof window.goHome,
+                    saveCheatSheet: typeof window.saveCheatSheet,
+                    closeModal: typeof window.closeModal,
+                    editScenario: typeof window.editScenario
+                };
+
+                console.log('📊 Test Environment Status:', {
+                    app: appStatus,
+                    dataManager: dataManagerStatus,
+                    modalHandler: modalHandlerStatus,
+                    functions: functionsStatus
+                });
+
+                showStatus(`App: ${appStatus}, Functions: ${Object.keys(functionsStatus).filter(k => functionsStatus[k] === 'function').length}/4 available`, 'success');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

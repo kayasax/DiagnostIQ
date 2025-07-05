@@ -28,6 +28,12 @@
                     <button class="btn btn-secondary" onclick="syncLibrary()">
                         <i class="fas fa-sync"></i> Sync Library
                     </button>
+                    <button class="btn btn-info" onclick="checkForNewScenarios()" title="Check for new scenarios in files">
+                        <i class="fas fa-search-plus"></i> Check New
+                    </button>
+                    <button class="btn btn-warning" onclick="resetToOriginalData()" title="Reset all edits and reload original data">
+                        <i class="fas fa-undo"></i> Reset Data
+                    </button>
                 </div>
             </div>
         </header>
@@ -87,10 +93,39 @@
                         <!-- Statistics will be populated by JavaScript -->
                     </div>
                 </div>
+
+                <!-- Category Changes -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-sync-alt"></i> Category Changes</h3>
+                    <div class="category-changes-section">
+                        <button id="checkCategoryChanges" class="btn-secondary" onclick="app.showCategoryChangesSummary()">
+                            <i class="fas fa-folder-open"></i> Check Changes
+                        </button>
+                        <div id="categoryChangesCount" class="changes-count hidden">
+                            <!-- Will show count of pending changes -->
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             <!-- Content Area -->
             <main class="content-area">
+                <!-- File Protocol Warning -->
+                <div id="fileProtocolWarning" class="file-protocol-warning hidden">
+                    <div class="warning-content">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Limited Functionality Detected</h3>
+                        <p>You're running DiagnostIQ directly from a file. Only 4 core scenarios are available.</p>
+                        <p><strong>For full access to 100+ scenarios:</strong></p>
+                        <ol>
+                            <li>Open terminal/command prompt in this folder</li>
+                            <li>Run: <code>python -m http.server 8080</code></li>
+                            <li>Open: <a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a></li>
+                        </ol>
+                        <p>Or simply double-click <code>start-diagnostiq.bat</code> (Windows) or <code>start-diagnostiq.sh</code> (Mac/Linux)</p>
+                    </div>
+                </div>
+
                 <div id="searchResults" class="search-results">
                     <!-- Results will be populated here -->
                 </div>
@@ -118,29 +153,29 @@
                 <form id="cheatSheetForm">
                     <div class="form-group">
                         <label for="title">Title:</label>
-                        <input type="text" id="title" required>
+                        <input type="text" id="title" name="title" required>
                     </div>
                     <div class="form-group">
                         <label for="category">Category:</label>
-                        <select id="category" required>
+                        <select id="category" name="category" required>
                             <!-- Categories will be populated dynamically by app.js -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="cluster">Cluster:</label>
-                        <input type="text" id="cluster" placeholder="e.g., prod, staging, dogfood">
+                        <input type="text" id="cluster" name="cluster" placeholder="e.g., prod, staging, dogfood">
                     </div>
                     <div class="form-group">
                         <label for="database">Database:</label>
-                        <input type="text" id="database" placeholder="e.g., AADSFprod (optional)">
+                        <input type="text" id="database" name="database" placeholder="e.g., AADSFprod (optional)">
                     </div>
                     <div class="form-group">
                         <label for="description">Description:</label>
-                        <textarea id="description" rows="3"></textarea>
+                        <textarea id="description" name="description" rows="3"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="steps">Troubleshooting Steps:</label>
-                        <textarea id="steps" rows="5" placeholder="1. First step...&#10;2. Second step..."></textarea>
+                        <textarea id="steps" name="steps" rows="5" placeholder="1. First step...&#10;2. Second step..."></textarea>
                     </div>
                     <div class="form-group">
                         <label>Queries:</label>
@@ -160,35 +195,398 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-    <script src="data-manager.js"></script>
+    <script src="auto-setup-globals.js"></script>
+    <script src="data-manager-optimized.js"></script>
+    <script src="js/ui/modals.js"></script>
     <script src="app.js"></script>
+
     <script>
-        // Initialize DiagnostIQ when DOM is ready
+        // Define critical global functions immediately (before DOMContentLoaded)
+        // These are needed for onclick handlers in HTML
+
+        window.showAddCheatSheet = function() {
+            console.log('➕ showAddCheatSheet called');
+            if (window.app && typeof window.app.showAddCheatSheet === 'function') {
+                return window.app.showAddCheatSheet();
+            } else {
+                console.error('❌ app.showAddCheatSheet is not available:', typeof window.app?.showAddCheatSheet);
+                // Fallback: try to initialize if not ready
+                if (!window.app) {
+                    alert('App is loading, please try again in a moment.');
+                }
+            }
+        };
+
+        window.checkForNewScenarios = function() {
+            console.log('🔍 checkForNewScenarios called');
+            if (window.app && typeof window.app.checkForNewScenarios === 'function') {
+                return window.app.checkForNewScenarios();
+            } else {
+                console.error('❌ app.checkForNewScenarios is not available:', typeof window.app?.checkForNewScenarios);
+                if (!window.app) {
+                    alert('App is loading, please try again in a moment.');
+                }
+            }
+        };
+
+        window.resetToOriginalData = function() {
+            console.log('🔄 resetToOriginalData called');
+            if (window.app && typeof window.app.resetToOriginalData === 'function') {
+                return window.app.resetToOriginalData();
+            } else {
+                console.error('❌ app.resetToOriginalData is not available:', typeof window.app?.resetToOriginalData);
+                if (!window.app) {
+                    alert('App is loading, please try again in a moment.');
+                }
+            }
+        };
+
+        window.saveCheatSheet = function() {
+            console.log('💾 saveCheatSheet called');
+            if (window.app && typeof window.app.saveCheatSheet === 'function') {
+                return window.app.saveCheatSheet();
+            } else {
+                console.error('❌ app.saveCheatSheet is not available:', typeof window.app?.saveCheatSheet);
+            }
+        };
+
+        window.closeModal = function() {
+            console.log('❌ closeModal called');
+            if (window.app && typeof window.app.closeModal === 'function') {
+                return window.app.closeModal();
+            } else {
+                console.error('❌ app.closeModal is not available:', typeof window.app?.closeModal);
+            }
+        };
+
+        window.goHome = function() {
+            console.log('🏠 goHome called');
+            if (window.app && typeof window.app.goHome === 'function') {
+                return window.app.goHome();
+            } else {
+                console.error('❌ app.goHome is not available:', typeof window.app?.goHome);
+            }
+        };
+
+        // Critical admin functions
+        window.showAddCheatSheet = function() {
+            console.log('📝 showAddCheatSheet called');
+            if (window.app && typeof window.app.showAddCheatSheet === 'function') {
+                return window.app.showAddCheatSheet();
+            } else {
+                console.error('❌ app.showAddCheatSheet is not available:', typeof window.app?.showAddCheatSheet);
+            }
+        };
+
+        window.resetToOriginalData = function() {
+            console.log('🔄 resetToOriginalData called');
+            if (window.app && typeof window.app.resetToOriginalData === 'function') {
+                return window.app.resetToOriginalData();
+            } else {
+                console.error('❌ app.resetToOriginalData is not available:', typeof window.app?.resetToOriginalData);
+            }
+        };
+
+        window.checkForNewScenarios = function() {
+            console.log('🔍 checkForNewScenarios called');
+            if (window.app && typeof window.app.checkForNewScenarios === 'function') {
+                return window.app.checkForNewScenarios();
+            } else {
+                console.error('❌ app.checkForNewScenarios is not available:', typeof window.app?.checkForNewScenarios);
+            }
+        };
+
+        window.importSelectedScenarios = function() {
+            console.log('📥 importSelectedScenarios called');
+            if (window.app && typeof window.app.importSelectedScenarios === 'function') {
+                return window.app.importSelectedScenarios();
+            } else {
+                console.error('❌ app.importSelectedScenarios is not available');
+            }
+        };
+
+        window.importAllNewScenarios = function() {
+            console.log('📥 importAllNewScenarios called');
+            if (window.app && typeof window.app.importAllNewScenarios === 'function') {
+                return window.app.importAllNewScenarios();
+            } else {
+                console.error('❌ app.importAllNewScenarios is not available');
+            }
+        };
+
+        window.closeNewScenariosModal = function() {
+            console.log('❌ closeNewScenariosModal called');
+            if (window.app && typeof window.app.closeNewScenariosModal === 'function') {
+                return window.app.closeNewScenariosModal();
+            } else {
+                console.error('❌ app.closeNewScenariosModal is not available');
+            }
+        };
+
+        // Additional admin functions
+        window.importSelectedScenarios = function() {
+            console.log('📥 importSelectedScenarios called');
+            if (window.app && typeof window.app.importSelectedScenarios === 'function') {
+                return window.app.importSelectedScenarios();
+            } else {
+                console.error('❌ app.importSelectedScenarios is not available');
+            }
+        };
+
+        window.importAllNewScenarios = function() {
+            console.log('📥 importAllNewScenarios called');
+            if (window.app && typeof window.app.importAllNewScenarios === 'function') {
+                return window.app.importAllNewScenarios();
+            } else {
+                console.error('❌ app.importAllNewScenarios is not available');
+            }
+        };
+
+        window.closeNewScenariosModal = function() {
+            console.log('❌ closeNewScenariosModal called');
+            if (window.app && typeof window.app.closeNewScenariosModal === 'function') {
+                return window.app.closeNewScenariosModal();
+            } else {
+                console.error('❌ app.closeNewScenariosModal is not available');
+            }
+        };
+
+        console.log('✅ Critical global functions defined immediately');
+    </script>
+
+    <script>
+        // Legacy compatibility functions that are called by onclick
+        function performSearch() {
+            if (window.app && window.app.performSearch) {
+                return window.app.performSearch();
+            }
+        }
+
+        function clearSearch() {
+            if (window.app && window.app.clearSearch) {
+                return window.app.clearSearch();
+            }
+        }
+
+        function clearAllFilters() {
+            if (window.app && window.app.clearAllFilters) {
+                return window.app.clearAllFilters();
+            }
+        }
+
+        function editScenario(id) {
+            if (window.app && window.app.editScenario) {
+                return window.app.editScenario(id);
+            }
+        }
+
+        // Import/Export functions for client-side file operations
+        function importLibrary(event) {
+            console.log('📥 Import library triggered');
+            if (window.app && typeof window.app.importLibrary === 'function') {
+                return window.app.importLibrary(event);
+            } else {
+                console.error('❌ app.importLibrary is not available');
+                alert('Import functionality is not available yet.');
+            }
+        }
+
+        function exportLibrary() {
+            console.log('📤 Export library triggered');
+            if (window.app && typeof window.app.exportLibrary === 'function') {
+                return window.app.exportLibrary();
+            } else {
+                console.error('❌ app.exportLibrary is not available');
+                alert('Export functionality is not available yet.');
+            }
+        }
+
+        function syncLibrary() {
+            console.log('🔄 Sync library triggered');
+            if (window.app && typeof window.app.syncLibrary === 'function') {
+                return window.app.syncLibrary();
+            } else {
+                alert('Sync functionality - This would synchronize with a remote server or repository.');
+            }
+        }
+    </script>
+
+    <script>
+        // Initialize DiagnostIQ when DOM is ready - SINGLE INITIALIZATION POINT
         document.addEventListener('DOMContentLoaded', function() {
+            // Prevent multiple initializations
+            if (window.diagnostiqInitialized) {
+                console.warn('⚠️ DiagnostIQ already initialized, skipping...');
+                return;
+            }
+            window.diagnostiqInitialized = true;
+
             console.log('🚀 Initializing DiagnostIQ...');
 
-            // Initialize data manager first
-            window.dataManager = new DataManager();
+            // Check for file:// protocol and show warning
+            if (window.location.protocol === 'file:') {
+                console.warn('⚠️ Running via file:// protocol - showing warning');
+                const warning = document.getElementById('fileProtocolWarning');
+                if (warning) {
+                    warning.classList.remove('hidden');
+                }
+            }
 
-            // Initialize app
-            window.app = new QueryLibraryApp();
+            // Initialize data manager first (only once)
+            if (!window.dataManager) {
+                window.dataManager = new DataManager();
+            }
 
-            // Make app functions globally available for onclick handlers
-            window.performSearch = () => window.app.performSearch();
-            window.clearAllFilters = () => window.app.clearAllFilters();
-            window.filterByCategory = (category) => window.app.filterByCategory(category);
-            window.clearCategoryFilter = () => window.app.clearCategoryFilter();
-            window.filterByTag = (tag) => window.app.filterByTag(tag);
-            window.goHome = () => window.app.goHome();
-            window.expandCheatSheet = (id) => window.app.expandCheatSheet(id);
-            window.collapseCheatSheet = (id) => window.app.collapseCheatSheet(id);
-            window.editCheatSheet = (id) => window.app.editCheatSheet(id);
-            window.deleteCheatSheet = (id) => window.app.deleteCheatSheet(id);
-            window.saveCheatSheet = () => window.app.saveCheatSheet();
-            window.closeModal = () => window.app.closeModal();
+            // Initialize app (only once)
+            if (!window.app) {
+                console.log('🚀 Creating QueryLibraryApp instance...');
+                window.app = new QueryLibraryApp();
+                // Manually call initializeApp after creating the instance
+                window.app.initializeApp();
+                console.log('✅ QueryLibraryApp initialized');
+            }
+
+            // Set up global functions immediately after app initialization
+            setupGlobalFunctions();
 
             console.log('✅ DiagnostIQ initialized successfully');
         });
+
+        // Separate function to set up global mappings
+        function setupGlobalFunctions() {
+            console.log('🔗 Setting up global function mappings...');
+
+            // Make app functions globally available for onclick handlers
+            window.performSearch = function() {
+                console.log('🔍 performSearch called');
+                return window.app.performSearch();
+            };
+
+            window.clearSearch = function() {
+                console.log('🧹 clearSearch called');
+                return window.app.clearSearch();
+            };
+
+            window.clearAllFilters = function() {
+                console.log('🧽 clearAllFilters called');
+                return window.app.clearAllFilters();
+            };
+
+            window.filterByCategory = function(category) {
+                console.log('🏷️ filterByCategory called:', category);
+                return window.app.filterByCategory(category);
+            };
+
+            window.clearCategoryFilter = function() {
+                console.log('🏷️ clearCategoryFilter called');
+                return window.app.clearCategoryFilter();
+            };
+
+            window.filterByTag = function(tag) {
+                console.log('🏷️ filterByTag called:', tag);
+                return window.app.filterByTag(tag);
+            };
+
+            window.goHome = function() {
+                console.log('🏠 goHome called');
+                if (window.app && typeof window.app.goHome === 'function') {
+                    return window.app.goHome();
+                } else {
+                    console.error('❌ app.goHome is not available:', typeof window.app?.goHome);
+                }
+            };
+
+            window.expandCheatSheet = function(id) {
+                console.log('📖 expandCheatSheet called:', id);
+                return window.app.expandCheatSheet(id);
+            };
+
+            window.collapseCheatSheet = function(id) {
+                console.log('📕 collapseCheatSheet called:', id);
+                return window.app.collapseCheatSheet(id);
+            };
+
+            window.editCheatSheet = function(id) {
+                console.log('✏️ editCheatSheet called:', id);
+                return window.app.editCheatSheet(id);
+            };
+
+            window.editScenario = function(id) {
+                console.log('✏️ editScenario called:', id);
+                if (window.app && typeof window.app.editScenario === 'function') {
+                    return window.app.editScenario(id);
+                } else {
+                    console.error('❌ app.editScenario is not available:', typeof window.app?.editScenario);
+                }
+            };
+
+            window.deleteCheatSheet = function(id) {
+                console.log('🗑️ deleteCheatSheet called:', id);
+                return window.app.deleteCheatSheet(id);
+            };
+
+            window.saveCheatSheet = function() {
+                console.log('💾 saveCheatSheet called');
+                return window.app.saveCheatSheet();
+            };
+
+            window.closeModal = function() {
+                console.log('❌ closeModal called');
+                return window.app.closeModal();
+            };
+
+            // Import/Export modal functions
+            window.closeImportModal = function() {
+                console.log('❌ closeImportModal called');
+                if (window.app && typeof window.app.closeImportModal === 'function') {
+                    return window.app.closeImportModal();
+                } else {
+                    console.error('❌ app.closeImportModal is not available');
+                }
+            };
+
+            window.confirmImport = function() {
+                console.log('✅ confirmImport called');
+                if (window.app && typeof window.app.confirmImport === 'function') {
+                    return window.app.confirmImport();
+                } else {
+                    console.error('❌ app.confirmImport is not available');
+                }
+            };
+
+            window.closeSyncModal = function() {
+                console.log('❌ closeSyncModal called');
+                if (window.app && typeof window.app.closeSyncModal === 'function') {
+                    return window.app.closeSyncModal();
+                } else {
+                    console.error('❌ app.closeSyncModal is not available');
+                }
+            };
+
+            console.log('🔗 Global functions mapped:', {
+                goHome: typeof window.goHome,
+                editScenario: typeof window.editScenario,
+                saveCheatSheet: typeof window.saveCheatSheet,
+                appExists: !!window.app,
+                appGoHome: typeof window.app?.goHome,
+                appEditScenario: typeof window.app?.editScenario,
+                appSaveCheatSheet: typeof window.app?.saveCheatSheet
+            });
+        }
+
+        // Also set up a fallback in case DOM is already loaded
+        if (document.readyState === 'loading') {
+            // Document is still loading, wait for DOMContentLoaded
+        } else {
+            // Document has already loaded
+            console.log('🚀 Document already loaded, initializing immediately...');
+            if (!window.diagnostiqInitialized) {
+                setTimeout(() => {
+                    const event = new Event('DOMContentLoaded');
+                    document.dispatchEvent(event);
+                }, 100);
+            }
+        }
     </script>
 </body>
 </html>

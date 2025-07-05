@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnostIQ - Function Mapping Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .function-item {
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .available {
+            background: #d4edda;
+            color: #155724;
+        }
+        .missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .test-buttons {
+            margin: 20px 0;
+        }
+        .test-buttons button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #0078d4;
+            color: white;
+        }
+        .test-buttons button:hover {
+            background: #106ebe;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 DiagnostIQ Function Mapping Test</h1>
+        <p>This page tests whether all global functions are properly mapped and available for HTML onclick handlers.</p>
+
+        <div class="test-buttons">
+            <button onclick="checkAllFunctions()">🔍 Check All Functions</button>
+            <button onclick="testCriticalFunctions()">🚨 Test Critical Functions</button>
+            <button onclick="testAppState()">📱 Test App State</button>
+            <button onclick="window.location.reload()">🔄 Reload Page</button>
+        </div>
+
+        <div id="status"></div>
+        <div id="functionStatus"></div>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // List of all expected functions
+        const expectedFunctions = [
+            'performSearch', 'clearSearch', 'clearAllFilters', 'goHome',
+            'showAddCheatSheet', 'resetToOriginalData', 'checkForNewScenarios',
+            'saveCheatSheet', 'closeModal', 'exportLibrary', 'importLibrary', 'syncLibrary',
+            'closeImportModal', 'confirmImport', 'closeSyncModal',
+            'importSelectedScenarios', 'importAllNewScenarios', 'closeNewScenariosModal',
+            'editScenario', 'editCheatSheet', 'deleteCheatSheet', 'expandCheatSheet', 'collapseCheatSheet',
+            'filterByCategory', 'clearCategoryFilter', 'filterByTag'
+        ];
+
+        function checkAllFunctions() {
+            console.log('🔍 Checking all global functions...');
+
+            const results = [];
+            const missing = [];
+
+            expectedFunctions.forEach(funcName => {
+                const isAvailable = typeof window[funcName] === 'function';
+                results.push({
+                    name: funcName,
+                    available: isAvailable,
+                    type: typeof window[funcName]
+                });
+
+                if (!isAvailable) {
+                    missing.push(funcName);
+                }
+            });
+
+            // Display results
+            const functionStatusDiv = document.getElementById('functionStatus');
+            functionStatusDiv.innerHTML = `
+                <h3>Function Mapping Status</h3>
+                <div class="function-grid">
+                    ${results.map(func => `
+                        <div class="function-item ${func.available ? 'available' : 'missing'}">
+                            <span>${func.name}</span>
+                            <span>${func.available ? '✅' : '❌'} (${func.type})</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Status summary
+            const statusDiv = document.getElementById('status');
+            const availableCount = results.filter(f => f.available).length;
+            const totalCount = results.length;
+
+            if (missing.length === 0) {
+                statusDiv.innerHTML = `
+                    <div class="status success">
+                        ✅ All ${totalCount} functions are properly mapped and available!
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ ${missing.length} functions are missing out of ${totalCount} total.
+                        <br>Missing: ${missing.join(', ')}
+                        <br>Available: ${availableCount}/${totalCount}
+                    </div>
+                `;
+            }
+
+            console.log('📊 Function check results:', results);
+            console.log('❌ Missing functions:', missing);
+        }
+
+        function testCriticalFunctions() {
+            console.log('🚨 Testing critical functions...');
+
+            const criticalFunctions = [
+                'showAddCheatSheet',
+                'resetToOriginalData',
+                'checkForNewScenarios',
+                'exportLibrary',
+                'syncLibrary'
+            ];
+
+            const testResults = [];
+
+            criticalFunctions.forEach(funcName => {
+                try {
+                    const func = window[funcName];
+                    if (typeof func === 'function') {
+                        testResults.push({
+                            name: funcName,
+                            status: 'available',
+                            message: 'Function is available and callable'
+                        });
+                    } else {
+                        testResults.push({
+                            name: funcName,
+                            status: 'missing',
+                            message: `Function is ${typeof func}, not a function`
+                        });
+                    }
+                } catch (error) {
+                    testResults.push({
+                        name: funcName,
+                        status: 'error',
+                        message: `Error accessing function: ${error.message}`
+                    });
+                }
+            });
+
+            // Display test results
+            const testResultsDiv = document.getElementById('testResults');
+            testResultsDiv.innerHTML = `
+                <h3>Critical Function Test Results</h3>
+                ${testResults.map(result => `
+                    <div class="status ${result.status === 'available' ? 'success' : 'error'}">
+                        <strong>${result.name}:</strong> ${result.message}
+                    </div>
+                `).join('')}
+            `;
+
+            console.log('🚨 Critical function test results:', testResults);
+        }
+
+        function testAppState() {
+            console.log('📱 Testing app state...');
+
+            const appState = {
+                windowApp: !!window.app,
+                windowDataManager: !!window.dataManager,
+                diagnostiqInitialized: !!window.diagnostiqInitialized,
+                globalFunctionsReady: !!window.globalFunctionsReady,
+                appType: typeof window.app,
+                dataManagerType: typeof window.dataManager
+            };
+
+            // Test app methods
+            const appMethods = [
+                'showAddCheatSheet',
+                'resetToOriginalData',
+                'checkForNewScenarios',
+                'exportLibrary',
+                'syncLibrary'
+            ];
+
+            const methodStatus = {};
+            if (window.app) {
+                appMethods.forEach(method => {
+                    methodStatus[method] = typeof window.app[method];
+                });
+            }
+
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div class="status info">
+                    <h4>App State:</h4>
+                    <ul>
+                        <li>window.app exists: ${appState.windowApp ? '✅' : '❌'}</li>
+                        <li>window.dataManager exists: ${appState.windowDataManager ? '✅' : '❌'}</li>
+                        <li>diagnostiqInitialized: ${appState.diagnostiqInitialized ? '✅' : '❌'}</li>
+                        <li>globalFunctionsReady: ${appState.globalFunctionsReady ? '✅' : '❌'}</li>
+                    </ul>
+
+                    ${window.app ? `
+                        <h4>App Methods:</h4>
+                        <ul>
+                            ${appMethods.map(method => `
+                                <li>${method}: ${methodStatus[method] === 'function' ? '✅' : '❌'} (${methodStatus[method]})</li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p>❌ window.app is not available</p>'}
+                </div>
+            `;
+
+            console.log('📱 App state:', appState);
+            console.log('📱 App methods:', methodStatus);
+        }
+
+        // Auto-run checks when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Function mapping test page loaded');
+
+            // Wait a bit for everything to initialize
+            setTimeout(() => {
+                checkAllFunctions();
+                testAppState();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

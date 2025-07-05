@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DiagnostIQ Debug Test</title>
+</head>
+<body>
+    <div id="test-output"></div>
+
+    <script src="js/ui/modals.js"></script>
+    <script>
+        const testOutput = document.getElementById('test-output');
+
+        try {
+            // Test if ModalHandler is defined
+            if (typeof ModalHandler !== 'undefined') {
+                testOutput.innerHTML += '<p style="color: green;">✅ ModalHandler class loaded successfully</p>';
+
+                // Test if we can create an instance
+                const mockApp = { allCheatSheets: [], showToast: () => {} };
+                const modalHandler = new ModalHandler(mockApp);
+                testOutput.innerHTML += '<p style="color: green;">✅ ModalHandler instance created successfully</p>';
+
+                testOutput.innerHTML += '<p style="color: blue;">🎯 Ready to test full app loading!</p>';
+            } else {
+                testOutput.innerHTML += '<p style="color: red;">❌ ModalHandler not defined</p>';
+            }
+        } catch (error) {
+            testOutput.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>
