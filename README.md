@@ -1,52 +1,131 @@
 # 🧠 DiagnostIQ
 
-Your intelligent companion for Azure AD/Entra ID troubleshooting. A comprehensive web-based application designed for support engineers to quickly find, manage, and share troubleshooting queries and procedures.
+A comprehensive web-based troubleshooting library for Azure AD/Entra ID support engineers. Search, filter, and manage KQL queries and troubleshooting procedures with ease.
 
 ![DiagnostIQ](https://img.shields.io/badge/DiagnostIQ-Azure%20AD%20Troubleshooting-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Functionality
-- **Smart Search**: Search across troubleshooting scenarios, queries, and keywords
-- **Advanced Filtering**: Filter by category (Sync, Auth, Provisioning, Performance, Applications) and cluster (Production, Staging, Dogfood)
-- **KQL Syntax Highlighting**: Professional code highlighting for Kusto Query Language
-- **One-Click Copy**: Easy copy-to-clipboard functionality for queries
-- **Multiple Queries per Topic**: Each troubleshooting scenario supports multiple related queries
+1. **Open the app**: Start a local server (VS Code Live Server recommended)
+2. **Navigate to**: `http://localhost:5500`
+3. **Start troubleshooting**: Search scenarios, copy KQL queries, and find solutions!
 
-### Library Management
-- **Local Storage**: Create and save custom cheat sheets locally in your browser
-- **Full CRUD Operations**: Add, edit, and delete custom troubleshooting scenarios
-- **Import/Export**: Backup and share your custom query libraries via JSON files
-- **Recent Queries**: Track recently searched items for quick access
+## ✨ Key Features
 
-### 🆕 Automated Content Extraction
-- **Content Integration**: Automatically extract scenarios from local documentation sources
-- **Smart Content Detection**: Intelligent parsing of markdown files to identify KQL queries, steps, and metadata
-- **Category Auto-Classification**: Automatic categorization based on content analysis
-- **Modular Architecture**: Scenarios organized in a scalable, maintainable structure
-- **Quality Validation**: Ensures extracted content meets quality standards before integration
+### 🔍 **Smart Search & Navigation**
+- **Search**: Find scenarios by keywords, categories, or troubleshooting steps
+- **Category Navigation**: Browse by Auth, Sync, Account Management, and General
+- **Tag Cloud**: Click popular tags to filter scenarios quickly
+- **Advanced Filtering**: Combine search terms with category filters
 
-### Sample Content
-The application includes **7 comprehensive troubleshooting scenarios** with **21 production-ready KQL queries**:
+### 📊 **Rich Content Library**
+- **350+ Scenarios**: Comprehensive troubleshooting scenarios from Azure AD documentation
+- **KQL Queries**: Production-ready Kusto queries with syntax highlighting
+- **Step-by-Step Guides**: Detailed troubleshooting procedures
+- **Copy-to-Clipboard**: One-click copying for queries and procedures
 
-1. **Cross Tenant Sync Issues** (3 queries)
-   - Sync status monitoring
-   - Permission analysis
-   - Configuration review
+### 🛠️ **Management Tools**
+- **Add/Edit Scenarios**: Create custom troubleshooting scenarios
+- **Local Storage**: All data saved in your browser
+- **Import/Export**: Backup and share scenario libraries
+- **Admin Tools**: Cache management and bulk operations
 
-2. **Authentication Failures Analysis** (3 queries)
-   - Overall failure analysis
-   - MFA-specific issues
-   - Conditional access blocks
+## 📱 User Interface
 
-3. **User Provisioning Errors** (3 queries)
-   - Recent provisioning failures
-   - Application-specific issues
-   - SCIM provisioning problems
+### Navigation
+- **Collapsible Verticals**: Organized by business area
+  - 🔐 **Auth**: Authentication, MFA, Conditional Access
+  - 🔄 **Sync**: Synchronization, Provisioning, Cross-tenant
+  - 👤 **Account Management**: Users, Groups, B2B/B2C
+  - ⚙️ **General**: Applications, Performance, Miscellaneous
+
+### Features
+- **Scenario Counters**: See how many scenarios in each category
+- **Tag Cloud**: Visual representation of popular troubleshooting topics
+- **Recent Queries**: Quick access to recently used searches
+- **Statistics**: Overview of your troubleshooting library
+
+## 🔧 Technical Details
+
+### Architecture
+- **Frontend**: Pure HTML5, CSS3, JavaScript (ES6+)
+- **Storage**: Browser LocalStorage for scenarios and preferences
+- **Styling**: Modern CSS with responsive design
+- **No Dependencies**: Self-contained, no external frameworks required
+
+### Data Structure
+- **Modular Design**: Scenarios organized by categories in JSON format
+- **Lazy Loading**: Optimized performance with on-demand content loading
+- **Extensible**: Easy to add new scenarios and categories
+
+## 🛡️ Browser Compatibility
+
+**Supported Browsers:**
+- ✅ Chrome/Edge (Recommended)
+- ✅ Firefox
+- ✅ Safari
+- ⚠️ **Important**: Must use `http://localhost` (not `file://` URLs)
+
+## 📈 Content Stats
+
+- **350+ Scenarios**: Covering all major Azure AD troubleshooting areas
+- **Categories**: 60+ specific troubleshooting categories
+- **KQL Queries**: Hundreds of production-ready queries
+- **Regular Updates**: Content extracted from latest Azure AD documentation
+
+## 🎯 For Support Engineers
+
+**Perfect for:**
+- Quick troubleshooting scenario lookup
+- KQL query reference and copying
+- Step-by-step troubleshooting procedures
+- Building custom troubleshooting libraries
+- Sharing knowledge within support teams
+
+**Workflow:**
+1. **Search** for your issue (e.g., "conditional access", "sync errors")
+2. **Browse** relevant scenarios and troubleshooting steps
+3. **Copy** KQL queries directly to your tools
+4. **Add** custom scenarios for your specific environment
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Modern web browser
+- Local web server (VS Code Live Server extension recommended)
+
+### Installation
+1. **Clone or download** this repository
+2. **Open** in VS Code with Live Server extension
+3. **Start Live Server** (right-click `index.html` → "Open with Live Server")
+4. **Navigate** to `http://localhost:5500`
+5. **Start troubleshooting!**
+
+### First Steps
+- Click **"All Categories"** to see all scenarios
+- Try **searching** for "authentication" or "sync"
+- **Click tags** in the tag cloud to filter scenarios
+- **Expand verticals** in the navigation to browse categories
+- **Click scenario cards** to view detailed KQL queries and steps
+
+## 📖 Documentation
+
+- **User Guide**: Explore the interface to discover features
+- **Admin Tools**: Use keyboard shortcuts (Ctrl+Shift+A) for admin functions
+- **Troubleshooting**: Check browser console for any issues
+
+## 📝 License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Built For
+
+Azure AD/Entra ID support engineers who need quick access to troubleshooting resources, KQL queries, and proven procedures.
+
+---
+
+**Made with ❤️ for the Azure AD support community**
 
 4. **Performance Issues - Slow Sign-ins** (3 queries)
    - Performance overview
