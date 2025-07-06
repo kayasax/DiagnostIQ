@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Navigation Counters Test</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .counter-test { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { border-left: 4px solid #28a745; }
+        .warning { border-left: 4px solid #ffc107; }
+        .error { border-left: 4px solid #dc3545; }
+        .btn { padding: 8px 16px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; }
+        .btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Navigation Counters Test</h1>
+        <p>Testing if scenario counters are working correctly in the navigation.</p>
+
+        <div class="test-section">
+            <h3>🔧 Manual Tests</h3>
+            <button class="btn" onclick="testNavigationCounters()">🔍 Test Navigation Counters</button>
+            <button class="btn" onclick="testDataManagerCounters()">📊 Test DataManager Counters</button>
+            <button class="btn" onclick="openMainApp()">📱 Open Main App</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="testResults">Click a test button to start testing.</div>
+        </div>
+    </div>
+
+    <script>
+        function testNavigationCounters() {
+            const results = document.getElementById('testResults');
+            let html = '<h4>🔍 Navigation Counter Test Results:</h4>';
+
+            try {
+                // Check if we can access the main app's dataManager
+                if (typeof window.opener !== 'undefined' && window.opener && window.opener.dataManager) {
+                    window.dataManager = window.opener.dataManager;
+                } else if (typeof parent !== 'undefined' && parent.dataManager) {
+                    window.dataManager = parent.dataManager;
+                }
+
+                if (!window.dataManager) {
+                    html += '<div class="counter-test error">❌ No dataManager available. Please open the main app first.</div>';
+                    results.innerHTML = html;
+                    return;
+                }
+
+                // Test category counts
+                const categories = window.dataManager.getAvailableCategories();
+                html += `<div class="counter-test success">✅ Found ${categories.length} categories</div>`;
+
+                // Test vertical grouping
+                const verticals = {
+                    'account-management': { name: 'Account Management', categories: [] },
+                    'sync': { name: 'Sync', categories: [] },
+                    'auth': { name: 'Auth', categories: [] },
+                    'general': { name: 'General', categories: [] }
+                };
+
+                // Group categories by vertical
+                categories.forEach(category => {
+                    const vertical = getCategoryVertical(category.name);
+                    if (verticals[vertical]) {
+                        verticals[vertical].categories.push(category);
+                    }
+                });
+
+                // Display vertical statistics
+                Object.entries(verticals).forEach(([key, vertical]) => {
+                    if (vertical.categories.length > 0) {
+                        const totalScenarios = vertical.categories.reduce((sum, cat) => sum + cat.count, 0);
+                        html += `<div class="counter-test success">
+                            📂 ${vertical.name}: ${vertical.categories.length} categories, ${totalScenarios} scenarios
+                            <br>Categories: ${vertical.categories.map(cat => `${cat.displayName} (${cat.count})`).join(', ')}
+                        </div>`;
+                    } else {
+                        html += `<div class="counter-test warning">⚠️ ${vertical.name}: No categories assigned</div>`;
+                    }
+                });
+
+                // Test total count
+                const totalScenarios = categories.reduce((sum, cat) => sum + cat.count, 0);
+                html += `<div class="counter-test success">🎯 Total scenarios across all categories: ${totalScenarios}</div>`;
+
+            } catch (error) {
+                html += `<div class="counter-test error">❌ Error during test: ${error.message}</div>`;
+            }
+
+            results.innerHTML = html;
+        }
+
+        function testDataManagerCounters() {
+            const results = document.getElementById('testResults');
+            let html = '<h4>📊 DataManager Counter Test Results:</h4>';
+
+            try {
+                if (!window.dataManager) {
+                    html += '<div class="counter-test error">❌ No dataManager available. Please open the main app first.</div>';
+                    results.innerHTML = html;
+                    return;
+                }
+
+                // Test scenarios loading
+                const allScenarios = window.dataManager.getAllScenarios();
+                html += `<div class="counter-test success">✅ Total scenarios loaded: ${allScenarios.length}</div>`;
+
+                // Test category breakdown
+                const categoryMap = new Map();
+                allScenarios.forEach(scenario => {
+                    if (scenario.category) {
+                        categoryMap.set(scenario.category, (categoryMap.get(scenario.category) || 0) + 1);
+                    }
+                });
+
+                html += `<div class="counter-test success">✅ Unique categories in scenarios: ${categoryMap.size}</div>`;
+
+                // Show top 10 categories by count
+                const sortedCategories = Array.from(categoryMap.entries())
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 10);
+
+                html += '<div class="counter-test success">📊 Top 10 categories by scenario count:<ul>';
+                sortedCategories.forEach(([category, count]) => {
+                    html += `<li>${category}: ${count} scenarios</li>`;
+                });
+                html += '</ul></div>';
+
+            } catch (error) {
+                html += `<div class="counter-test error">❌ Error during test: ${error.message}</div>`;
+            }
+
+            results.innerHTML = html;
+        }
+
+        function getCategoryVertical(categoryName) {
+            const verticalMap = {
+                'authentication': 'auth',
+                'conditional-access': 'auth',
+                'mfa': 'auth',
+                'synchronization': 'sync',
+                'azure-ad-application-management': 'account-management',
+                'domain-services': 'account-management',
+                'b2b': 'general',
+                'b2c': 'general'
+            };
+
+            return verticalMap[categoryName] || 'general';
+        }
+
+        function openMainApp() {
+            window.open('index.html', '_blank');
+        }
+
+        // Try to automatically connect to main app if it's open
+        setTimeout(() => {
+            if (window.opener && window.opener.dataManager) {
+                window.dataManager = window.opener.dataManager;
+                document.getElementById('testResults').innerHTML =
+                    '<div class="counter-test success">✅ Connected to main app dataManager automatically!</div>';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

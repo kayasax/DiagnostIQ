@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Loading Debug</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Loading Debug</h1>
+        <div id="debug-output"></div>
+    </div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script>
+        async function debugDataLoading() {
+            const output = document.getElementById('debug-output');
+
+            try {
+                output.innerHTML += '<p>🚀 Starting data manager debug...</p>';
+
+                // Initialize data manager
+                const dataManager = new DataManager();
+
+                // Try to load scenarios
+                output.innerHTML += '<p>📦 Calling loadAllScenarios...</p>';
+                await dataManager.loadAllScenarios();
+
+                const scenarios = dataManager.getAllScenarios();
+                output.innerHTML += `<p>📊 Total scenarios loaded: ${scenarios.length}</p>`;
+
+                if (scenarios.length === 0) {
+                    output.innerHTML += '<p>❌ No scenarios loaded! Let me check the index file...</p>';
+
+                    // Try to load index directly
+                    try {
+                        const response = await fetch('data/scenarios/index.json');
+                        output.innerHTML += `<p>📂 Index fetch status: ${response.status}</p>`;
+
+                        if (response.ok) {
+                            const indexData = await response.json();
+                            output.innerHTML += `<p>📝 Index contains ${indexData.categories?.length || 0} categories</p>`;
+
+                            if (indexData.categories && indexData.categories.length > 0) {
+                                const firstCategory = indexData.categories[0];
+                                output.innerHTML += `<p>🔍 First category: ${firstCategory.name} with ${firstCategory.files?.length || 0} files</p>`;
+
+                                if (firstCategory.files && firstCategory.files.length > 0) {
+                                    const firstFile = firstCategory.files[0];
+                                    const filePath = `data/scenarios/${firstCategory.name}/${firstFile}`;
+                                    output.innerHTML += `<p>📄 Testing first file: ${filePath}</p>`;
+
+                                    try {
+                                        const fileResponse = await fetch(filePath);
+                                        output.innerHTML += `<p>📄 File fetch status: ${fileResponse.status}</p>`;
+
+                                        if (fileResponse.ok) {
+                                            const fileData = await fileResponse.json();
+                                            output.innerHTML += `<p>✅ File loaded successfully: ${JSON.stringify(fileData).substring(0, 200)}...</p>`;
+                                        } else {
+                                            output.innerHTML += `<p>❌ File fetch failed: ${fileResponse.statusText}</p>`;
+                                        }
+                                    } catch (fileError) {
+                                        output.innerHTML += `<p>❌ File load error: ${fileError.message}</p>`;
+                                    }
+                                }
+                            }
+                        } else {
+                            output.innerHTML += `<p>❌ Index fetch failed: ${response.statusText}</p>`;
+                        }
+                    } catch (indexError) {
+                        output.innerHTML += `<p>❌ Index load error: ${indexError.message}</p>`;
+                    }
+                } else {
+                    output.innerHTML += `<p>✅ First scenario: ${scenarios[0].title}</p>`;
+                }
+
+            } catch (error) {
+                output.innerHTML += `<p>❌ Debug error: ${error.message}</p>`;
+                console.error('Debug error:', error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', debugDataLoading);
+    </script>
+</body>
+</html>

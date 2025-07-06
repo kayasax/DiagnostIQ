@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnostIQ Card Debug</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>DiagnostIQ Card Debug</h1>
+
+        <div id="debug-info">
+            <h2>Debug Information</h2>
+            <div id="debug-output"></div>
+        </div>
+
+        <div id="card-test">
+            <h2>Card Test</h2>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script src="app.js"></script>
+    <script>
+        async function debugCardRendering() {
+            const debugOutput = document.getElementById('debug-output');
+            const testResults = document.getElementById('test-results');
+
+            try {
+                debugOutput.innerHTML += '<p>🚀 Starting debug...</p>';
+
+                // Initialize data manager
+                window.dataManager = new DataManager();
+
+                debugOutput.innerHTML += '<p>📦 Data manager created</p>';
+
+                // Load scenarios
+                await window.dataManager.loadAllScenarios();
+                const scenarios = window.dataManager.getAllScenarios();
+
+                debugOutput.innerHTML += `<p>📋 Loaded ${scenarios.length} scenarios</p>`;
+
+                if (scenarios.length > 0) {
+                    debugOutput.innerHTML += `<p>🔍 First scenario: ${JSON.stringify(scenarios[0], null, 2).substring(0, 200)}...</p>`;
+
+                    // Create app instance
+                    window.app = new QueryLibraryApp();
+                    await window.app.initializeApp();
+
+                    debugOutput.innerHTML += '<p>🎨 App initialized, testing card creation...</p>';
+
+                    // Test card creation with first scenario
+                    const testCard = window.app.createScenarioCard(scenarios[0]);
+                    debugOutput.innerHTML += `<p>🎴 Card HTML length: ${testCard.length} characters</p>`;
+
+                    // Display the test card
+                    testResults.innerHTML = testCard;
+
+                    debugOutput.innerHTML += '<p>✅ Card rendered in test area</p>';
+                } else {
+                    debugOutput.innerHTML += '<p>❌ No scenarios loaded</p>';
+                }
+
+            } catch (error) {
+                debugOutput.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Debug error:', error);
+            }
+        }
+
+        // Run debug when page loads
+        window.addEventListener('DOMContentLoaded', debugCardRendering);
+    </script>
+</body>
+</html>

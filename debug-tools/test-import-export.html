@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnostIQ - Import/Export Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e9ecef;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 DiagnostIQ Import/Export Test</h1>
+        <p>Test the client-side filesystem capabilities of DiagnostIQ.</p>
+
+        <div class="test-section">
+            <h3>📤 Export Test</h3>
+            <p>Generate and download a sample JSON export file:</p>
+            <button class="btn btn-primary" onclick="testExport()">Test Export</button>
+            <div id="exportResult" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📥 Import Test</h3>
+            <p>Select a JSON file to test import functionality:</p>
+            <input type="file" id="importFile" accept=".json" onchange="testImport(event)">
+            <button class="btn btn-success" onclick="document.getElementById('importFile').click()">Select File to Import</button>
+            <div id="importResult" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💾 LocalStorage Test</h3>
+            <p>Test localStorage read/write operations:</p>
+            <button class="btn btn-info" onclick="testLocalStorage()">Test LocalStorage</button>
+            <div id="localStorageResult" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Sample Export Data</h3>
+            <p>This is what a DiagnostIQ export file looks like:</p>
+            <pre id="sampleData" style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for testing
+        const sampleExportData = {
+            metadata: {
+                exportDate: new Date().toISOString(),
+                version: "v0.6.1",
+                source: "DiagnostIQ-Test",
+                totalScenarios: 2
+            },
+            scenarios: [
+                {
+                    id: "test-scenario-1",
+                    title: "Test Authentication Scenario",
+                    description: "A sample scenario for testing import/export",
+                    category: "authentication",
+                    vertical: "Identity",
+                    queryCount: 2,
+                    tags: ["test", "auth"],
+                    isLoaded: true,
+                    queries: [
+                        {
+                            name: "User Sign-in Events",
+                            description: "Query user sign-in activities",
+                            query: "SigninLogs | where UserPrincipalName == 'test@contoso.com' | take 10"
+                        },
+                        {
+                            name: "Failed Sign-ins",
+                            description: "Query failed authentication attempts",
+                            query: "SigninLogs | where ResultType != 0 | take 10"
+                        }
+                    ]
+                },
+                {
+                    id: "test-scenario-2",
+                    title: "Test Conditional Access Scenario",
+                    description: "A sample conditional access scenario",
+                    category: "conditional-access",
+                    vertical: "Security",
+                    queryCount: 1,
+                    tags: ["test", "ca"],
+                    isLoaded: true,
+                    queries: [
+                        {
+                            name: "CA Policy Evaluation",
+                            description: "Query conditional access policy evaluations",
+                            query: "SigninLogs | mv-expand ConditionalAccessPolicies | take 10"
+                        }
+                    ]
+                }
+            ],
+            localCheatSheets: []
+        };
+
+        // Display sample data
+        document.getElementById('sampleData').textContent = JSON.stringify(sampleExportData, null, 2);
+
+        function testExport() {
+            try {
+                console.log('📤 Testing export functionality...');
+
+                // Create export data
+                const dataStr = JSON.stringify(sampleExportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+                const exportFileDefaultName = `diagnostiq-test-export-${new Date().toISOString().split('T')[0]}.json`;
+
+                // Create download link
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+
+                showResult('exportResult', '✅ Export test successful! File should be downloading.', 'success');
+                console.log('✅ Export test completed');
+
+            } catch (error) {
+                console.error('❌ Export test failed:', error);
+                showResult('exportResult', '❌ Export test failed: ' + error.message, 'error');
+            }
+        }
+
+        function testImport(event) {
+            try {
+                console.log('📥 Testing import functionality...');
+
+                const file = event.target.files[0];
+                if (!file) {
+                    showResult('importResult', '🚫 No file selected', 'error');
+                    return;
+                }
+
+                if (!file.name.endsWith('.json')) {
+                    showResult('importResult', '❌ Please select a JSON file', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importData = JSON.parse(e.target.result);
+
+                        // Validate structure
+                        if (!importData.scenarios || !Array.isArray(importData.scenarios)) {
+                            throw new Error('Invalid format: scenarios array not found');
+                        }
+
+                        const result = `
+                            ✅ Import test successful!<br>
+                            📄 File: ${file.name}<br>
+                            📊 Scenarios found: ${importData.scenarios.length}<br>
+                            📅 Export date: ${importData.metadata?.exportDate || 'Unknown'}<br>
+                            🏷️ Version: ${importData.metadata?.version || 'Unknown'}
+                        `;
+
+                        showResult('importResult', result, 'success');
+                        console.log('✅ Import test completed:', importData);
+
+                    } catch (parseError) {
+                        console.error('❌ Invalid JSON file:', parseError);
+                        showResult('importResult', '❌ Invalid JSON file format: ' + parseError.message, 'error');
+                    }
+                };
+
+                reader.onerror = () => {
+                    console.error('❌ File reading failed');
+                    showResult('importResult', '❌ Failed to read file', 'error');
+                };
+
+                reader.readAsText(file);
+
+            } catch (error) {
+                console.error('❌ Import test failed:', error);
+                showResult('importResult', '❌ Import test failed: ' + error.message, 'error');
+            }
+        }
+
+        function testLocalStorage() {
+            try {
+                console.log('💾 Testing localStorage functionality...');
+
+                const testKey = 'diagnostiq_test_data';
+                const testData = {
+                    timestamp: new Date().toISOString(),
+                    testValue: 'LocalStorage is working!',
+                    scenarios: sampleExportData.scenarios
+                };
+
+                // Write test
+                localStorage.setItem(testKey, JSON.stringify(testData));
+
+                // Read test
+                const retrievedData = JSON.parse(localStorage.getItem(testKey));
+
+                // Verify
+                if (retrievedData && retrievedData.testValue === testData.testValue) {
+                    const result = `
+                        ✅ LocalStorage test successful!<br>
+                        📝 Data written and read correctly<br>
+                        📊 Test scenarios: ${retrievedData.scenarios.length}<br>
+                        🕒 Timestamp: ${retrievedData.timestamp}
+                    `;
+                    showResult('localStorageResult', result, 'success');
+
+                    // Clean up
+                    localStorage.removeItem(testKey);
+                    console.log('✅ LocalStorage test completed');
+                } else {
+                    throw new Error('Data verification failed');
+                }
+
+            } catch (error) {
+                console.error('❌ LocalStorage test failed:', error);
+                showResult('localStorageResult', '❌ LocalStorage test failed: ' + error.message, 'error');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+            element.classList.remove('hidden');
+        }
+
+        // Initialize page
+        console.log('🧪 DiagnostIQ Import/Export Test Page Loaded');
+    </script>
+</body>
+</html>

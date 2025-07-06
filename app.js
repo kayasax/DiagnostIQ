@@ -1,4 +1,5 @@
-// DiagnostIQ - Main Application Logic
+// DiagnostIQ - Optimized Main Application Logic v0.6.1
+// Removed: Runtime deduplication, multiple loading cycles, redundant processing
 
 class QueryLibraryApp {
     constructor() {
@@ -8,131 +9,111 @@ class QueryLibraryApp {
         this.allCheatSheets = []; // Will be populated by data manager
         this.currentQueries = [{ name: '', description: '', query: '' }];
         this.editingSheetId = null;
-        this.dataManager = window.dataManager;
+        this.isInitialized = false;
 
-        // Don't initialize immediately - wait for data to load
+        // Initialize modal handler
+        this.modalHandler = new ModalHandler(this);
+
+        // Setup immediately but don't auto-initialize data
         this.setupEventListeners();
         this.loadSyntaxHighlighter();
-
-        // Initialize when data is ready
-        if (this.dataManager.getLoadingStatus().complete) {
-            this.onDataLoaded();
-        } else {
-            // Wait for data manager to load scenarios
-            this.waitForDataLoad();
-        }
+        // Note: initializeApp() will be called externally to prevent multiple initializations
     }
 
-    async waitForDataLoad() {
+    async initializeApp() {
         try {
-            await this.dataManager.loadAllScenarios();
-            this.onDataLoaded();
+            console.log('🚀 Initializing DiagnostIQ...');
+
+            // Load data once using optimized data manager
+            await window.dataManager.loadAllScenarios();
+
+            // Get clean scenarios (no runtime deduplication needed)
+            this.allCheatSheets = window.dataManager.getAllScenarios();
+
+            // Add any local scenarios
+            if (this.localCheatSheets.length > 0) {
+                this.allCheatSheets.push(...this.localCheatSheets);
+            }
+
+            console.log('✅ DiagnostIQ initialized successfully');
+
+            // Setup UI once
+            this.setupInterface();
+            this.isInitialized = true;
+
         } catch (error) {
-            console.error('Failed to load data:', error);
-            // Continue with fallback data
-            this.onDataLoaded();
+            console.error('❌ Failed to initialize DiagnostIQ:', error);
+            // Continue with fallback
+            this.setupInterface();
         }
     }
 
-    onDataLoaded() {
-        // Combine all scenarios from different sources
-        const allSources = [...(window.cheatSheets || []), ...this.localCheatSheets];
-
-        // Deduplicate scenarios by ID
-        const uniqueScenarios = [];
-        const seenIds = new Set();
-
-        allSources.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-
-                // Normalize category to lowercase for consistency and handle edge cases
-                if (sheet.category) {
-                    const originalCategory = sheet.category;
-                    sheet.category = sheet.category.toLowerCase().trim();
-
-                    // Handle specific category mappings
-                    const categoryMappings = {
-                        'auth': 'authentication',
-                        'sync': 'synchronization',
-                        'password-protection': 'authentication', // Group password-protection with authentication
-                        'conditional-access': 'authentication',   // Group conditional-access with authentication
-                        'provisioning': 'provisioning',
-                        'performance': 'performance',
-                        'applications': 'applications',
-                        'general': 'general'
-                    };
-
-                    if (categoryMappings[sheet.category]) {
-                        sheet.category = categoryMappings[sheet.category];
-                    }
-
-                    if (originalCategory !== sheet.category) {
-                        console.log(`📝 Category normalized: "${originalCategory}" → "${sheet.category}" for "${sheet.title}"`);
-                    }
-                }
-
-                uniqueScenarios.push(sheet);
-            } else {
-                console.log(`🔄 Duplicate scenario removed: ${sheet.title} (ID: ${sheet.id})`);
-            }
-        });
-
-        this.allCheatSheets = uniqueScenarios;
-
-        // Debug: Check what scenarios we have
-        console.log('📊 Total scenarios loaded:', this.allCheatSheets.length);
-        console.log(`📊 Deduplicated from ${allSources.length} total sources`);
-        console.log('🔍 Categories after normalization:', [...new Set(this.allCheatSheets.map(s => s.category))].sort());
-        console.log('🏷️ Scenarios by category:');
-        const categoryCount = {};
-        const syncScenarios = [];
-
-        this.allCheatSheets.forEach(sheet => {
-            categoryCount[sheet.category] = (categoryCount[sheet.category] || 0) + 1;
-            if (sheet.category === 'general') {
-                console.log('🎯 General scenario found:', sheet.title);
-            }
-            if (sheet.category === 'synchronization') {
-                syncScenarios.push(sheet.title);
-            }
-        });
-
-        console.log('📈 Category counts:', categoryCount);
-        console.log('🔄 Synchronization scenarios found:', syncScenarios.length, syncScenarios.slice(0, 5)); // Show first 5
-
-        // Populate category dropdown dynamically
+    setupInterface() {
+        // Populate UI elements once
         this.populateCategoryDropdown();
-
-        // Populate new enhanced navigation
         this.populateCategoryNavigation();
         this.populateTagCloud();
         this.populateStatistics();
-
-        // Populate quick access links dynamically
         this.populateQuickAccess();
-
-        // Update total count in header
         this.updateTotalCount();
-
+        this.updateCategoryChangesIndicator();
         this.populateRecentQueries();
+
+        // Show welcome message initially
+        this.showWelcomeMessage();
+
         console.log(`📊 DiagnostIQ initialized with ${this.allCheatSheets.length} scenarios`);
+    }
+
+    clearSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const clusterFilter = document.getElementById('clusterFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+
+        if (searchInput) searchInput.value = '';
+        if (clusterFilter) clusterFilter.value = '';
+        if (categoryFilter) categoryFilter.value = '';
+
+        this.showWelcomeMessage();
+    }
+
+    showWelcomeMessage() {
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const searchResults = document.getElementById('searchResults');
+
+        if (welcomeMessage) {
+            welcomeMessage.style.display = 'block';
+        }
+        if (searchResults) {
+            searchResults.style.display = 'none';
+        }
     }
 
     setupEventListeners() {
         // Search input event
         const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.performSearch();
-            }
-        });
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.performSearch();
+                }
+            });
+        }
 
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
             const modal = document.getElementById('addCheatSheetModal');
             if (e.target === modal) {
                 this.closeModal();
+            }
+        });
+
+        // Add keyboard shortcut for cache clearing (Ctrl+Shift+R)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+                e.preventDefault();
+                console.log('🧹 Cache clear shortcut triggered');
+                this.clearCacheAndReload();
             }
         });
     }
@@ -145,1618 +126,1611 @@ class QueryLibraryApp {
                 'operator': /[+\-*\/=<>!&|%]/,
                 'function': /\b\w+(?=\s*\()/,
                 'string': {
-                    pattern: /(["'])(?:(?!\1)[^\\\r\n]|\\.)*\1/,
+                    pattern: /"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'/,
                     greedy: true
                 },
                 'number': /\b\d+(?:\.\d+)?\b/,
-                'comment': /\/\/.*$/m,
-                'punctuation': /[(){}[\];,.|]/
+                'punctuation': /[{}[\];(),.:]/
             };
         }
     }
 
     performSearch() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-        const clusterFilter = document.getElementById('clusterFilter').value;
-        const categoryFilter = document.getElementById('categoryFilter').value;
+        const selectedCategory = document.getElementById('categoryFilter').value;
 
-        if (!searchTerm && !clusterFilter && !categoryFilter) {
-            this.showWelcomeMessage();
+        console.log('🔍 Performing search:', { searchTerm, selectedCategory, totalScenarios: this.allCheatSheets.length });
+
+        // If no search term and no category, show message
+        if (!searchTerm && (!selectedCategory || selectedCategory === 'all')) {
+            this.displayMessage('Please enter a search term or select a category.');
             return;
         }
 
-        // Debug logging
-        console.log('🔍 Search criteria:', { searchTerm, clusterFilter, categoryFilter });
-        console.log('📊 Total scenarios available:', this.allCheatSheets.length);
+        let results = this.allCheatSheets;
 
-        // Filter cheat sheets based on search criteria
-        let filteredResults = this.allCheatSheets.filter(sheet => {
-            const matchesSearch = !searchTerm ||
-                sheet.title.toLowerCase().includes(searchTerm) ||
-                sheet.description.toLowerCase().includes(searchTerm) ||
-                (sheet.tags && sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
-                (sheet.query && sheet.query.toLowerCase().includes(searchTerm)) ||
-                (sheet.queries && sheet.queries.some(q =>
-                    (q.query && q.query.toLowerCase().includes(searchTerm)) ||
-                    (q.kql && q.kql.toLowerCase().includes(searchTerm)) ||
-                    (q.name && q.name.toLowerCase().includes(searchTerm)) ||
-                    (q.title && q.title.toLowerCase().includes(searchTerm)) ||
-                    (q.description && q.description.toLowerCase().includes(searchTerm))
-                ));
+        // Filter by category if selected
+        if (selectedCategory && selectedCategory !== 'all') {
+            results = results.filter(sheet => sheet.category === selectedCategory);
+            console.log(`🏷️ Category filter applied (${selectedCategory}): ${results.length} scenarios`);
+        }
 
-            const matchesCluster = !clusterFilter || sheet.cluster === clusterFilter;
-
-            // Category matching with normalization support
-            const normalizeCategoryForFilter = (category) => {
-                if (!category) return 'general';
-                const normalized = category.toLowerCase().trim();
-
-                const categoryMappings = {
-                    'auth': 'authentication',
-                    'sync': 'synchronization',
-                    'password-protection': 'authentication',
-                    'conditional-access': 'authentication',
-                    'provisioning': 'provisioning',
-                    'performance': 'performance',
-                    'applications': 'applications',
-                    'general': 'general'
-                };
-
-                return categoryMappings[normalized] || normalized;
-            };
-
-            const normalizedSheetCategory = normalizeCategoryForFilter(sheet.category);
-            const normalizedFilterCategory = normalizeCategoryForFilter(categoryFilter);
-            const matchesCategory = !categoryFilter || normalizedSheetCategory === normalizedFilterCategory;
-
-            // Debug logging for synchronization category filter
-            if (categoryFilter === 'synchronization') {
-                console.log('🔄 Synchronization category filter - checking sheet:', {
-                    title: sheet.title,
-                    category: sheet.category,
-                    matches: matchesCategory
-                });
-            }
-
-            return matchesSearch && matchesCluster && matchesCategory;
-        });
-
-        // Remove duplicates based on ID (in case there are any)
-        const uniqueResults = [];
-        const seenIds = new Set();
-
-        filteredResults.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-                uniqueResults.push(sheet);
-            } else {
-                console.warn('🔄 Duplicate scenario found and removed:', sheet.title, sheet.id);
-            }
-        });
-
-        console.log(`✅ Filtered results: ${uniqueResults.length} scenarios (${filteredResults.length - uniqueResults.length} duplicates removed)`);
-
-        // Add to recent queries if it's a search term
+        // Filter by search term if provided
         if (searchTerm) {
+            results = results.filter(sheet => {
+                const matchTitle = sheet.title && sheet.title.toLowerCase().includes(searchTerm);
+                const matchDescription = sheet.description && sheet.description.toLowerCase().includes(searchTerm);
+                const matchCategory = sheet.category && sheet.category.toLowerCase().includes(searchTerm);
+                const matchTags = sheet.tags && sheet.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                const matchQueries = sheet.queries && sheet.queries.some(q =>
+                    (q.query && q.query.toLowerCase().includes(searchTerm)) ||
+                    (q.description && q.description.toLowerCase().includes(searchTerm))
+                );
+                const matchKqlQueries = sheet.kqlQueries && sheet.kqlQueries.some(q =>
+                    (q.query && q.query.toLowerCase().includes(searchTerm)) ||
+                    (q.description && q.description.toLowerCase().includes(searchTerm))
+                );
+
+                return matchTitle || matchDescription || matchCategory || matchTags || matchQueries || matchKqlQueries;
+            });
+
+            console.log(`🔍 Search filter applied (${searchTerm}): ${results.length} scenarios`);
+
+            // Add to recent queries if it's a search term
             this.addToRecentQueries(searchTerm);
         }
 
-        this.displayResults(uniqueResults);
-    }
-
-    displayResults(results, customMessage = null) {
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const searchResults = document.getElementById('searchResults');
-
-        welcomeMessage.style.display = 'none';
-        searchResults.style.display = 'block';
-
-        if (results.length === 0) {
-            searchResults.innerHTML = `
-                <div class="no-results">
-                    <i class="fas fa-search"></i>
-                    <h3>No results found</h3>
-                    <p>Try adjusting your search terms or filters.</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Add summary header
-        const summaryHTML = `
-            <div class="results-summary">
-                <h3><i class="fas fa-search"></i> ${customMessage || 'Search Results'}</h3>
-                <p>Found <strong>${results.length}</strong> troubleshooting scenario${results.length > 1 ? 's' : ''}</p>
-            </div>
-        `;
-
-        const resultsHTML = results.map(sheet => this.createCheatSheetPreview(sheet)).join('');
-        searchResults.innerHTML = summaryHTML + resultsHTML;
+        console.log(`✅ Final results: ${results.length} scenarios`);
 
         this.currentResults = results;
+        this.displayResults(results);
+        this.updateResultsCount(results.length);
     }
 
-    createCheatSheetCard(sheet) {
-        // Handle both string array and object array formats for steps
-        const stepsHtml = sheet.steps.map((step, index) => {
-            if (typeof step === 'string') {
-                // Simple string format
-                return `<li>${step}</li>`;
-            } else if (typeof step === 'object' && step.action) {
-                // Detailed object format
-                return `<li><strong>${step.description || `Step ${step.step || index + 1}`}:</strong> ${step.action}${step.expected ? ` <em>(Expected: ${step.expected})</em>` : ''}</li>`;
-            } else {
-                // Fallback for unknown format
-                return `<li>${step}</li>`;
-            }
-        }).join('');
+    populateCategoryDropdown() {
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (!categoryFilter) return;
 
-        // Handle both old format (single query) and new format (multiple queries)
-        let queriesHtml = '';
-        if (sheet.queries && Array.isArray(sheet.queries)) {
-            // New format with multiple queries
-            queriesHtml = sheet.queries.map((queryObj, index) => {
-                const queryId = `query_${sheet.id}_${index}`;
-                return `
-                <div class="query-item">
-                    <div class="query-item-header">
-                        <h4>${queryObj.name || queryObj.title}</h4>
-                        <p class="query-description">${queryObj.description}</p>
-                    </div>
-                    <div class="query-container">
-                        <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                        <textarea id="${queryId}" style="display: none;">${queryObj.query || queryObj.kql}</textarea>
-                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(queryObj.query || queryObj.kql)}</code></pre>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        } else if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
-            // Handle relatedKQL format from extracted scenarios
-            queriesHtml = sheet.relatedKQL.map((query, index) => {
-                const queryId = `query_${sheet.id}_kql_${index}`;
-                return `
-                <div class="query-item">
-                    <div class="query-container">
-                        <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                        <textarea id="${queryId}" style="display: none;">${query}</textarea>
-                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(query)}</code></pre>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        } else if (sheet.query) {
-            // Old format with single query - maintain backwards compatibility
-            const queryId = `query_${sheet.id}_single`;
-            queriesHtml = `
-                <div class="query-item">
-                    <div class="query-container">
-                        <button class="copy-btn" onclick="app.copyQueryById('${queryId}', this)">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                        <textarea id="${queryId}" style="display: none;">${sheet.query}</textarea>
-                        <pre class="query-code"><code class="language-kql">${this.escapeHtml(sheet.query)}</code></pre>
-                    </div>
-                </div>
-            `;
-        }        return `
-            <div class="cheat-sheet-card" data-sheet-id="${sheet.id}">
-                <div class="card-header">
-                    <div class="card-title" onclick="collapseCheatSheet('${sheet.id}')" title="Click to minimize to preview">${sheet.title}</div>
-                    <div class="card-actions">
-                        <button class="btn-minimize" onclick="collapseCheatSheet('${sheet.id}')" title="Minimize to preview">
-                            <i class="fas fa-compress"></i>
-                        </button>
-                        <button class="btn-edit" onclick="editCheatSheet('${sheet.id}')" title="Edit this cheat sheet">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-delete" onclick="deleteCheatSheet('${sheet.id}')" title="Delete this cheat sheet">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-meta">
-                    ${sheet.vertical ? `<span><i class="fas fa-layer-group"></i> ${sheet.vertical}</span>` : ''}
-                    <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
-                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
-                    ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
-                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
-                    ${this.isWikiSource(sheet) ? `<span class="wiki-indicator"><i class="fas fa-book"></i> <a href="#" onclick="app.openWikiLink('${this.getSourcePath(sheet)}')" title="View source wiki page">Wiki Source</a></span>` : ''}
-                </div>
-                ${sheet.tags && sheet.tags.length > 0 ? `
-                <div class="card-tags">
-                    <i class="fas fa-tags"></i>
-                    ${sheet.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                </div>` : ''}
-                <div class="card-content">
-                    <div class="card-description">${sheet.description}</div>
+        // Get categories from data manager
+        const categories = window.dataManager.getAvailableCategories();
 
-                    <div class="query-section">
-                        <div class="section-title">
-                            <i class="fas fa-code"></i> KQL ${sheet.queries && sheet.queries.length > 1 ? 'Queries' : 'Query'}
-                        </div>
-                        ${queriesHtml}
-                    </div>
+        // Clear existing options except "All Categories"
+        categoryFilter.innerHTML = '<option value="all">All Categories</option>';
 
-                    <div class="steps-section">
-                        <div class="section-title">
-                            <i class="fas fa-list-ol"></i> Troubleshooting Steps
-                        </div>
-                        <div class="steps-list">
-                            <ol>${stepsHtml}</ol>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+        // Sort categories alphabetically
+        categories.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-    createCheatSheetPreview(sheet) {
-        // Create a preview card with excerpt and expand option
-        const firstQuery = sheet.queries && sheet.queries.length > 0
-            ? sheet.queries[0]
-            : (sheet.query ? { name: 'Main Query', query: sheet.query } : null);
-
-        const descriptionExcerpt = sheet.description.length > 150
-            ? sheet.description.substring(0, 150) + '...'
-            : sheet.description;
-
-        const queryPreview = firstQuery
-            ? `<div class="query-preview">
-                <strong>${firstQuery.name || 'Query'}:</strong>
-                <code>${(firstQuery.query || firstQuery.kql || '').substring(0, 100)}${(firstQuery.query || firstQuery.kql || '').length > 100 ? '...' : ''}</code>
-               </div>`
-            : '';
-
-        return `
-            <div class="cheat-sheet-preview" data-sheet-id="${sheet.id}">
-                <div class="preview-header">
-                    <div class="preview-title" onclick="expandCheatSheet('${sheet.id}')" title="Click to expand">${sheet.title}</div>
-                    <div class="preview-actions">
-                        <button class="btn-expand" onclick="expandCheatSheet('${sheet.id}')" title="View full details">
-                            <i class="fas fa-expand"></i> Open
-                        </button>
-                        <button class="btn-edit" onclick="editCheatSheet('${sheet.id}')" title="Edit this cheat sheet">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-delete" onclick="deleteCheatSheet('${sheet.id}')" title="Delete this cheat sheet">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="preview-meta">
-                    ${sheet.vertical ? `<span><i class="fas fa-layer-group"></i> ${sheet.vertical}</span>` : ''}
-                    <span><i class="fas fa-tag"></i> ${this.getCategoryName(sheet.category)}</span>
-                    <span><i class="fas fa-server"></i> ${sheet.cluster || 'N/A'}</span>
-                    ${sheet.database ? `<span><i class="fas fa-database"></i> ${sheet.database}</span>` : ''}
-                    <span><i class="fas fa-code"></i> ${this.getQueryCount(sheet)} ${this.getQueryCount(sheet) !== 1 ? 'queries' : 'query'}</span>
-                    <span><i class="fas fa-list-ol"></i> ${sheet.steps ? sheet.steps.length : 0} steps</span>
-                    ${this.isWikiSource(sheet) ? `<span class="wiki-indicator"><i class="fas fa-book"></i> Wiki</span>` : ''}
-                </div>
-                ${sheet.tags && sheet.tags.length > 0 ? `
-                <div class="preview-tags">
-                    <i class="fas fa-tags"></i>
-                    ${sheet.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    ${sheet.tags.length > 3 ? `<span class="tag-more">+${sheet.tags.length - 3} more</span>` : ''}
-                </div>` : ''}
-                <div class="preview-content">
-                    <div class="preview-description">${descriptionExcerpt}</div>
-                    ${queryPreview}
-                </div>
-            </div>
-        `;
-    }
-
-    expandCheatSheet(sheetId) {
-        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet) {
-            alert('Scenario not found!');
-            return;
-        }
-
-        // Replace the preview with the full card
-        const previewElement = document.querySelector(`[data-sheet-id="${sheetId}"]`);
-        if (previewElement) {
-            previewElement.outerHTML = this.createCheatSheetCard(sheet);
-
-            // Apply syntax highlighting to the new content
-            setTimeout(() => {
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
-                }
-            }, 100);
-        }
-    }
-
-    collapseCheatSheet(sheetId) {
-        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet) {
-            alert('Scenario not found!');
-            return;
-        }
-
-        // Replace the full card with the preview
-        const cardElement = document.querySelector(`[data-sheet-id="${sheetId}"]`);
-        if (cardElement) {
-            cardElement.outerHTML = this.createCheatSheetPreview(sheet);
-        }
-    }
-
-    getCategoryName(category) {
-        const categoryNames = {
-            'sync': 'Synchronization',
-            'synchronization': 'Synchronization',
-            'auth': 'Authentication',
-            'authentication': 'Authentication',
-            'provisioning': 'Provisioning',
-            'performance': 'Performance',
-            'applications': 'Applications',
-            'general': 'General'
-        };
-        return categoryNames[category] || this.capitalizeFirst(category);
-    }
-
-    capitalizeFirst(str) {
-        if (!str) return '';
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    getQueryCount(sheet) {
-        // Count queries from different possible sources
-        if (sheet.queries && Array.isArray(sheet.queries)) {
-            return sheet.queries.length;
-        }
-        if (sheet.relatedKQL && Array.isArray(sheet.relatedKQL)) {
-            return sheet.relatedKQL.length;
-        }
-        if (sheet.query) {
-            return 1;
-        }
-        return 0;
-    }
-
-    openWikiLink(source) {
-        // For now, show an alert with the source information
-        // In the future, this could link to the actual wiki page
-        alert(`This scenario was extracted from: ${source}\n\nThis troubleshooting scenario comes from the internal wiki documentation.`);
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    copyQueryById(queryId, button) {
-        const textarea = document.getElementById(queryId);
-        if (!textarea) {
-            console.error('Query element not found:', queryId);
-            return;
-        }
-        const text = textarea.value;
-        this.copyToClipboard(text, button);
-    }
-
-    copyToClipboard(text, button) {
-        // Enhanced fallback method that works with local files
-        const fallbackCopy = () => {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-                return successful;
-            } catch (err) {
-                document.body.removeChild(textArea);
-                return false;
-            }
-        };
-
-        const showSuccess = () => {
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            button.style.background = 'rgba(40, 167, 69, 0.8)';
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.style.background = 'rgba(255,255,255,0.1)';
-            }, 2000);
-        };
-
-        const showError = () => {
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-exclamation"></i> Copy Failed';
-            button.style.background = 'rgba(220, 53, 69, 0.8)';
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.style.background = 'rgba(255,255,255,0.1)';
-            }, 2000);
-        };
-
-        // Try modern clipboard API first
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => {
-                showSuccess();
-            }).catch(() => {
-                // Fallback to execCommand
-                if (fallbackCopy()) {
-                    showSuccess();
-                } else {
-                    showError();
-                }
-            });
-        } else {
-            // Use fallback method for local files
-            if (fallbackCopy()) {
-                showSuccess();
-            } else {
-                showError();
-            }
-        }
-    }
-
-    searchFor(term) {
-        document.getElementById('searchInput').value = term;
-        this.performSearch();
-    }
-
-    clearSearch() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('clusterFilter').value = '';
-        document.getElementById('categoryFilter').value = '';
-        this.showWelcomeMessage();
-    }
-
-    showWelcomeMessage() {
-        document.getElementById('welcomeMessage').style.display = 'block';
-        document.getElementById('searchResults').style.display = 'none';
-    }
-
-    addToRecentQueries(query) {
-        // Remove if already exists
-        this.recentQueries = this.recentQueries.filter(item => item.query !== query);
-
-        // Add to beginning
-        this.recentQueries.unshift({
-            query: query,
-            timestamp: new Date().toLocaleString()
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.textContent = `${category.displayName} (${category.count})`;
+            categoryFilter.appendChild(option);
         });
 
-        // Keep only last 10
-        this.recentQueries = this.recentQueries.slice(0, 10);
+        console.log(`🏷️ Available categories: (${categories.length})`, categories);
+    }
 
-        // Save to localStorage
-        localStorage.setItem('recentQueries', JSON.stringify(this.recentQueries));
+    populateCategoryNavigation() {
+        console.log('🏗️ Populating vertical-based category navigation...');
 
-        this.populateRecentQueries();
+        const navContainer = document.getElementById('categoryNavigation');
+        if (!navContainer) return;
+
+        // Group categories by vertical - SIMPLIFIED TO 4 MAIN VERTICALS as specified
+        const verticals = {
+            'account-management': { name: 'Account Management', icon: '👤', categories: [] },
+            'sync': { name: 'Sync', icon: '�', categories: [] },
+            'auth': { name: 'Auth', icon: '🔐', categories: [] },
+            'general': { name: 'General', icon: '�', categories: [] }
+        };
+
+        // Get categories and group them
+        const categories = window.dataManager ? window.dataManager.getAvailableCategories() : [];
+        console.log('📂 Categories from data manager:', categories);
+
+        categories.forEach(category => {
+            const vertical = this.getCategoryVertical(category.name);
+            if (verticals[vertical]) {
+                verticals[vertical].categories.push(category);
+            }
+        });
+
+        // Build navigation HTML with proper structure for existing CSS
+        let navigationHTML = '';
+
+        // Add "All Categories" option first
+        navigationHTML += `
+            <div class="category-item all-categories" onclick="app.clearAllFilters()">
+                <div class="category-label">
+                    <i class="fas fa-list"></i>
+                    All Categories
+                </div>
+                <span class="category-count">${categories.reduce((sum, cat) => sum + cat.count, 0)}</span>
+            </div>
+            <div class="nav-divider"></div>
+        `;
+
+        Object.entries(verticals).forEach(([key, vertical]) => {
+            if (vertical.categories.length > 0) {
+                const totalScenarios = vertical.categories.reduce((sum, cat) => sum + cat.count, 0);
+
+                navigationHTML += `
+                <div class="vertical-section">
+                    <div class="vertical-header" onclick="app.toggleVertical('${key}')">
+                        <span class="vertical-arrow" id="arrow-${key}">▶</span>
+                        <span class="vertical-icon">${vertical.icon}</span>
+                        <span class="vertical-name">${vertical.name}</span>
+                        <span class="vertical-count">${totalScenarios}</span>
+                    </div>
+                    <div class="vertical-categories" id="categories-${key}" style="display: none;">
+                        ${vertical.categories.map(cat => `
+                            <div class="category-item subcategory" onclick="app.filterByCategory('${cat.name}')">
+                                <div class="category-label">
+                                    ${cat.displayName}
+                                </div>
+                                <span class="category-count">${cat.count}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+        });
+
+        navContainer.innerHTML = navigationHTML;
+
+        // Log stats
+        const verticalStats = {};
+        Object.entries(verticals).forEach(([key, vertical]) => {
+            if (vertical.categories.length > 0) {
+                verticalStats[key] = {
+                    categories: vertical.categories.length,
+                    scenarios: vertical.categories.reduce((sum, cat) => sum + cat.count, 0)
+                };
+            }
+        });
+
+        console.log('📊 Vertical stats for navigation:', verticalStats);
+        console.log(`✅ Vertical-based navigation populated with ${Object.keys(verticalStats).length} verticals`);
+    }
+
+    getCategoryVertical(categoryName) {
+        const verticalMap = {
+            // Auth - Authentication, MFA, Conditional Access, Device Registration, Password Protection
+            'authentication': 'auth',
+            'conditional-access': 'auth',
+            'conditional-access-policies': 'auth',
+            'mfa': 'auth',
+            'multi-factor-authentication': 'auth',
+            'consent': 'auth',
+            'device-registration': 'auth',
+            'device-certificate-prompts': 'auth',
+            'password-protection': 'auth',
+            'old-sspr-self-service-password-reset': 'auth',
+            'sspr-self-service-password-reset': 'auth',
+            'token-protection-app-compatibility': 'auth',
+            'token-protection-device-issues': 'auth',
+            'vpn-authentication-failures': 'auth',
+            'vpn-certificate-filtering': 'auth',
+            'vpn-certificate-issues': 'auth',
+            'vpn-connectivity': 'auth',
+
+            // Sync - Synchronization, Provisioning, ADFS, Hybrid Identity
+            'synchronization': 'sync',
+            'provisioning': 'sync',
+            'domain-services': 'sync',
+            'adfs-and-wap': 'sync',
+            'adfs-troubleshooting': 'sync',
+            'adfs-wap-trust': 'sync',
+            'azure-ad-password-protection-for-on2dpremise': 'sync',
+
+            // Account Management - User Management, Groups, Identities, RBAC, PIM
+            'azure-ad-user-management': 'account-management',
+            'azure-ad-domain-name-management': 'account-management',
+            'azure-ad-managed-identities-msi': 'account-management',
+            'azure-rbac-for-resources': 'account-management',
+            'privilege-identity-management-pim': 'account-management',
+            'user-scoping': 'account-management',
+            'dynamic-groups': 'account-management',
+            'aad-account-management': 'account-management',
+            'b2b': 'account-management',
+            'b2c': 'account-management',
+            'b2c-identity-experience': 'account-management',
+            'b2c-protocol-support': 'account-management',
+
+            // General - Everything else including applications, monitoring, reporting, misc
+            'azure-ad-application-management': 'general',
+            'applications': 'general',
+            'application-targeting': 'general',
+            'saml': 'general',
+            'azure-ad-reporting-workflow': 'general',
+            'azure-ad-activity-logs-in-azure-monitor': 'general',
+            'azure-monitor-integration': 'general',
+            'reporting-workflow': 'general',
+            'risk-policies': 'general',
+            'report-only-configuration': 'general',
+            'report-only-result-interpretation': 'general',
+            'report-only-tool-limitations': 'general',
+            'report-only-workbook-issues': 'general',
+            'performance': 'general',
+            'graph-api-integration': 'general',
+            'graph-scope-policy-evaluation': 'general',
+            'graph-scope-translation': 'general',
+            'general': 'general',
+            'general-guidance': 'general',
+            'miscellaneous': 'general',
+            'identity': 'general',
+            'testing': 'general',
+            'aadsts-errors': 'general',
+            'microsoft-entra-portal-microsoftaadiam': 'general',
+            'office365-app-group-blocking': 'general',
+            'office365-app-group-configuration': 'general'
+        };
+
+        return verticalMap[categoryName] || 'general';
+    }
+
+    getVerticalIcon(vertical) {
+        const iconMap = {
+            'authentication': '🔐',
+            'synchronization': '🔄',
+            'applications': '📱',
+            'collaboration': '🤝',
+            'management': '⚙️',
+            'monitoring': '📊',
+            'infrastructure': '🏗️',
+            'general': '📚'
+        };
+        return iconMap[vertical] || '📄';
+    }
+
+    populateTagCloud() {
+        const tagCloudContainer = document.getElementById('tagCloud');
+        if (!tagCloudContainer) return;
+
+        const tagCounts = {};
+        this.allCheatSheets.forEach(sheet => {
+            if (sheet.tags && Array.isArray(sheet.tags)) {
+                sheet.tags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            }
+        });
+
+        const sortedTags = Object.entries(tagCounts)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 20); // Top 20 tags
+
+        tagCloudContainer.innerHTML = sortedTags.map(([tag, count]) => {
+            // Determine tag size based on count
+            let sizeClass = 'size-sm';
+            if (count >= 10) sizeClass = 'size-xl';
+            else if (count >= 7) sizeClass = 'size-lg';
+            else if (count >= 5) sizeClass = 'size-md';
+            else if (count >= 3) sizeClass = 'size-sm';
+            else sizeClass = 'size-xs';
+
+            return `<span class="cloud-tag ${sizeClass}" onclick="app.filterByTag('${tag}')" title="${count} scenarios">
+                ${tag} <span class="tag-count">${count}</span>
+            </span>`;
+        }).join('');
+    }
+
+    populateStatistics() {
+        const statsContainer = document.getElementById('statistics');
+        if (!statsContainer) return;
+
+        const categoryCount = new Set(this.allCheatSheets.map(s => s.category)).size;
+        const avgQueriesPerScenario = this.allCheatSheets.reduce((sum, s) => {
+            const queryCount = (s.queries?.length || 0) + (s.kqlQueries?.length || 0);
+            return sum + queryCount;
+        }, 0) / this.allCheatSheets.length;
+
+        statsContainer.innerHTML = `
+            <div class="stat-item">
+                <div class="stat-number">${this.allCheatSheets.length}</div>
+                <div class="stat-label">Total Scenarios</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">${categoryCount}</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">${Math.round(avgQueriesPerScenario * 10) / 10}</div>
+                <div class="stat-label">Avg Queries/Scenario</div>
+            </div>
+        `;
+    }
+
+    populateQuickAccess() {
+        const quickAccessContainer = document.getElementById('quickAccess');
+        if (!quickAccessContainer) return;
+
+        // Get top categories by scenario count
+        const categoryCount = {};
+        this.allCheatSheets.forEach(sheet => {
+            categoryCount[sheet.category] = (categoryCount[sheet.category] || 0) + 1;
+        });
+
+        const topCategories = Object.entries(categoryCount)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 6)
+            .map(([category, count]) => ({
+                category,
+                count,
+                displayName: this.formatCategoryName(category)
+            }));
+
+        quickAccessContainer.innerHTML = topCategories.map(cat =>
+            `<button class="quick-access-btn" onclick="app.filterByCategory('${cat.category}')">
+                ${cat.displayName}
+                <span class="quick-access-count">${cat.count}</span>
+            </button>`
+        ).join('');
     }
 
     populateRecentQueries() {
         const recentQueriesContainer = document.getElementById('recentQueries');
-
-        // Handle case where recent queries element doesn't exist (removed from sidebar)
         if (!recentQueriesContainer) {
             console.log('ℹ️ Recent queries container not found - feature disabled');
             return;
         }
 
         if (this.recentQueries.length === 0) {
-            recentQueriesContainer.innerHTML = '<li><em>No recent queries</em></li>';
+            recentQueriesContainer.innerHTML = '<p class="recent-empty">No recent queries</p>';
             return;
         }
 
-        const recentHTML = this.recentQueries.map(item =>
-            `<li><a href="#" onclick="app.searchFor('${item.query}')">${item.query}</a></li>`
-        ).join('');
-
-        recentQueriesContainer.innerHTML = recentHTML;
+        recentQueriesContainer.innerHTML = this.recentQueries
+            .slice(-5) // Last 5 queries
+            .reverse()
+            .map(query =>
+                `<button class="recent-query-btn" onclick="app.searchRecent('${query}')">
+                    ${query}
+                </button>`
+            ).join('');
     }
 
-    populateCategoryDropdown() {
-        // Populate search filter dropdown
-        const categoryFilter = document.getElementById('categoryFilter');
-        if (categoryFilter) {
-            // Get available categories from data manager
-            const categories = this.dataManager.getAvailableCategories();
+    formatCategoryName(category) {
+        if (!category) return '';
+        return category.split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
 
-            console.log('🏷️ Available categories:', categories);
-
-            // Clear existing options except "All Categories"
-            categoryFilter.innerHTML = '<option value="">All Categories</option>';
-
-            // Add dynamic categories
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.value;
-                option.textContent = `${category.label}${category.count ? ` (${category.count})` : ''}`;
-
-                // Add description as title attribute for tooltip
-                if (category.description) {
-                    option.title = category.description;
-                }
-
-                categoryFilter.appendChild(option);
-            });
-        }
-
-        // Populate modal form dropdown
-        const categoryModal = document.getElementById('category');
-        if (categoryModal) {
-            // Get available categories from data manager
-            const categories = this.dataManager.getAvailableCategories();
-
-            // Clear existing options
-            categoryModal.innerHTML = '';
-
-            // Add dynamic categories
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.value;
-                option.textContent = category.label;
-                categoryModal.appendChild(option);
-            });
-
-            // If no categories are available, add default ones
-            if (categories.length === 0) {
-                const defaultCategories = [
-                    { value: 'synchronization', label: 'Synchronization' },
-                    { value: 'authentication', label: 'Authentication' },
-                    { value: 'provisioning', label: 'Provisioning' },
-                    { value: 'performance', label: 'Performance' },
-                    { value: 'applications', label: 'Applications' },
-                    { value: 'general', label: 'General' }
-                ];
-
-                defaultCategories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.value;
-                    option.textContent = category.label;
-                    categoryModal.appendChild(option);
-                });
-            }
+    updateTotalCount() {
+        const totalCountElement = document.getElementById('totalCount');
+        if (totalCountElement) {
+            totalCountElement.textContent = this.allCheatSheets.length;
         }
     }
 
-    showAddCheatSheet() {
-        // Reset editing mode
-        this.editingSheetId = null;
-
-        // Clear form first
-        this.clearForm();
-        // Reset to single query mode
-        this.currentQueries = [{ name: '', description: '', query: '' }];
-
-        this.renderQueryInputs();
-
-        // Update modal title and button text
-        document.querySelector('#addCheatSheetModal .modal-header h2').textContent = 'Add New Cheat Sheet';
-        document.querySelector('#addCheatSheetModal .modal-footer .btn-primary').textContent = 'Save Cheat Sheet';
-
-        document.getElementById('addCheatSheetModal').style.display = 'block';
-    }
-
-    closeModal() {
-        document.getElementById('addCheatSheetModal').style.display = 'none';
-        this.clearForm();
-    }
-
-    clearForm() {
-        document.getElementById('cheatSheetForm').reset();
-        this.currentQueries = [{ name: '', description: '', query: '' }];
-    }
-
-    renderQueryInputs() {
-        const queryContainer = document.getElementById('queryInputs');
-        if (!queryContainer) return;
-
-        const queriesHtml = this.currentQueries.map((query, index) => `
-            <div class="query-input-group" data-index="${index}">
-                <div class="query-input-header">
-                    <h4>Query ${index + 1}</h4>
-                    ${this.currentQueries.length > 1 ? `<button type="button" class="btn-remove-query" onclick="app.removeQuery(${index})"><i class="fas fa-trash"></i></button>` : ''}
-                </div>
-                <div class="form-group">
-                    <label>Query Name:</label>
-                    <input type="text" value="${query.name}" onchange="app.updateQuery(${index}, 'name', this.value)" placeholder="e.g., Check Sync Status">
-                </div>
-                <div class="form-group">
-                    <label>Query Description:</label>
-                    <input type="text" value="${query.description}" onchange="app.updateQuery(${index}, 'description', this.value)" placeholder="Brief description of what this query does">
-                </div>
-                <div class="form-group">
-                    <label>KQL Query:</label>
-                    <textarea rows="6" onchange="app.updateQuery(${index}, 'query', this.value)" placeholder="Enter your KQL query here...">${query.query}</textarea>
-                </div>
-            </div>
-        `).join('');
-
-        const finalHtml = queriesHtml + `
-            <button type="button" class="btn btn-secondary" onclick="app.addQuery()" style="display: block; width: 100%; margin-top: 15px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px;">
-                <i class="fas fa-plus"></i> Add Another Query
-            </button>
-        `;
-
-        queryContainer.innerHTML = finalHtml;
-    }
-
-    addQuery() {
-        this.currentQueries.push({ name: '', description: '', query: '' });
-        this.renderQueryInputs();
-    }
-
-    removeQuery(index) {
-        if (this.currentQueries.length > 1) {
-            this.currentQueries.splice(index, 1);
-            this.renderQueryInputs();
+    updateCategoryChangesIndicator() {
+        // Placeholder for category changes tracking
+        const changesIndicator = document.getElementById('categoryChanges');
+        if (changesIndicator) {
+            changesIndicator.innerHTML = '<span class="changes-status">✅ All categories loaded</span>';
         }
     }
 
-    updateQuery(index, field, value) {
-        if (this.currentQueries[index]) {
-            this.currentQueries[index][field] = value;
-        }
-    }    saveCheatSheet() {
-        const title = document.getElementById('title').value;
-        const category = document.getElementById('category').value;
-        const cluster = document.getElementById('cluster').value || 'custom';
-        const database = document.getElementById('database').value || '';
-        const description = document.getElementById('description').value;
-        const steps = document.getElementById('steps').value.split('\n').filter(step => step.trim());
-
-        // Validate required fields
-        if (!title) {
-            alert('Title is required.');
-            return;
-        }
-
-        if (!this.currentQueries || this.currentQueries.length === 0 || !this.currentQueries[0].query) {
-            alert('At least one query is required.');
-            return;
-        }
-
-        // Filter out empty queries
-        const validQueries = this.currentQueries.filter(q => q.query.trim());
-
-        if (validQueries.length === 0) {
-            alert('At least one query with content is required.');
-            return;
-        }
-
-        const cheatSheetData = {
-            title: title,
-            category: category,
-            cluster: cluster,
-            database: database,
-            description: description,
-            queries: validQueries.map(q => ({
-                name: q.name || 'Custom Query',
-                description: q.description || 'User-defined troubleshooting query',
-                query: q.query
-            })),
-            steps: steps,
-            tags: ['custom', 'user-created']
-        };
-
-        if (this.editingSheetId) {
-            const originalSheet = this.allCheatSheets.find(s => s.id === this.editingSheetId);
-            const isCustomSheet = originalSheet && originalSheet.tags && originalSheet.tags.includes('custom');
-
-            if (isCustomSheet) {
-                // Update existing custom cheat sheet
-                if (this.dataManager.updateScenario(this.editingSheetId, cheatSheetData)) {
-                    // Also update local storage for persistence
-                    const index = this.localCheatSheets.findIndex(s => s.id === this.editingSheetId);
-                    if (index !== -1) {
-                        this.localCheatSheets[index] = { ...cheatSheetData, id: this.editingSheetId };
-                        localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-                    }
-                    this.refreshData();
-                    alert('Cheat sheet updated successfully!');
-                } else {
-                    alert('Error: Could not find cheat sheet to update.');
-                    return;
-                }
-            } else {
-                // Editing an extracted scenario - create a new custom version
-                const newCheatSheet = this.dataManager.addCustomScenario(cheatSheetData);
-
-                // Also save to local storage for persistence
-                this.localCheatSheets.push(newCheatSheet);
-                localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-
-                this.refreshData();
-                alert('Modified cheat sheet saved as a new custom version!');
-            }
-        } else {
-            // Add new cheat sheet using data manager
-            const newCheatSheet = this.dataManager.addCustomScenario(cheatSheetData);
-
-            // Also save to local storage for persistence
-            this.localCheatSheets.push(newCheatSheet);
-            localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-
-            this.refreshData();
-            alert('Cheat sheet saved successfully!');
-        }
-
-        this.closeModal();
-
-        // If currently searching, refresh results
-        if (document.getElementById('searchResults').style.display === 'block') {
-            this.performSearch();
+    updateResultsCount(count) {
+        const resultsCountElement = document.getElementById('resultsCount');
+        if (resultsCountElement) {
+            resultsCountElement.textContent = `${count} scenarios found`;
         }
     }
 
-    refreshData() {
-        // Refresh the local reference to all scenarios
-        const allSources = [...(window.cheatSheets || []), ...this.localCheatSheets];
+    // Quick filter methods
+    clearAllFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('categoryFilter').value = 'all';
 
-        // Apply category normalization (same as loadData)
-        const uniqueScenarios = [];
-        const seenIds = new Set();
-
-        allSources.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-
-                // Normalize category to lowercase for consistency and handle edge cases
-                if (sheet.category) {
-                    const originalCategory = sheet.category;
-                    sheet.category = sheet.category.toLowerCase().trim();
-
-                    // Handle specific category mappings
-                    const categoryMappings = {
-                        'auth': 'authentication',
-                        'sync': 'synchronization',
-                        'password-protection': 'authentication', // Group password-protection with authentication
-                        'conditional-access': 'authentication',   // Group conditional-access with authentication
-                        'provisioning': 'provisioning',
-                        'performance': 'performance',
-                        'applications': 'applications',
-                        'general': 'general'
-                    };
-
-                    if (categoryMappings[sheet.category]) {
-                        sheet.category = categoryMappings[sheet.category];
-                    }
-
-                    if (originalCategory !== sheet.category) {
-                        console.log(`📝 Category normalized in refresh: "${originalCategory}" → "${sheet.category}" for "${sheet.title}"`);
-                    }
-                }
-
-                uniqueScenarios.push(sheet);
-            }
+        // Sort scenarios by most recent first (lastUpdated field)
+        const sortedScenarios = [...this.allCheatSheets].sort((a, b) => {
+            const dateA = new Date(a.lastUpdated || '2020-01-01');
+            const dateB = new Date(b.lastUpdated || '2020-01-01');
+            return dateB - dateA; // Most recent first
         });
 
-        this.allCheatSheets = uniqueScenarios;
-        console.log(`🔄 Data refreshed: ${this.allCheatSheets.length} scenarios`);
-
-        // Update dynamic elements
-        this.populateQuickAccess();
-        this.updateTotalCount();
-        this.populateCategoryDropdown();
-        this.populateCategoryNavigation();
-        this.populateTagCloud();
+        this.displayResults(sortedScenarios);
+        this.updateResultsCount(sortedScenarios.length);
     }
 
-    editCheatSheet(sheetId) {
-        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet) {
-            alert('Cheat sheet not found!');
-            return;
-        }
-
-        console.log('🛠️ Editing sheet:', {
-            id: sheet.id,
-            title: sheet.title,
-            category: sheet.category,
-            cluster: sheet.cluster,
-            database: sheet.database,
-            queries: sheet.queries ? sheet.queries.length : 'N/A'
-        });
-
-        // Set editing mode
-        this.editingSheetId = sheetId;
-
-        // Populate form with existing data
-        document.getElementById('title').value = sheet.title;
-        document.getElementById('category').value = sheet.category;
-        document.getElementById('cluster').value = sheet.cluster;
-        document.getElementById('database').value = sheet.database || '';
-        document.getElementById('description').value = sheet.description;
-        document.getElementById('steps').value = sheet.steps.join('\n');
-
-        // Setup queries for editing
-        if (sheet.queries && Array.isArray(sheet.queries)) {
-            this.currentQueries = [...sheet.queries];
-            console.log('📝 Loaded queries from sheet.queries:', this.currentQueries.length);
-        } else if (sheet.query) {
-            // Convert old format to new format
-            this.currentQueries = [{
-                name: 'Main Query',
-                description: 'Primary troubleshooting query',
-                query: sheet.query
-            }];
-            console.log('📝 Converted single query to array format');
-        } else {
-            this.currentQueries = [{ name: '', description: '', query: '' }];
-            console.log('⚠️ No queries found, using empty template');
-        }
-
-        console.log('📋 Current queries for editing:', this.currentQueries);
-
-        this.renderQueryInputs();
-
-        // Update modal title and button text
-        document.querySelector('#addCheatSheetModal .modal-header h2').textContent = 'Edit Cheat Sheet';
-        document.querySelector('#addCheatSheetModal .modal-footer .btn-primary').textContent = 'Update Cheat Sheet';
-
-        document.getElementById('addCheatSheetModal').style.display = 'block';
-    }
-
-    deleteCheatSheet(sheetId) {
-        const sheet = this.allCheatSheets.find(s => s.id === sheetId);
-        if (!sheet) {
-            alert('Cheat sheet not found!');
-            return;
-        }
-
-        // Check if it's a custom sheet or extracted sheet
-        const isCustomSheet = sheet.tags && sheet.tags.includes('custom');
-
-        const confirmMessage = isCustomSheet
-            ? 'Are you sure you want to delete this custom cheat sheet? This action cannot be undone.'
-            : 'Are you sure you want to delete this scenario? It will be hidden until you refresh the page or restore it from the settings.';
-
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
-        if (isCustomSheet) {
-            // Remove custom sheet from localStorage and data manager
-            this.localCheatSheets = this.localCheatSheets.filter(s => s.id !== sheetId);
-            localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-        }
-
-        // Remove from data manager (works for both custom and extracted scenarios)
-        if (this.dataManager.removeScenario(sheetId)) {
-            this.refreshData();
-
-            const successMessage = isCustomSheet
-                ? 'Custom cheat sheet deleted successfully!'
-                : 'Scenario hidden successfully! (Use browser tools console and call app.dataManager.restoreScenario("' + sheetId + '") to restore)';
-
-            alert(successMessage);
-
-            // Refresh results if currently searching
-            if (document.getElementById('searchResults').style.display === 'block') {
-                this.performSearch();
-            }
-        } else {
-            alert('Error: Could not delete cheat sheet.');
-        }
-    }
-
-    exportLibrary() {
-        // Use data manager for export
-        const exportData = this.dataManager.exportScenarios(true); // Export only custom scenarios
-
-        // Add recent queries for completeness
-        exportData.recentQueries = this.recentQueries;
-
-        const dataStr = JSON.stringify(exportData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(dataBlob);
-        link.download = `diagnostiq-export-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        alert('Library exported successfully!');
-    }
-
-    importLibrary(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const importData = JSON.parse(e.target.result);
-
-                // Support both old and new export formats
-                let scenariosToImport = [];
-
-                if (importData.scenarios) {
-                    // New format from data manager
-                    scenariosToImport = importData.scenarios;
-                } else if (importData.customCheatSheets) {
-                    // Old format - convert to new format
-                    scenariosToImport = importData.customCheatSheets;
-                }
-
-                if (!Array.isArray(scenariosToImport) || scenariosToImport.length === 0) {
-                    alert('No valid scenarios found in import file.');
-                    return;
-                }
-
-                // Use data manager to import
-                const importedCount = this.dataManager.importScenarios({ scenarios: scenariosToImport });
-
-                // Also update local storage
-                const newLocalSheets = scenariosToImport.map(sheet => ({
-                    ...sheet,
-                    id: sheet.id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    isCustom: true
-                }));
-
-                this.localCheatSheets.push(...newLocalSheets);
-                localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
-
-                // Import recent queries if available
-                if (importData.recentQueries && Array.isArray(importData.recentQueries)) {
-                    // Merge recent queries, keeping existing ones at the top
-                    const mergedQueries = [...this.recentQueries];
-                    importData.recentQueries.forEach(q => {
-                        if (!mergedQueries.some(existing => existing.query === q.query)) {
-                            mergedQueries.push(q);
-                        }
-                    });
-                    this.recentQueries = mergedQueries.slice(0, 10); // Keep only 10 most recent
-                    localStorage.setItem('recentQueries', JSON.stringify(this.recentQueries));
-                    this.populateRecentQueries();
-                }
-
-                this.refreshData();
-                alert(`Successfully imported ${importedCount} scenarios!`);
-
-            } catch (error) {
-                console.error('Import error:', error);
-                alert('Error reading import file. Please check the file format.');
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    syncLibrary() {
-        // Placeholder for library synchronization
-        alert('DiagnostIQ sync feature will be implemented to pull from:\n- SharePoint libraries\n- GitHub repositories\n- Azure DevOps wikis\n\nThis will sync the latest troubleshooting queries from your team.');
-    }
-
-    populateQuickAccess() {
-        const quickLinksContainer = document.querySelector('.quick-links');
-        if (!quickLinksContainer) return;
-
-        // Get category counts (deduplicated)
-        const categoryStats = {};
-        const seenIds = new Set();
-
-        this.allCheatSheets.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-                categoryStats[sheet.category] = (categoryStats[sheet.category] || 0) + 1;
-            }
-        });
-
-        console.log('📊 Quick Access - Category counts (deduplicated):', categoryStats);
-
-        // Create dynamic quick access based on most popular categories
-        const sortedCategories = Object.entries(categoryStats)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 5); // Top 5 categories
-
-        const quickAccessHTML = sortedCategories.map(([category, count]) => {
-            const displayName = this.getCategoryName(category);
-            return `<li><a href="#" onclick="app.searchForCategory('${category}')">${displayName} (${count})</a></li>`;
-        }).join('');
-
-        // Calculate total unique scenarios for "Show All"
-        const totalUniqueScenarios = seenIds.size;
-        const showAllHTML = `<li><a href="#" onclick="app.showAllScenarios()"><i class="fas fa-th-list"></i> All Scenarios (${totalUniqueScenarios})</a></li>`;
-
-        quickLinksContainer.innerHTML = quickAccessHTML + showAllHTML;
-    }
-
-    searchForCategory(category) {
-        document.getElementById('categoryFilter').value = category;
+    filterByCategory(categoryName) {
+        document.getElementById('categoryFilter').value = categoryName;
         document.getElementById('searchInput').value = '';
         this.performSearch();
     }
 
-    showAllScenarios() {
-        console.log('🎯 Showing all scenarios...');
+    toggleVertical(verticalKey) {
+        console.log('🔄 Toggling vertical:', verticalKey);
 
-        // Clear all filters (don't call other methods to avoid loops)
-        document.getElementById('categoryFilter').value = '';
-        document.getElementById('searchInput').value = '';
+        const categoriesContainer = document.getElementById(`categories-${verticalKey}`);
+        const arrow = document.getElementById(`arrow-${verticalKey}`);
 
-        // Hide welcome message and show search results
-        document.getElementById('welcomeMessage').style.display = 'none';
-        document.getElementById('searchResults').style.display = 'block';
-
-        // Reset current results and display all scenarios (apply deduplication)
-        const uniqueResults = [];
-        const seenIds = new Set();
-
-        this.allCheatSheets.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-                uniqueResults.push(sheet);
-            }
-        });        // Sort scenarios from recent to oldest
-        uniqueResults.sort((a, b) => {
-            // Get the most recent date for each scenario
-            const getScenarioDate = (scenario) => {
-                // Priority: lastUpdated > source.extractedAt > id-based date heuristic for newer scenarios
-                if (scenario.lastUpdated) {
-                    return new Date(scenario.lastUpdated);
-                }
-                if (scenario.source && scenario.source.extractedAt) {
-                    return new Date(scenario.source.extractedAt);
-                }
-
-                // For scenarios with modern-style IDs (like our newly extracted ones),
-                // assume they're more recent than legacy scenarios
-                if (scenario.id && scenario.id.includes('-') && scenario.id.length > 10) {
-                    return new Date('2025-06-28'); // Recent but not today
-                }
-
-                // Fallback for older scenarios without date info
-                return new Date('2020-01-01');
-            };
-
-            const dateA = getScenarioDate(a);
-            const dateB = getScenarioDate(b);
-
-            // Sort descending (most recent first)
-            return dateB - dateA;
-        });
-
-        // Debug: Show first few scenarios with their dates
-        console.log('📅 Top 10 scenarios after sorting:');
-        uniqueResults.slice(0, 10).forEach((scenario, index) => {
-            const date = scenario.lastUpdated || (scenario.source && scenario.source.extractedAt) || 'No date';
-            console.log(`${index + 1}. ${scenario.title} - ${date} (vertical: ${scenario.vertical || 'none'}, category: ${scenario.category || 'none'})`);
-        });
-
-        console.log(`✅ Displaying ${uniqueResults.length} unique scenarios out of ${this.allCheatSheets.length} total (sorted by most recent)`);
-        this.displayResults(uniqueResults, 'All Scenarios');
-    }
-
-    updateTotalCount() {
-        // Add total count to the header (deduplicated)
-        const headerContent = document.querySelector('.header-content h1');
-        if (headerContent) {
-            const existingCount = headerContent.querySelector('.scenario-count');
-            if (existingCount) {
-                existingCount.remove();
-            }
-
-            // Calculate unique scenario count
-            const seenIds = new Set();
-            this.allCheatSheets.forEach(sheet => seenIds.add(sheet.id));
-            const uniqueCount = seenIds.size;
-
-            const countSpan = document.createElement('span');
-            countSpan.className = 'scenario-count';
-            countSpan.innerHTML = ` <small>(${uniqueCount} scenarios)</small>`;
-            headerContent.appendChild(countSpan);
-        }
-    }
-
-    // Enhanced Navigation Methods
-
-    populateCategoryNavigation() {
-        const categoryNav = document.getElementById('categoryNavigation');
-        if (!categoryNav) return;
-
-        console.log('🏗️ Populating vertical-based category navigation...');
-
-        // Get vertical and category counts (deduplicated and normalized)
-        const verticalStats = {};
-        const seenIds = new Set();
-
-        this.allCheatSheets.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-                const vertical = sheet.vertical || 'General';
-                const category = sheet.category || 'general';
-
-                if (!verticalStats[vertical]) {
-                    verticalStats[vertical] = {
-                        count: 0,
-                        categories: {}
-                    };
-                }
-
-                verticalStats[vertical].count++;
-                verticalStats[vertical].categories[category] = (verticalStats[vertical].categories[category] || 0) + 1;
-            }
-        });
-
-        console.log('📊 Vertical stats for navigation:', verticalStats);
-
-        // Create navigation HTML with collapsible verticals
-        const totalCount = seenIds.size;
-
-        // Add "All Categories" option at the top
-        let navigationHTML = `
-            <div class="category-item all-categories" onclick="app.showAllScenarios()" data-category="">
-                <div class="category-label">
-                    <i class="fas fa-th-list"></i>
-                    <span>All Scenarios</span>
-                </div>
-                <span class="category-count">${totalCount}</span>
-            </div>
-            <div class="nav-divider"></div>
-        `;
-
-        // Sort verticals by count (highest first)
-        const sortedVerticals = Object.entries(verticalStats)
-            .sort(([,a], [,b]) => b.count - a.count);
-
-        sortedVerticals.forEach(([vertical, data]) => {
-            const verticalId = `vertical-${vertical.toLowerCase().replace(/\s+/g, '-')}`;
-            const verticalIcon = this.getVerticalIcon(vertical);
-
-            // Vertical header (collapsible)
-            navigationHTML += `
-                <div class="vertical-section">
-                    <div class="vertical-header" onclick="app.toggleVertical('${verticalId}')" data-vertical="${vertical}">
-                        <i class="fas fa-chevron-right vertical-arrow" id="${verticalId}-arrow"></i>
-                        <i class="${verticalIcon} vertical-icon"></i>
-                        <span class="vertical-name">${vertical}</span>
-                        <span class="vertical-count">${data.count}</span>
-                    </div>
-                    <div class="vertical-categories" id="${verticalId}" style="display: none;">
-            `;
-
-            // Sort categories within this vertical
-            const sortedCategories = Object.entries(data.categories)
-                .sort(([,a], [,b]) => b - a);
-
-            sortedCategories.forEach(([category, count]) => {
-                const displayName = this.getCategoryName(category);
-                const categoryIcon = this.getCategoryIcon(category);
-
-                navigationHTML += `
-                    <div class="category-item subcategory" onclick="app.filterByCategory('${category}')" data-category="${category}">
-                        <div class="category-label">
-                            <i class="${categoryIcon}"></i>
-                            <span>${displayName}</span>
-                        </div>
-                        <span class="category-count">${count}</span>
-                    </div>
-                `;
+        if (!categoriesContainer || !arrow) {
+            console.error('❌ Vertical elements not found:', {
+                verticalKey,
+                categoriesContainer: !!categoriesContainer,
+                arrow: !!arrow
             });
-
-            navigationHTML += `
-                    </div>
-                </div>
-            `;
-        });
-
-        categoryNav.innerHTML = navigationHTML;
-        console.log('✅ Vertical-based navigation populated with', sortedVerticals.length, 'verticals');
-    }
-
-    populateTagCloud() {
-        const tagCloud = document.getElementById('tagCloud');
-        if (!tagCloud) return;
-
-        // Collect all tags and their frequencies
-        const tagStats = {};
-        const seenIds = new Set();
-
-        this.allCheatSheets.forEach(sheet => {
-            if (!seenIds.has(sheet.id) && sheet.tags) {
-                seenIds.add(sheet.id);
-                sheet.tags.forEach(tag => {
-                    tagStats[tag] = (tagStats[tag] || 0) + 1;
-                });
-            }
-        });
-
-        // Sort tags by frequency and take top 20
-        const sortedTags = Object.entries(tagStats)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 20);
-
-        if (sortedTags.length === 0) {
-            tagCloud.innerHTML = '<p class="text-muted">No tags available</p>';
             return;
         }
 
-        // Calculate tag sizes based on frequency
-        const maxCount = Math.max(...sortedTags.map(([,count]) => count));
-        const minCount = Math.min(...sortedTags.map(([,count]) => count));
+        // Check current visibility state
+        // If display is not set or is block/empty, consider it visible
+        const currentDisplay = categoriesContainer.style.display;
+        const isVisible = currentDisplay !== 'none';
 
-        const tagHTML = sortedTags.map(([tag, count]) => {
-            const sizeClass = this.getTagSizeClass(count, minCount, maxCount);
-            return `
-                <span class="cloud-tag ${sizeClass}" onclick="filterByTag('${tag}')"
-                      title="${tag} (${count} scenarios)" data-tag="${tag}">
-                    ${tag}
-                </span>
-            `;
-        }).join('');
-
-        tagCloud.innerHTML = tagHTML;
-    }
-
-    populateStatistics() {
-        const statsDisplay = document.getElementById('statsDisplay');
-        if (!statsDisplay) return;
-
-        const seenIds = new Set();
-        let totalScenarios = 0;
-        let scenariosWithKQL = 0;
-        let wikiExtracted = 0;
-        let highSeverity = 0;
-
-        this.allCheatSheets.forEach(sheet => {
-            if (!seenIds.has(sheet.id)) {
-                seenIds.add(sheet.id);
-                totalScenarios++;
-
-                if (sheet.queries && sheet.queries.length > 0) {
-                    scenariosWithKQL++;
-                }
-
-                if (sheet.relatedKQL && sheet.relatedKQL.length > 0) {
-                    scenariosWithKQL++;
-                }
-
-                if (this.isWikiSource(sheet)) {
-                    wikiExtracted++;
-                }
-
-                if (sheet.severity === 'high') {
-                    highSeverity++;
-                }
-            }
+        console.log('📊 Current state:', {
+            verticalKey,
+            currentDisplay,
+            isVisible,
+            arrowText: arrow.textContent
         });
 
-        const categoryCount = new Set(this.allCheatSheets.map(s => s.category)).size;
-        const totalTags = new Set(this.allCheatSheets.flatMap(s => s.tags || [])).size;
-
-        const statsHTML = `
-            <div class="stat-item">
-                <span class="stat-label">Total Scenarios</span>
-                <span class="stat-value">${totalScenarios}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Categories</span>
-                <span class="stat-value">${categoryCount}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Tags</span>
-                <span class="stat-value">${totalTags}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">With KQL</span>
-                <span class="stat-value">${scenariosWithKQL}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Wiki Extracted</span>
-                <span class="stat-value">${wikiExtracted}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Critical</span>
-                <span class="stat-value">${highSeverity}</span>
-            </div>
-        `;
-
-        statsDisplay.innerHTML = statsHTML;
-    }
-
-    // Helper methods for enhanced navigation
-
-    getCategoryIcon(category) {
-        const iconMap = {
-            'authentication': 'fas fa-key',
-            'synchronization': 'fas fa-sync',
-            'provisioning': 'fas fa-user-plus',
-            'conditional-access': 'fas fa-shield-alt',
-            'performance': 'fas fa-tachometer-alt',
-            'applications': 'fas fa-cube',
-            'general': 'fas fa-info-circle',
-            'b2b': 'fas fa-handshake',
-            'b2c': 'fas fa-users',
-            'mfa': 'fas fa-mobile-alt',
-            'governance': 'fas fa-gavel',
-            'domain-services': 'fas fa-server'
-        };
-        return iconMap[category] || 'fas fa-folder';
-    }
-
-    getVerticalIcon(vertical) {
-        const iconMap = {
-            'Auth': 'fas fa-shield-alt',
-            'Account Management': 'fas fa-users',
-            'Sync': 'fas fa-sync-alt',
-            'Applications': 'fas fa-cube',
-            'Performance': 'fas fa-tachometer-alt',
-            'General': 'fas fa-cog'
-        };
-        return iconMap[vertical] || 'fas fa-folder';
-    }
-
-    getTagSizeClass(count, minCount, maxCount) {
-        if (maxCount === minCount) return 'size-md';
-
-        const range = maxCount - minCount;
-        const normalized = (count - minCount) / range;
-
-        if (normalized < 0.2) return 'size-xs';
-        if (normalized < 0.4) return 'size-sm';
-        if (normalized < 0.6) return 'size-md';
-        if (normalized < 0.8) return 'size-lg';
-        return 'size-xl';
-    }
-
-    toggleVertical(verticalId) {
-        const verticalElement = document.getElementById(verticalId);
-        const arrowElement = document.getElementById(`${verticalId}-arrow`);
-
-        if (!verticalElement || !arrowElement) return;
-
-        const isVisible = verticalElement.style.display !== 'none';
-
         if (isVisible) {
-            verticalElement.style.display = 'none';
-            arrowElement.classList.remove('fa-chevron-down');
-            arrowElement.classList.add('fa-chevron-right');
+            // Collapse
+            categoriesContainer.style.display = 'none';
+            arrow.textContent = '▶';
+            console.log('📁 Collapsed vertical:', verticalKey);
         } else {
-            verticalElement.style.display = 'block';
-            arrowElement.classList.remove('fa-chevron-right');
-            arrowElement.classList.add('fa-chevron-down');
+            // Expand
+            categoriesContainer.style.display = 'block';
+            arrow.textContent = '▼';
+            console.log('📂 Expanded vertical:', verticalKey);
         }
     }
 
-    // Enhanced filtering methods
-
-    filterByCategory(category) {
-        console.log(`🏷️ Filtering by category: ${category}`);
-
-        // Update UI to show active category
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        document.querySelector(`[data-category="${category}"]`)?.classList.add('active');
-
-        // Hide welcome message and show search results
-        document.getElementById('welcomeMessage').style.display = 'none';
-        document.getElementById('searchResults').style.display = 'block';
-
-        // Update search
-        document.getElementById('categoryFilter').value = category;
-        document.getElementById('searchInput').value = '';
+    searchByTag(tag) {
+        document.getElementById('searchInput').value = tag;
+        document.getElementById('categoryFilter').value = 'all';
         this.performSearch();
     }
 
     filterByTag(tag) {
         console.log(`🏷️ Filtering by tag: ${tag}`);
+        document.getElementById('searchInput').value = tag;
+        document.getElementById('categoryFilter').value = 'all';
+        this.performSearch();
+    }
 
-        // Update UI to show active tag
-        document.querySelectorAll('.cloud-tag').forEach(item => {
-            item.classList.remove('active');
+    searchRecent(query) {
+        document.getElementById('searchInput').value = query;
+        this.performSearch();
+    }
+
+    addToRecentQueries(query) {
+        if (query && !this.recentQueries.includes(query)) {
+            this.recentQueries.push(query);
+            if (this.recentQueries.length > 10) {
+                this.recentQueries.shift(); // Keep only last 10
+            }
+            localStorage.setItem('recentQueries', JSON.stringify(this.recentQueries));
+            this.populateRecentQueries();
+        }
+    }
+
+    displayResults(results) {
+        const resultsContainer = document.getElementById('searchResults');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+
+        console.log('🎨 displayResults called:', {
+            containerFound: !!resultsContainer,
+            welcomeFound: !!welcomeMessage,
+            resultsCount: results.length,
+            firstResult: results[0]
         });
-        document.querySelector(`[data-tag="${tag}"]`)?.classList.add('active');
 
-        // Hide welcome message and show search results
-        document.getElementById('welcomeMessage').style.display = 'none';
-        document.getElementById('searchResults').style.display = 'block';
+        if (!resultsContainer) {
+            console.error('❌ searchResults container not found!');
+            return;
+        }
 
-        // Clear search inputs
-        document.getElementById('searchInput').value = '';
-        document.getElementById('categoryFilter').value = '';
+        // Show results container and hide welcome message
+        resultsContainer.style.display = 'block';
+        if (welcomeMessage) {
+            welcomeMessage.style.display = 'none';
+        }
 
-        // Filter scenarios by exact tag match
-        const filteredResults = this.allCheatSheets.filter(sheet => {
-            return sheet.tags && sheet.tags.some(sheetTag =>
-                sheetTag.toLowerCase() === tag.toLowerCase()
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="no-results">No scenarios found matching your criteria.</div>';
+            return;
+        }
+
+        console.log('🏗️ Creating scenario cards...');
+
+        // Handle async loading internally without requiring callers to be async
+        this.renderScenariosAsync(results, resultsContainer);
+    }
+
+    async renderScenariosAsync(results, resultsContainer) {
+        try {
+            console.log('🔄 Loading full scenarios for card display...');
+
+            // Load full scenarios before creating cards to ensure KQL queries are available
+            const fullScenarios = await Promise.all(
+                results.map(async (sheet) => {
+                    if (!sheet.isLoaded && window.dataManager) {
+                        console.log(`📄 Loading full content for: ${sheet.title}`);
+                        const fullScenario = await window.dataManager.loadFullScenario(sheet);
+                        if (fullScenario) {
+                            console.log(`✅ Loaded full scenario: ${fullScenario.title}, KQL queries: ${fullScenario.kqlQueries ? fullScenario.kqlQueries.length : 'none'}`);
+                            return fullScenario;
+                        }
+                    }
+                    return sheet;
+                })
             );
+
+            console.log('🎯 Full scenarios loaded, creating cards...');
+            const cardsHTML = fullScenarios.map(sheet => {
+                console.log(`🔍 Creating card for: ${sheet.title}, isLoaded: ${sheet.isLoaded}, kqlQueries: ${sheet.kqlQueries ? sheet.kqlQueries.length : 'none'}`);
+                return this.createScenarioCard(sheet);
+            }).join('');
+
+            console.log('📝 Generated HTML length:', cardsHTML.length);
+
+            resultsContainer.innerHTML = cardsHTML;
+            console.log('✅ HTML set to container');
+
+            // Re-apply syntax highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+        } catch (error) {
+            console.error('❌ Error loading scenarios:', error);
+            // Show error message instead of broken cards
+            resultsContainer.innerHTML = `<div class="no-results">Error loading scenarios: ${error.message}</div>`;
+        }
+    }    createScenarioCard(sheet) {
+        console.log('🎴 Creating card for scenario:', {
+            id: sheet.id,
+            title: sheet.title,
+            category: sheet.category,
+            isLoaded: sheet.isLoaded,
+            hasKqlQueries: !!sheet.kqlQueries,
+            kqlQueriesLength: sheet.kqlQueries ? sheet.kqlQueries.length : 0
         });
 
-        console.log(`🏷️ Found ${filteredResults.length} scenarios with tag "${tag}"`);
-        this.displayResults(filteredResults, `Scenarios tagged with "${tag}"`);
+        const categoryDisplayName = this.formatCategoryName(sheet.category);
+        const tagsHtml = sheet.tags ?
+            sheet.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+
+        let queriesHtml = '';
+
+        // Handle both old 'queries' and new 'kqlQueries' format
+        const allQueries = [
+            ...(sheet.queries || []),
+            ...(sheet.kqlQueries || [])
+        ].filter(query => query && (query.query || query.description || query.name));
+
+        console.log(`🔍 Queries found for ${sheet.title}:`, {
+            oldQueries: sheet.queries ? sheet.queries.length : 0,
+            kqlQueries: sheet.kqlQueries ? sheet.kqlQueries.length : 0,
+            totalFiltered: allQueries.length
+        });
+
+        if (allQueries.length > 0) {
+            queriesHtml = allQueries.map((query, index) => `
+                <div class="query-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-code"></i>
+                        Query ${index + 1}: ${query.name || query.description || 'Untitled'}
+                    </h4>
+                    ${query.description ? `<p class="query-description">${query.description}</p>` : ''}
+                    <div class="query-container">
+                        <pre><code class="language-kql query-code">${query.query || ''}</code></pre>
+                        <button class="copy-btn" onclick="app.copyToClipboard(\`${(query.query || '').replace(/`/g, '\\`')}\`)">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Handle troubleshooting steps
+        let stepsHtml = '';
+        if (sheet.steps && sheet.steps.length > 0) {
+            stepsHtml = `
+                <div class="steps-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-list-ol"></i>
+                        Troubleshooting Steps
+                    </h4>
+                    <div class="steps-list">
+                        <ol>
+                            ${sheet.steps.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+            `;
+        } else if (sheet.troubleshootingSteps && sheet.troubleshootingSteps.length > 0) {
+            stepsHtml = `
+                <div class="steps-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-list-ol"></i>
+                        Troubleshooting Steps
+                    </h4>
+                    <div class="steps-list">
+                        <ol>
+                            ${sheet.troubleshootingSteps.map(step => {
+                                // Handle both object and string formats
+                                if (typeof step === 'object' && step !== null) {
+                                    const stepTitle = step.step || step.title || 'Step';
+                                    const stepDesc = step.description || '';
+                                    return `<li><strong>${stepTitle}</strong>${stepDesc ? `: ${stepDesc}` : ''}</li>`;
+                                } else {
+                                    return `<li>${step}</li>`;
+                                }
+                            }).join('')}
+                        </ol>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get category vertical icon
+        const verticalIcon = this.getVerticalIcon(sheet.vertical || this.getCategoryVertical(sheet.category));
+
+        const cardHTML = `
+            <div class="cheat-sheet-card" data-category="${sheet.category}">
+                <div class="card-header">
+                    <div class="card-icon">
+                        ${verticalIcon}
+                    </div>
+                    <div class="card-main">
+                        <h3 class="card-title" onclick="app.modalHandler.viewScenarioDetails('${sheet.id}')">${sheet.title}</h3>
+                        <div class="card-meta">
+                            <span class="category">
+                                <i class="fas fa-tag"></i> ${categoryDisplayName}
+                            </span>
+                            ${allQueries.length > 0 ? `<span class="queries">
+                                <i class="fas fa-code"></i> ${allQueries.length} ${allQueries.length === 1 ? 'Query' : 'Queries'}
+                            </span>` : ''}
+                            ${sheet.tags && sheet.tags.length > 0 ? `<span class="tags">
+                                <i class="fas fa-tags"></i> ${sheet.tags.length} ${sheet.tags.length === 1 ? 'Tag' : 'Tags'}
+                            </span>` : ''}
+                            ${sheet.queryCount > 0 ? `<span class="query-count">
+                                <i class="fas fa-search"></i> ${sheet.queryCount} Queries
+                            </span>` : ''}
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn view-btn" onclick="app.modalHandler.viewScenarioDetails('${sheet.id}')" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    ${sheet.description ? `<p class="card-description">${sheet.description}</p>` : ''}
+
+                    ${tagsHtml ? `<div class="tags-section">${tagsHtml}</div>` : ''}
+
+                    ${stepsHtml}
+
+                    ${queriesHtml}
+                </div>
+            </div>
+        `;
+
+        console.log('🎴 Generated card HTML length:', cardHTML.length);
+        return cardHTML;
     }
 
-    clearCategoryFilter() {
-        console.log('🧹 Clearing category filter');
-
-        // Update UI to show "All Categories" as active
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        document.querySelector('[data-category=""]')?.classList.add('active');
-
-        // Clear filters
-        document.getElementById('categoryFilter').value = '';
-        document.getElementById('searchInput').value = '';
-
-        // Show all scenarios instead of calling performSearch which might show welcome message
-        this.showAllScenarios();
+    displayMessage(message, type = 'info') {
+        const resultsContainer = document.getElementById('searchResults');
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
     }
 
-    clearAllFilters() {
-        console.log('🧹 Clearing all filters');
-
-        // Clear category selection but don't call clearCategoryFilter to avoid double processing
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.classList.remove('active');
+    copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast('Query copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            this.showToast('Failed to copy query', 'error');
         });
-        document.querySelector('[data-category=""]')?.classList.add('active');
-
-        // Clear tag selection
-        document.querySelectorAll('.cloud-tag').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        // Clear form inputs
-        document.getElementById('categoryFilter').value = '';
-        document.getElementById('searchInput').value = '';
-
-        // Show all scenarios
-        this.showAllScenarios();
     }
 
+    showToast(message, type = 'success') {
+        // Simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    editScenario(scenarioId) {
+        console.log('✏️ Edit scenario requested:', scenarioId);
+
+        const scenario = this.allCheatSheets.find(s => s.id === scenarioId);
+        if (scenario) {
+            this.editingSheetId = scenarioId;
+            console.log('Editing scenario:', scenario);
+
+            // Close any existing modals first
+            if (this.modalHandler) {
+                this.modalHandler.closeScenarioModal();
+            }
+
+            // Small delay to ensure modal is closed before opening edit modal
+            setTimeout(() => {
+                // Populate the edit modal with scenario data
+                this.populateEditModal(scenario);
+
+                // Show the modal with edit-mode class for higher z-index
+                const modal = document.getElementById('addCheatSheetModal');
+                if (modal) {
+                    modal.classList.add('edit-mode');
+                    modal.style.display = 'block';
+                    console.log('✅ Edit modal opened for scenario:', scenarioId);
+                } else {
+                    console.error('❌ addCheatSheetModal not found');
+                }
+            }, 100);
+        } else {
+            this.showToast('Scenario not found', 'error');
+        }
+    }
+
+    populateEditModal(scenario) {
+        // Update modal title for editing
+        const modalTitle = document.querySelector('#addCheatSheetModal .modal-header h2');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Scenario';
+        }
+
+        // Update save button text
+        const saveButton = document.querySelector('#addCheatSheetModal .modal-footer .btn-primary');
+        if (saveButton) {
+            saveButton.textContent = 'Update Scenario';
+        }
+
+        // Populate form fields
+        const titleField = document.getElementById('title');
+        const categoryField = document.getElementById('category');
+        const clusterField = document.getElementById('cluster');
+        const databaseField = document.getElementById('database');
+        const descriptionField = document.getElementById('description');
+        const stepsField = document.getElementById('steps');
+
+        if (titleField) titleField.value = scenario.title || '';
+        if (categoryField) {
+            // Populate categories first using the form-specific method
+            this.populateFormCategoryDropdown();
+            categoryField.value = scenario.category || '';
+        }
+        if (clusterField) clusterField.value = scenario.cluster || '';
+        if (databaseField) databaseField.value = scenario.database || '';
+        if (descriptionField) descriptionField.value = scenario.description || '';
+
+        // Handle steps (convert array to numbered list if needed)
+        if (stepsField) {
+            const steps = scenario.steps || scenario.troubleshootingSteps || [];
+            if (Array.isArray(steps)) {
+                stepsField.value = steps.map((step, index) => `${index + 1}. ${step}`).join('\n');
+            } else {
+                stepsField.value = steps || '';
+            }
+        }
+
+        // Populate queries
+        this.populateQueryInputs(scenario);
+    }
+
+    populateQueryInputs(scenario) {
+        const queryInputsContainer = document.getElementById('queryInputs');
+        if (!queryInputsContainer) return;
+
+        // Get all queries from scenario
+        const allQueries = [
+            ...(scenario.queries || []),
+            ...(scenario.kqlQueries || [])
+        ];
+
+        // Clear existing query inputs
+        queryInputsContainer.innerHTML = '';
+
+        // Add existing queries
+        allQueries.forEach((query, index) => {
+            this.addQueryInput(index, query);
+        });
+
+        // Add one empty query input if no queries exist
+        if (allQueries.length === 0) {
+            this.addQueryInput(0);
+        }
+
+        // Add "Add Query" button
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'btn btn-secondary';
+        addButton.textContent = '+ Add Query';
+        addButton.onclick = () => this.addQueryInput(allQueries.length);
+        queryInputsContainer.appendChild(addButton);
+    }
+
+    addQueryInput(index, queryData = null) {
+        const queryInputsContainer = document.getElementById('queryInputs');
+        if (!queryInputsContainer) return;
+
+        const queryDiv = document.createElement('div');
+        queryDiv.className = 'query-input-group';
+        queryDiv.innerHTML = `
+            <div class="form-group">
+                <label for="queryName${index}">Query ${index + 1} Name:</label>
+                <input type="text" id="queryName${index}" value="${queryData?.name || queryData?.description || ''}" placeholder="Query name or description">
+            </div>
+            <div class="form-group">
+                <label for="queryCode${index}">Query ${index + 1} Code:</label>
+                <textarea id="queryCode${index}" rows="4" placeholder="KQL query code...">${queryData?.query || ''}</textarea>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">Remove Query</button>
+        `;
+
+        // Insert before the "Add Query" button
+        const addButton = queryInputsContainer.querySelector('.btn.btn-secondary');
+        if (addButton) {
+            queryInputsContainer.insertBefore(queryDiv, addButton);
+        } else {
+            queryInputsContainer.appendChild(queryDiv);
+        }
+    }
+
+    /**
+     * Export current scenarios to a JSON file
+     */
+    exportLibrary() {
+        try {
+            console.log('📤 Starting export...');
+
+            // Get all current scenarios from data manager
+            const scenarios = window.dataManager.getAllScenarios();
+
+            // Create export data structure
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    version: "v0.6.1",
+                    source: "DiagnostIQ",
+                    totalScenarios: scenarios.length
+                },
+                scenarios: scenarios,
+                localCheatSheets: this.localCheatSheets || []
+            };
+
+            // Create and download file
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `diagnostiq-export-${new Date().toISOString().split('T')[0]}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+
+            console.log('✅ Export completed successfully');
+            this.showNotification('📤 Library exported successfully!', 'success');
+
+        } catch (error) {
+            console.error('❌ Export failed:', error);
+            this.showNotification('❌ Export failed: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Import scenarios from a JSON file
+     */
+    importLibrary(event) {
+        try {
+            console.log('📥 Starting import...');
+
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('🚫 No file selected');
+                return;
+            }
+
+            if (!file.name.endsWith('.json')) {
+                this.showNotification('❌ Please select a JSON file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    this.processImportData(importData, file.name);
+                } catch (parseError) {
+                    console.error('❌ Invalid JSON file:', parseError);
+                    this.showNotification('❌ Invalid JSON file format', 'error');
+                }
+            };
+
+            reader.onerror = () => {
+                console.error('❌ File reading failed');
+                this.showNotification('❌ Failed to read file', 'error');
+            };
+
+            reader.readAsText(file);
+
+        } catch (error) {
+            console.error('❌ Import failed:', error);
+            this.showNotification('❌ Import failed: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Process imported data and merge with existing scenarios
+     */
+    processImportData(importData, fileName) {
+        try {
+            console.log('🔄 Processing import data from:', fileName);
+
+            // Validate import data structure
+            if (!importData.scenarios || !Array.isArray(importData.scenarios)) {
+                throw new Error('Invalid import format: scenarios array not found');
+            }
+
+            const importedScenarios = importData.scenarios;
+            const existingScenarios = window.dataManager.getAllScenarios();
+
+            // Create a map of existing scenarios by ID for quick lookup
+            const existingIds = new Set(existingScenarios.map(s => s.id));
+
+            // Filter new scenarios
+            const newScenarios = importedScenarios.filter(scenario => !existingIds.has(scenario.id));
+            const duplicateCount = importedScenarios.length - newScenarios.length;
+
+            if (newScenarios.length === 0) {
+                this.showNotification('ℹ️ No new scenarios to import (all duplicates)', 'info');
+                return;
+            }
+
+            // Show import confirmation modal
+            this.showImportConfirmationModal(newScenarios, duplicateCount, importData);
+
+        } catch (error) {
+            console.error('❌ Import processing failed:', error);
+            this.showNotification('❌ Import processing failed: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Show import confirmation modal
+     */
+    showImportConfirmationModal(newScenarios, duplicateCount, importData) {
+        const modalHtml = `
+            <div id="importConfirmationModal" class="modal" style="display: block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-upload"></i> Import Scenarios</h2>
+                        <span class="close" onclick="closeImportModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="import-summary">
+                            <p><strong>Import Summary:</strong></p>
+                            <ul>
+                                <li>📥 New scenarios to import: <strong>${newScenarios.length}</strong></li>
+                                ${duplicateCount > 0 ? `<li>⚠️ Duplicate scenarios (will be skipped): <strong>${duplicateCount}</strong></li>` : ''}
+                                <li>📊 Your current scenarios: <strong>${window.dataManager.getAllScenarios().length}</strong></li>
+                            </ul>
+                        </div>
+
+                        ${newScenarios.length > 0 ? `
+                            <div class="import-preview">
+                                <h4>New Scenarios Preview:</h4>
+                                <div class="scenarios-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
+                                    ${newScenarios.slice(0, 10).map(scenario => `
+                                        <div class="scenario-item" style="margin-bottom: 8px; padding: 5px; background: #f5f5f5; border-radius: 3px;">
+                                            <strong>${scenario.title || scenario.id}</strong>
+                                            <br><small>Category: ${scenario.category || 'Unknown'}</small>
+                                        </div>
+                                    `).join('')}
+                                    ${newScenarios.length > 10 ? `<div style="text-align: center; color: #666; margin-top: 10px;">... and ${newScenarios.length - 10} more scenarios</div>` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                        ${newScenarios.length > 0 ? `<button type="button" class="btn btn-primary" onclick="confirmImport()">Import ${newScenarios.length} Scenarios</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Store import data temporarily for confirmation
+        this.pendingImportData = { newScenarios, importData };
+
+        // Add modal to page
+        const existingModal = document.getElementById('importConfirmationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    /**
+     * Confirm and execute the import
+     */
+    confirmImport() {
+        try {
+            if (!this.pendingImportData) {
+                throw new Error('No pending import data found');
+            }
+
+            const { newScenarios, importData } = this.pendingImportData;
+
+            console.log(`📥 Importing ${newScenarios.length} new scenarios...`);
+
+            // Add new scenarios to data manager
+            for (const scenario of newScenarios) {
+                // Ensure scenario has required fields
+                if (!scenario.id) {
+                    scenario.id = this.generateScenarioId(scenario.title || 'imported-scenario');
+                }
+
+                window.dataManager.addScenario(scenario);
+            }
+
+            // Handle local cheat sheets if present
+            if (importData.localCheatSheets && Array.isArray(importData.localCheatSheets)) {
+                const newLocalSheets = importData.localCheatSheets.filter(sheet =>
+                    !this.localCheatSheets.some(existing => existing.id === sheet.id)
+                );
+
+                if (newLocalSheets.length > 0) {
+                    this.localCheatSheets.push(...newLocalSheets);
+                    localStorage.setItem('localCheatSheets', JSON.stringify(this.localCheatSheets));
+                    console.log(`📥 Imported ${newLocalSheets.length} local cheat sheets`);
+                }
+            }
+
+            // Refresh the display
+            this.allCheatSheets = window.dataManager.getAllScenarios();
+            if (this.localCheatSheets.length > 0) {
+                this.allCheatSheets.push(...this.localCheatSheets);
+            }
+
+            this.closeImportModal();
+            this.setupInterface(); // Refresh the UI
+
+            this.showNotification(`✅ Successfully imported ${newScenarios.length} scenarios!`, 'success');
+            console.log('✅ Import completed successfully');
+
+            // Clear pending data
+            this.pendingImportData = null;
+
+        } catch (error) {
+            console.error('❌ Import confirmation failed:', error);
+            this.showNotification('❌ Import failed: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Close the import modal
+     */
+    closeImportModal() {
+        const modal = document.getElementById('importConfirmationModal');
+        if (modal) {
+            modal.remove();
+        }
+        this.pendingImportData = null;
+    }
+
+    /**
+     * Generate a unique scenario ID
+     */
+    generateScenarioId(title) {
+        const base = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        const timestamp = Date.now();
+        return `${base}-${timestamp}`;
+    }
+
+    /**
+     * Sync library (placeholder for future remote sync functionality)
+     */
+    syncLibrary() {
+        console.log('🔄 Sync library triggered');
+
+        // Show sync options modal
+        const modalHtml = `
+            <div id="syncLibraryModal" class="modal" style="display: block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-sync"></i> Sync Library</h2>
+                        <span class="close" onclick="closeSyncModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="sync-options">
+                            <p>Choose synchronization method:</p>
+
+                            <div class="sync-option" style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                                <h4><i class="fas fa-download"></i> Export Current Data</h4>
+                                <p>Download your current scenarios as a backup file.</p>
+                                <button class="btn btn-primary" onclick="window.app.exportLibrary(); closeSyncModal();">
+                                    <i class="fas fa-download"></i> Export Now
+                                </button>
+                            </div>
+
+                            <div class="sync-option" style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                                <h4><i class="fas fa-upload"></i> Import External Data</h4>
+                                <p>Import scenarios from a previously exported file.</p>
+                                <input type="file" id="syncImportFile" accept=".json" style="margin-bottom: 10px;">
+                                <button class="btn btn-primary" onclick="if(document.getElementById('syncImportFile').files[0]) { window.app.importLibrary({target: document.getElementById('syncImportFile')}); closeSyncModal(); } else { alert('Please select a file first'); }">
+                                    <i class="fas fa-upload"></i> Import File
+                                </button>
+                            </div>
+
+                            <div class="sync-option" style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                                <h4><i class="fas fa-search-plus"></i> Check for Updates</h4>
+                                <p>Check for new scenarios in the original data files.</p>
+                                <button class="btn btn-primary" onclick="window.app.checkForNewScenarios(); closeSyncModal();">
+                                    <i class="fas fa-search-plus"></i> Check Updates
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeSyncModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        const existingModal = document.getElementById('syncLibraryModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    /**
+     * Close the sync modal
+     */
+    closeSyncModal() {
+        const modal = document.getElementById('syncLibraryModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    /**
+     * Show notification to user
+     */
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        notification.textContent = message;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
+
+    // ===== END IMPORT/EXPORT FUNCTIONALITY =====
+
+    /**
+     * Show the add cheat sheet modal
+     */
+    showAddCheatSheet() {
+        console.log('📝 showAddCheatSheet called');
+        // Reset editing mode
+        this.editingSheetId = null;
+
+        // Clear form first
+        this.clearForm();
+
+        // Update modal title and button text for adding (not editing)
+        const modalTitle = document.querySelector('#addCheatSheetModal .modal-header h2');
+        const saveButton = document.querySelector('#addCheatSheetModal .modal-footer .btn-primary');
+
+        if (modalTitle) {
+            modalTitle.textContent = 'Add New Cheat Sheet';
+        }
+        if (saveButton) {
+            saveButton.textContent = 'Save Cheat Sheet';
+        }
+
+        // Remove edit-mode class if present
+        const modal = document.getElementById('addCheatSheetModal');
+        if (modal) {
+            modal.classList.remove('edit-mode');
+            modal.style.display = 'block';
+            console.log('✅ Add cheat sheet modal opened');
+        } else {
+            console.error('❌ addCheatSheetModal not found');
+        }
+
+        // Populate categories in the dropdown
+        this.populateFormCategoryDropdown();
+    }
+
+    /**
+     * Reset to original data from files
+     */
+    resetToOriginalData() {
+        console.log('🔄 resetToOriginalData called');
+
+        if (confirm('This will reset all your edits and reload original data from files. Are you sure?')) {
+            try {
+                // Clear localStorage
+                localStorage.removeItem('diagnostiq_scenarios');
+                localStorage.removeItem('deletedScenarios');
+
+                // Reset data manager
+                if (window.dataManager && typeof window.dataManager.resetToFiles === 'function') {
+                    window.dataManager.resetToFiles();
+                }
+
+                // Reload the page to get fresh data
+                window.location.reload();
+
+            } catch (error) {
+                console.error('❌ Reset failed:', error);
+                this.showNotification('❌ Reset failed: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Check for new scenarios in files vs localStorage
+     */
+    checkForNewScenarios() {
+        console.log('🔍 checkForNewScenarios called');
+
+        if (window.dataManager && typeof window.dataManager.checkForNewScenarios === 'function') {
+            return window.dataManager.checkForNewScenarios();
+        } else {
+            console.error('❌ DataManager.checkForNewScenarios not available');
+            this.showNotification('❌ Admin function not available', 'error');
+        }
+    }
+
+    /**
+     * Import selected scenarios from the admin modal
+     */
+    importSelectedScenarios() {
+        console.log('📥 importSelectedScenarios called');
+
+        if (window.dataManager && typeof window.dataManager.importSelectedScenarios === 'function') {
+            return window.dataManager.importSelectedScenarios();
+        } else {
+            console.error('❌ DataManager.importSelectedScenarios not available');
+            this.showNotification('❌ Import function not available', 'error');
+        }
+    }
+
+    /**
+     * Import all new scenarios from the admin modal
+     */
+    importAllNewScenarios() {
+        console.log('📥 importAllNewScenarios called');
+
+        if (window.dataManager && typeof window.dataManager.importAllNewScenarios === 'function') {
+            return window.dataManager.importAllNewScenarios();
+        } else {
+            console.error('❌ DataManager.importAllNewScenarios not available');
+            this.showNotification('❌ Import function not available', 'error');
+        }
+    }
+
+    /**
+     * Close the new scenarios modal
+     */
+    closeNewScenariosModal() {
+        console.log('❌ closeNewScenariosModal called');
+
+        const modal = document.getElementById('newScenariosModal');
+        if (modal) {
+            modal.remove();
+            console.log('✅ New scenarios modal closed');
+        }
+    }
+
+    /**
+     * Save cheat sheet (for modal) - handles both add and edit modes
+     */
+    saveCheatSheet() {
+        console.log('💾 saveCheatSheet called');
+
+        try {
+            // Get form data
+            const form = document.getElementById('cheatSheetForm');
+            if (!form) {
+                throw new Error('Cheat sheet form not found');
+            }
+
+            const formData = new FormData(form);
+            const title = formData.get('title')?.trim();
+            const description = formData.get('description')?.trim() || '';
+            const category = formData.get('category');
+            const cluster = formData.get('cluster')?.trim() || '';
+            const database = formData.get('database')?.trim() || '';
+            const stepsText = formData.get('steps')?.trim() || '';
+
+            console.log('📋 Form data collected:', {
+                title: title,
+                category: category,
+                description: description ? 'Present' : 'Empty',
+                cluster: cluster,
+                database: database,
+                steps: stepsText ? 'Present' : 'Empty'
+            });
+
+            if (!title || !category) {
+                this.showNotification('❌ Title and category are required', 'error');
+                console.error('❌ Validation failed:', { title: !!title, category: !!category });
+                return;
+            }
+
+            // Parse steps
+            const steps = stepsText.split('\n')
+                .map(step => step.replace(/^\d+\.\s*/, '').trim())
+                .filter(step => step.length > 0);
+
+            // Collect query data
+            const queries = [];
+            const queryInputs = document.querySelectorAll('.query-input-group');
+            queryInputs.forEach((queryGroup, index) => {
+                const nameField = queryGroup.querySelector(`#queryName${index}`);
+                const codeField = queryGroup.querySelector(`#queryCode${index}`);
+
+                if (nameField && codeField && codeField.value.trim()) {
+                    queries.push({
+                        name: nameField.value.trim() || `Query ${index + 1}`,
+                        description: nameField.value.trim() || `Query ${index + 1}`,
+                        query: codeField.value.trim()
+                    });
+                }
+            });
+
+            // Create scenario object
+            const scenarioData = {
+                id: this.editingSheetId || this.generateScenarioId(title),
+                title: title,
+                description: description,
+                category: category,
+                cluster: cluster,
+                database: database,
+                steps: steps,
+                kqlQueries: queries,
+                vertical: this.getCategoryVertical(category),
+                tags: [],
+                isLoaded: true,
+                queryCount: queries.length
+            };
+
+            console.log('💾 Scenario data prepared:', {
+                id: scenarioData.id,
+                title: scenarioData.title,
+                category: scenarioData.category,
+                isEdit: !!this.editingSheetId,
+                queryCount: queries.length
+            });
+
+            // Add or update scenario via data manager
+            if (window.dataManager) {
+                const isEditMode = !!this.editingSheetId;
+
+                if (isEditMode) {
+                    // Update existing scenario
+                    console.log('✏️ Updating existing scenario:', this.editingSheetId);
+                    window.dataManager.updateScenario(scenarioData);
+                } else {
+                    // Add new scenario
+                    console.log('➕ Adding new scenario');
+                    window.dataManager.addScenario(scenarioData);
+                }
+
+                // Refresh the display
+                this.allCheatSheets = window.dataManager.getAllScenarios();
+                this.setupInterface();
+
+                // Reset editing state
+                this.editingSheetId = null;
+
+                // Close modal
+                this.closeModal();
+
+                const actionText = isEditMode ? 'updated' : 'saved';
+                this.showNotification(`✅ Scenario ${actionText} successfully!`, 'success');
+                console.log(`✅ Scenario ${actionText}:`, scenarioData.id);
+            } else {
+                throw new Error('DataManager not available');
+            }
+
+        } catch (error) {
+            console.error('❌ Save failed:', error);
+            this.showNotification('❌ Save failed: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Close modal
+     */
+    closeModal() {
+        console.log('❌ closeModal called');
+
+        const modals = [
+            'addCheatSheetModal',
+            'newScenariosModal',
+            'importConfirmationModal',
+            'syncLibraryModal'
+        ];
+
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                console.log(`✅ Modal ${modalId} closed`);
+            }
+        });
+    }
+
+    /**
+     * Go to home/welcome view
+     */
     goHome() {
-        // Clear all filters and search
-        document.getElementById('searchInput').value = '';
-        document.getElementById('categoryFilter').value = '';
+        console.log('🏠 goHome called');
 
-        // Clear all visual indicators
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        document.querySelector('[data-category=""]')?.classList.add('active'); // Activate "All Categories"
-
-        document.querySelectorAll('.cloud-tag').forEach(item => {
-            item.classList.remove('active');
-        });
+        // Clear search
+        this.clearSearch();
 
         // Show welcome message
-        document.getElementById('searchResults').style.display = 'none';
-        document.getElementById('welcomeMessage').style.display = 'block';
+        this.showWelcomeMessage();
 
-        // Clear recent queries selection
-        document.querySelectorAll('#recentQueries a').forEach(a => {
-            a.classList.remove('active');
+        console.log('✅ Returned to home view');
+    }
+
+    clearForm() {
+        const form = document.getElementById('cheatSheetForm');
+        if (form) {
+            form.reset();
+        }
+
+        // Reset current queries
+        this.currentQueries = [{ name: '', description: '', query: '' }];
+
+        // Clear query inputs container
+        const queryInputsContainer = document.getElementById('queryInputs');
+        if (queryInputsContainer) {
+            queryInputsContainer.innerHTML = '';
+        }
+    }
+
+    populateFormCategoryDropdown() {
+        const categorySelect = document.getElementById('category');
+        if (!categorySelect) {
+            console.warn('❌ Category select element not found');
+            return;
+        }
+
+        // Check if dataManager is available
+        if (!window.dataManager) {
+            console.error('❌ dataManager not available for form category population');
+            return;
+        }
+
+        // Get categories from data manager
+        const categories = window.dataManager.getAvailableCategories();
+        console.log('🏷️ Populating form categories:', categories.length);
+
+        if (!categories || categories.length === 0) {
+            console.warn('⚠️ No categories available from dataManager');
+            categorySelect.innerHTML = '<option value="">No categories available</option>';
+            return;
+        }
+
+        // Clear existing options
+        categorySelect.innerHTML = '<option value="">Select a category...</option>';
+
+        // Sort categories alphabetically
+        categories.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+        // Add category options
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.textContent = `${category.displayName} (${category.count})`;
+            categorySelect.appendChild(option);
         });
 
-        console.log('🏠 Returned to home');
+        console.log(`✅ Form category dropdown populated with ${categories.length} categories`);
     }
 
-    isWikiSource(sheet) {
-        if (!sheet.source) return false;
+    // Clear cache and force reload - for debugging
+    async clearCacheAndReload() {
+        try {
+            console.log('🧹 Clearing cache and reloading...');
 
-        // Handle both string and object formats
-        if (typeof sheet.source === 'string') {
-            return sheet.source.endsWith('.md');
+            if (window.dataManager) {
+                await window.dataManager.forceReload();
+                this.allCheatSheets = window.dataManager.getAllScenarios();
+
+                // Refresh the UI
+                this.setupInterface();
+                this.showWelcomeMessage();
+
+                this.showToast('✅ Cache cleared and data reloaded!', 'success');
+                console.log('✅ Cache cleared and reloaded successfully');
+            }
+        } catch (error) {
+            console.error('❌ Cache clear failed:', error);
+            this.showToast('❌ Cache clear failed: ' + error.message, 'error');
         }
-
-        // Handle object format with path property
-        if (typeof sheet.source === 'object') {
-            return (sheet.source.type === 'wiki') ||
-                   (sheet.source.path && sheet.source.path.endsWith('.md'));
-        }
-
-        return false;
-    }
-
-    getSourcePath(sheet) {
-        if (!sheet.source) return '';
-
-        // Handle string format
-        if (typeof sheet.source === 'string') {
-            return sheet.source;
-        }
-
-        // Handle object format
-        if (typeof sheet.source === 'object') {
-            return sheet.source.path || sheet.source.url || '';
-        }
-
-        return '';
     }
 }
 
-// Global functions for HTML onclick events
-function performSearch() {
-    app.performSearch();
-}
-
+// Global function for HTML button
 function clearSearch() {
-    app.clearSearch();
+    if (window.app) {
+        window.app.clearSearch();
+    }
 }
 
-function showAddCheatSheet() {
-    app.showAddCheatSheet();
-}
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.diagnostiqInitialized) {
+        console.warn('⚠️ DiagnostIQ already initialized, skipping...');
+        return;
+    }
+    window.diagnostiqInitialized = true;
 
-function closeModal() {
-    app.closeModal();
-}
-
-function saveCheatSheet() {
-    app.saveCheatSheet();
-}
-
-function syncLibrary() {
-    app.syncLibrary();
-}
-
-function searchFor(term) {
-    app.searchFor(term);
-}
-
-function deleteCheatSheet(sheetId) {
-    app.deleteCheatSheet(sheetId);
-}
-
-function editCheatSheet(sheetId) {
-    app.editCheatSheet(sheetId);
-}
-
-function exportLibrary() {
-    app.exportLibrary();
-}
-
-function importLibrary(event) {
-    app.importLibrary(event);
-}
-
-function expandCheatSheet(sheetId) {
-    app.expandCheatSheet(sheetId);
-}
-
-function collapseCheatSheet(sheetId) {
-    app.collapseCheatSheet(sheetId);
-}
-
-// Global function to go home
-function goHome() {
-    app.goHome();
-}
-
-// Global functions for enhanced navigation
-function filterByCategory(category) {
-    app.filterByCategory(category);
-}
-
-function filterByTag(tag) {
-    app.filterByTag(tag);
-}
-
-function clearCategoryFilter() {
-    app.clearCategoryFilter();
-}
-
-function clearAllFilters() {
-    app.clearAllFilters();
-}
-
-// Initialize the application when the page loads
-let app;
-document.addEventListener('DOMContentLoaded', function() {
-    app = new QueryLibraryApp();
-    // Make app accessible globally for onclick handlers
-    window.app = app;
+    if (!window.dataManager) {
+        window.dataManager = new DataManager();
+    }
+    if (!window.app) {
+        window.app = new QueryLibraryApp();
+        window.app.initializeApp();
+    }
 });
+
+// Legacy compatibility
+window.initializeApp = () => {
+    if (window.diagnostiqInitialized) {
+        console.warn('⚠️ DiagnostIQ already initialized, skipping legacy init...');
+        return;
+    }
+    window.diagnostiqInitialized = true;
+
+    if (!window.dataManager) {
+        window.dataManager = new DataManager();
+    }
+    if (!window.app) {
+        window.app = new QueryLibraryApp();
+        window.app.initializeApp();
+    }
+};
+
+// Note: Global function exposures are handled in index.html setupGlobalFunctions()
+// to avoid duplication and ensure proper initialization order

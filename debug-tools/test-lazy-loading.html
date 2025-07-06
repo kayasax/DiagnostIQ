@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LazyLoad Debug Test</title>
+</head>
+<body>
+    <h1>Lazy Loading Debug Test</h1>
+    <div id="output"></div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script>
+        async function testLazyLoading() {
+            const output = document.getElementById('output');
+
+            output.innerHTML += '<p>🔄 Creating DataManager...</p>';
+            const dataManager = new DataManager();
+
+            output.innerHTML += '<p>📦 Calling loadAllScenarios...</p>';
+            console.log('📦 About to call loadAllScenarios...');
+
+            await dataManager.loadAllScenarios();
+
+            output.innerHTML += `<p>✅ Done! Loaded ${dataManager.allScenarios.length} scenarios</p>`;
+
+            // Check if they are placeholders
+            const firstScenario = dataManager.allScenarios[0];
+            if (firstScenario) {
+                output.innerHTML += `<p>🔍 First scenario isLoaded: ${firstScenario.isLoaded}</p>`;
+                output.innerHTML += `<p>📄 First scenario has queries: ${(firstScenario.queries || firstScenario.kqlQueries || []).length}</p>`;
+                output.innerHTML += `<p>📁 First scenario title: ${firstScenario.title}</p>`;
+            }
+        }
+
+        // Run the test when page loads
+        window.addEventListener('load', testLazyLoading);
+    </script>
+</body>
+</html>

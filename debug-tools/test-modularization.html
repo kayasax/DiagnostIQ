@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modularization Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Modularization Test</h1>
+            </div>
+        </header>
+
+        <div class="search-container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search scenarios..." onkeyup="performSearch()">
+            </div>
+        </div>
+
+        <div class="main-content">
+            <main class="content-area">
+                <div id="searchResults" class="search-results">
+                    <!-- Results will be populated here -->
+                </div>
+
+                <div id="welcomeMessage" class="welcome-message">
+                    <div class="welcome-content">
+                        <i class="fas fa-rocket"></i>
+                        <h2>Modularization Test</h2>
+                        <p>Testing the new modal handler module.</p>
+                        <button class="btn btn-primary" onclick="showAllScenarios()">Show All Scenarios</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="data-manager-optimized.js"></script>
+    <script src="js/ui/modals.js"></script>
+    <script src="app.js"></script>
+    <script>
+        async function initializeTest() {
+            try {
+                console.log('🧪 Testing modularization...');
+
+                // Initialize data manager
+                if (!window.dataManager) {
+                    window.dataManager = new DataManager();
+                }
+
+                // Initialize app
+                if (!window.app) {
+                    window.app = new QueryLibraryApp();
+                    await window.app.initializeApp();
+                }
+
+                // Test that modal handler was created
+                console.log('✅ Modal handler created:', !!window.app.modalHandler);
+                console.log('✅ Modal handler methods:', Object.getOwnPropertyNames(window.app.modalHandler.__proto__));
+
+                // Make functions globally available
+                window.performSearch = () => window.app.performSearch();
+                window.showAllScenarios = () => {
+                    console.log('🎯 Showing all scenarios...');
+                    window.app.currentResults = window.app.allCheatSheets;
+                    window.app.displayResults(window.app.allCheatSheets);
+                };
+
+                console.log(`✅ Test initialized successfully. Loaded ${window.app.allCheatSheets.length} scenarios`);
+                console.log('🎯 Click "Show All Scenarios" and then click on any card title to test modal functionality');
+
+            } catch (error) {
+                console.error('❌ Failed to initialize test:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeTest);
+    </script>
+</body>
+</html>

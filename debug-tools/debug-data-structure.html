@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Structure Debug</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Structure Debug</h1>
+        <div id="debug-output"></div>
+        <div id="first-scenarios"></div>
+    </div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script src="app.js"></script>
+    <script>
+        async function debugDataStructure() {
+            const output = document.getElementById('debug-output');
+            const firstScenarios = document.getElementById('first-scenarios');
+
+            try {
+                output.innerHTML += '<p>🚀 Loading data manager...</p>';
+
+                // Initialize
+                window.dataManager = new DataManager();
+                await window.dataManager.loadAllScenarios();
+
+                const scenarios = window.dataManager.getAllScenarios();
+
+                output.innerHTML += `<p>📊 Total scenarios loaded: ${scenarios.length}</p>`;
+
+                if (scenarios.length > 0) {
+                    output.innerHTML += `<p>🔍 Type of first item: ${typeof scenarios[0]}</p>`;
+                    output.innerHTML += `<p>🏷️ First scenario structure:</p>`;
+                    output.innerHTML += `<pre>${JSON.stringify(scenarios[0], null, 2)}</pre>`;
+
+                    // Check if any scenarios have nested structure
+                    let hasNestedScenarios = false;
+                    for (let i = 0; i < Math.min(5, scenarios.length); i++) {
+                        if (scenarios[i].scenarios && Array.isArray(scenarios[i].scenarios)) {
+                            hasNestedScenarios = true;
+                            output.innerHTML += `<p>⚠️ Item ${i} has nested scenarios: ${scenarios[i].scenarios.length}</p>`;
+                        }
+                    }
+
+                    if (!hasNestedScenarios) {
+                        output.innerHTML += `<p>✅ All items appear to be flat scenario objects</p>`;
+                    }
+
+                    // Show first 3 scenarios
+                    firstScenarios.innerHTML = '<h2>First 3 Scenarios:</h2>';
+                    for (let i = 0; i < Math.min(3, scenarios.length); i++) {
+                        firstScenarios.innerHTML += `<h3>Scenario ${i + 1}:</h3>`;
+                        firstScenarios.innerHTML += `<p><strong>ID:</strong> ${scenarios[i].id || 'No ID'}</p>`;
+                        firstScenarios.innerHTML += `<p><strong>Title:</strong> ${scenarios[i].title || 'No Title'}</p>`;
+                        firstScenarios.innerHTML += `<p><strong>Category:</strong> ${scenarios[i].category || 'No Category'}</p>`;
+                        firstScenarios.innerHTML += `<p><strong>Has Queries:</strong> ${(scenarios[i].queries?.length || 0) + (scenarios[i].kqlQueries?.length || 0)} queries</p>`;
+                        firstScenarios.innerHTML += '<hr>';
+                    }
+                } else {
+                    output.innerHTML += '<p>❌ No scenarios found</p>';
+                }
+
+            } catch (error) {
+                output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Debug error:', error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', debugDataStructure);
+    </script>
+</body>
+</html>

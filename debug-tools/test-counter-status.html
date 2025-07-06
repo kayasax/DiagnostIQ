@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Live Navigation Counter Check</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; }
+        .btn:hover { background: #0056b3; }
+        .code-display { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Live Navigation Counter Check</h1>
+        <p>This will check the actual generated HTML from the main app to see if counters are present.</p>
+
+        <div>
+            <button class="btn" onclick="checkNavigationHTML()">🔍 Check Navigation HTML</button>
+            <button class="btn" onclick="checkCounterCSS()">🎨 Check Counter CSS</button>
+            <button class="btn" onclick="checkDataManagerState()">📊 Check DataManager State</button>
+            <button class="btn" onclick="openMainApp()">📱 Open Main App</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="../data-manager-optimized.js"></script>
+    <script>
+        async function checkNavigationHTML() {
+            const results = document.getElementById('results');
+
+            try {
+                // Try to connect to main window if available
+                let mainWindow = null;
+                if (window.opener) {
+                    mainWindow = window.opener;
+                } else {
+                    // Try to access via iframe or other means
+                    results.innerHTML = '<div class="warning">⚠️ No main window reference. Please open this from the main app.</div>';
+                }
+
+                if (mainWindow && mainWindow.document) {
+                    const categoryNav = mainWindow.document.getElementById('categoryNavigation');
+
+                    if (categoryNav) {
+                        const html = categoryNav.innerHTML;
+                        const hasCounters = html.includes('category-count') || html.includes('vertical-count');
+
+                        let status = hasCounters ? 'success' : 'error';
+                        let message = hasCounters
+                            ? '✅ Counter classes found in navigation HTML!'
+                            : '❌ No counter classes found in navigation HTML';
+
+                        // Count actual counter elements
+                        const counterElements = categoryNav.querySelectorAll('.category-count, .vertical-count');
+
+                        results.innerHTML = `
+                            <div class="${status}">
+                                <h3>${message}</h3>
+                                <p>Found ${counterElements.length} counter elements</p>
+                                <h4>Navigation HTML Sample:</h4>
+                                <div class="code-display">${html.substring(0, 1000)}${html.length > 1000 ? '...' : ''}</div>
+                            </div>
+                        `;
+
+                        // Show counter values
+                        if (counterElements.length > 0) {
+                            let counterInfo = '<h4>Counter Values:</h4><ul>';
+                            counterElements.forEach((el, i) => {
+                                counterInfo += `<li>Counter ${i+1} (${el.className}): "${el.textContent}"</li>`;
+                            });
+                            counterInfo += '</ul>';
+                            results.innerHTML += `<div class="success">${counterInfo}</div>`;
+                        }
+                    } else {
+                        results.innerHTML = '<div class="error">❌ No categoryNavigation element found in main app</div>';
+                    }
+                } else {
+                    results.innerHTML = '<div class="error">❌ Cannot access main app window. Please open this test from the main app.</div>';
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Error checking navigation: ${error.message}</div>`;
+            }
+        }
+
+        async function checkCounterCSS() {
+            const results = document.getElementById('results');
+
+            try {
+                // Check if CSS classes exist
+                const testEl = document.createElement('div');
+                testEl.className = 'category-count';
+                document.body.appendChild(testEl);
+
+                const styles = window.getComputedStyle(testEl);
+                const hasStyles = styles.background !== 'rgba(0, 0, 0, 0)' || styles.padding !== '0px';
+
+                document.body.removeChild(testEl);
+
+                results.innerHTML = `
+                    <div class="${hasStyles ? 'success' : 'warning'}">
+                        <h3>${hasStyles ? '✅ Counter CSS styles are loaded' : '⚠️ Counter CSS may not be loaded'}</h3>
+                        <p>Background: ${styles.background}</p>
+                        <p>Padding: ${styles.padding}</p>
+                        <p>Border Radius: ${styles.borderRadius}</p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Error checking CSS: ${error.message}</div>`;
+            }
+        }
+
+        async function checkDataManagerState() {
+            const results = document.getElementById('results');
+
+            try {
+                const dataManager = new DataManager();
+                await dataManager.loadAllScenarios();
+
+                const categories = dataManager.getAvailableCategories();
+                const allScenarios = dataManager.getAllScenarios();
+
+                results.innerHTML = `
+                    <div class="success">
+                        <h3>✅ DataManager State Check</h3>
+                        <ul>
+                            <li>Total scenarios loaded: ${allScenarios.length}</li>
+                            <li>Categories available: ${categories.length}</li>
+                            <li>Categories with counts: ${categories.filter(cat => cat.count > 0).length}</li>
+                        </ul>
+                        <h4>Category Breakdown:</h4>
+                        <div class="code-display">${categories.map(cat => `${cat.displayName}: ${cat.count} scenarios`).join('\\n')}</div>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Error checking DataManager: ${error.message}</div>`;
+            }
+        }
+
+        function openMainApp() {
+            window.open('../index.html', '_blank');
+        }
+
+        // Auto-check if main window is available
+        setTimeout(() => {
+            if (window.opener) {
+                checkNavigationHTML();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Data Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>Quick Data Loading Test</h1>
+    <div id="status-log"></div>
+
+    <script src="data-manager-optimized.js"></script>
+    <script>
+        const statusLog = document.getElementById('status-log');
+
+        function logStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusLog.appendChild(div);
+            console.log(message);
+        }
+
+        async function quickTest() {
+            try {
+                logStatus('🚀 Starting quick data loading test...', 'info');
+
+                // Test DataManager initialization
+                const dataManager = new DataManager();
+                logStatus('✅ DataManager created successfully', 'success');
+
+                // Check if scenarioSources is initialized
+                if (dataManager.scenarioSources && dataManager.scenarioSources.categories) {
+                    logStatus('✅ scenarioSources properly initialized', 'success');
+                } else {
+                    logStatus('❌ scenarioSources not properly initialized', 'error');
+                    return;
+                }
+
+                // Test loading scenarios
+                logStatus('📦 Loading scenarios...', 'info');
+                await dataManager.loadAllScenarios();
+
+                const scenarios = dataManager.getAllScenarios();
+                logStatus(`📊 Loaded ${scenarios.length} scenarios`, scenarios.length > 0 ? 'success' : 'error');
+
+                if (scenarios.length > 0) {
+                    const firstScenario = scenarios[0];
+                    logStatus(`📄 First scenario: ${firstScenario.title || firstScenario.id}`, 'info');
+                    logStatus(`📂 Category: ${firstScenario.category}`, 'info');
+                }
+
+                // Test categories
+                const categories = dataManager.getAvailableCategories();
+                logStatus(`📁 Available categories: ${categories.length}`, categories.length > 0 ? 'success' : 'error');
+
+            } catch (error) {
+                logStatus(`❌ Test failed: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', quickTest);
+    </script>
+</body>
+</html>

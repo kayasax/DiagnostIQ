@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnostIQ Welcome/Display Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .welcome-message { background: #f0f8ff; padding: 20px; text-align: center; }
+        .search-results { display: none; background: #f8f8f8; padding: 20px; }
+        .scenario-card { background: white; border: 1px solid #ddd; margin: 10px 0; padding: 15px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .log { background: #f0f0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 DiagnostIQ Welcome/Display Test</h1>
+
+    <div class="test-section">
+        <h3>UI State Test</h3>
+        <button onclick="showWelcome()">Show Welcome</button>
+        <button onclick="showResults()">Show Results</button>
+        <button onclick="testSearch()">Test Search Simulation</button>
+
+        <div id="welcomeMessage" class="welcome-message">
+            <h2>Welcome to DiagnostIQ</h2>
+            <p>This is the welcome message that should hide when results are shown.</p>
+        </div>
+
+        <div id="searchResults" class="search-results">
+            <div class="scenario-card">
+                <h4>Test Scenario 1</h4>
+                <p>This is a test scenario card.</p>
+            </div>
+            <div class="scenario-card">
+                <h4>Test Scenario 2</h4>
+                <p>This is another test scenario card.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Console Log</h3>
+        <div id="logOutput" class="log"></div>
+    </div>
+
+    <script>
+        // Simple logging function
+        function log(message) {
+            const logOutput = document.getElementById('logOutput');
+            logOutput.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function showWelcome() {
+            const resultsContainer = document.getElementById('searchResults');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+
+            if (resultsContainer) {
+                resultsContainer.style.display = 'none';
+            }
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'block';
+            }
+
+            log('👋 Welcome message shown, results hidden');
+        }
+
+        function showResults() {
+            const resultsContainer = document.getElementById('searchResults');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+            }
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+
+            log('📊 Results shown, welcome message hidden');
+        }
+
+        function testSearch() {
+            log('🔍 Simulating search with results...');
+
+            // Simulate search results
+            const resultsContainer = document.getElementById('searchResults');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+
+            // Show results container and hide welcome message (same logic as app.js)
+            resultsContainer.style.display = 'block';
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+
+            // Add some test scenario cards
+            resultsContainer.innerHTML = `
+                <div class="scenario-card">
+                    <h4>Azure AD Password Protection Overview</h4>
+                    <p><strong>Category:</strong> aad-account-management</p>
+                    <p>Test scenario for troubleshooting password protection issues.</p>
+                </div>
+                <div class="scenario-card">
+                    <h4>Troubleshoot Azure AD Password Protection Proxy</h4>
+                    <p><strong>Category:</strong> aad-account-management</p>
+                    <p>Test scenario for proxy download failures.</p>
+                </div>
+            `;
+
+            log('✅ Search simulation complete - 2 test scenarios displayed');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Test page loaded');
+            showWelcome(); // Start with welcome message
+        });
+    </script>
+</body>
+</html>
