@@ -107,6 +107,15 @@ class QueryLibraryApp {
                 this.closeModal();
             }
         });
+
+        // Add keyboard shortcut for cache clearing (Ctrl+Shift+R)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+                e.preventDefault();
+                console.log('🧹 Cache clear shortcut triggered');
+                this.clearCacheAndReload();
+            }
+        });
     }
 
     loadSyntaxHighlighter() {
@@ -391,11 +400,19 @@ class QueryLibraryApp {
             .sort(([,a], [,b]) => b - a)
             .slice(0, 20); // Top 20 tags
 
-        tagCloudContainer.innerHTML = sortedTags.map(([tag, count]) =>
-            `<span class="tag-item" onclick="app.searchByTag('${tag}')" title="${count} scenarios">
+        tagCloudContainer.innerHTML = sortedTags.map(([tag, count]) => {
+            // Determine tag size based on count
+            let sizeClass = 'size-sm';
+            if (count >= 10) sizeClass = 'size-xl';
+            else if (count >= 7) sizeClass = 'size-lg';
+            else if (count >= 5) sizeClass = 'size-md';
+            else if (count >= 3) sizeClass = 'size-sm';
+            else sizeClass = 'size-xs';
+
+            return `<span class="cloud-tag ${sizeClass}" onclick="app.filterByTag('${tag}')" title="${count} scenarios">
                 ${tag} <span class="tag-count">${count}</span>
-            </span>`
-        ).join('');
+            </span>`;
+        }).join('');
     }
 
     populateStatistics() {
@@ -506,8 +523,16 @@ class QueryLibraryApp {
     clearAllFilters() {
         document.getElementById('searchInput').value = '';
         document.getElementById('categoryFilter').value = 'all';
-        this.displayResults(this.allCheatSheets);
-        this.updateResultsCount(this.allCheatSheets.length);
+
+        // Sort scenarios by most recent first (lastUpdated field)
+        const sortedScenarios = [...this.allCheatSheets].sort((a, b) => {
+            const dateA = new Date(a.lastUpdated || '2020-01-01');
+            const dateB = new Date(b.lastUpdated || '2020-01-01');
+            return dateB - dateA; // Most recent first
+        });
+
+        this.displayResults(sortedScenarios);
+        this.updateResultsCount(sortedScenarios.length);
     }
 
     filterByCategory(categoryName) {
@@ -518,10 +543,10 @@ class QueryLibraryApp {
 
     toggleVertical(verticalKey) {
         console.log('🔄 Toggling vertical:', verticalKey);
-        
+
         const categoriesContainer = document.getElementById(`categories-${verticalKey}`);
         const arrow = document.getElementById(`arrow-${verticalKey}`);
-        
+
         if (!categoriesContainer || !arrow) {
             console.error('❌ Vertical elements not found:', {
                 verticalKey,
@@ -530,19 +555,19 @@ class QueryLibraryApp {
             });
             return;
         }
-        
+
         // Check current visibility state
         // If display is not set or is block/empty, consider it visible
         const currentDisplay = categoriesContainer.style.display;
         const isVisible = currentDisplay !== 'none';
-        
+
         console.log('📊 Current state:', {
             verticalKey,
             currentDisplay,
             isVisible,
             arrowText: arrow.textContent
         });
-        
+
         if (isVisible) {
             // Collapse
             categoriesContainer.style.display = 'none';
@@ -557,6 +582,13 @@ class QueryLibraryApp {
     }
 
     searchByTag(tag) {
+        document.getElementById('searchInput').value = tag;
+        document.getElementById('categoryFilter').value = 'all';
+        this.performSearch();
+    }
+
+    filterByTag(tag) {
+        console.log(`🏷️ Filtering by tag: ${tag}`);
         document.getElementById('searchInput').value = tag;
         document.getElementById('categoryFilter').value = 'all';
         this.performSearch();
@@ -606,18 +638,59 @@ class QueryLibraryApp {
         }
 
         console.log('🏗️ Creating scenario cards...');
-        const cardsHTML = results.map(sheet => this.createScenarioCard(sheet)).join('');
-        console.log('📝 Generated HTML length:', cardsHTML.length);
 
-        resultsContainer.innerHTML = cardsHTML;
-        console.log('✅ HTML set to container');
+        // Handle async loading internally without requiring callers to be async
+        this.renderScenariosAsync(results, resultsContainer);
+    }
 
-        // Re-apply syntax highlighting
-        if (typeof Prism !== 'undefined') {
-            Prism.highlightAll();
+    async renderScenariosAsync(results, resultsContainer) {
+        try {
+            console.log('🔄 Loading full scenarios for card display...');
+
+            // Load full scenarios before creating cards to ensure KQL queries are available
+            const fullScenarios = await Promise.all(
+                results.map(async (sheet) => {
+                    if (!sheet.isLoaded && window.dataManager) {
+                        console.log(`📄 Loading full content for: ${sheet.title}`);
+                        const fullScenario = await window.dataManager.loadFullScenario(sheet);
+                        if (fullScenario) {
+                            console.log(`✅ Loaded full scenario: ${fullScenario.title}, KQL queries: ${fullScenario.kqlQueries ? fullScenario.kqlQueries.length : 'none'}`);
+                            return fullScenario;
+                        }
+                    }
+                    return sheet;
+                })
+            );
+
+            console.log('🎯 Full scenarios loaded, creating cards...');
+            const cardsHTML = fullScenarios.map(sheet => {
+                console.log(`🔍 Creating card for: ${sheet.title}, isLoaded: ${sheet.isLoaded}, kqlQueries: ${sheet.kqlQueries ? sheet.kqlQueries.length : 'none'}`);
+                return this.createScenarioCard(sheet);
+            }).join('');
+
+            console.log('📝 Generated HTML length:', cardsHTML.length);
+
+            resultsContainer.innerHTML = cardsHTML;
+            console.log('✅ HTML set to container');
+
+            // Re-apply syntax highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+        } catch (error) {
+            console.error('❌ Error loading scenarios:', error);
+            // Show error message instead of broken cards
+            resultsContainer.innerHTML = `<div class="no-results">Error loading scenarios: ${error.message}</div>`;
         }
     }    createScenarioCard(sheet) {
-        console.log('🎴 Creating card for scenario:', { id: sheet.id, title: sheet.title, category: sheet.category });
+        console.log('🎴 Creating card for scenario:', {
+            id: sheet.id,
+            title: sheet.title,
+            category: sheet.category,
+            isLoaded: sheet.isLoaded,
+            hasKqlQueries: !!sheet.kqlQueries,
+            kqlQueriesLength: sheet.kqlQueries ? sheet.kqlQueries.length : 0
+        });
 
         const categoryDisplayName = this.formatCategoryName(sheet.category);
         const tagsHtml = sheet.tags ?
@@ -630,6 +703,12 @@ class QueryLibraryApp {
             ...(sheet.queries || []),
             ...(sheet.kqlQueries || [])
         ].filter(query => query && (query.query || query.description || query.name));
+
+        console.log(`🔍 Queries found for ${sheet.title}:`, {
+            oldQueries: sheet.queries ? sheet.queries.length : 0,
+            kqlQueries: sheet.kqlQueries ? sheet.kqlQueries.length : 0,
+            totalFiltered: allQueries.length
+        });
 
         if (allQueries.length > 0) {
             queriesHtml = allQueries.map((query, index) => `
@@ -674,7 +753,16 @@ class QueryLibraryApp {
                     </h4>
                     <div class="steps-list">
                         <ol>
-                            ${sheet.troubleshootingSteps.map(step => `<li>${step}</li>`).join('')}
+                            ${sheet.troubleshootingSteps.map(step => {
+                                // Handle both object and string formats
+                                if (typeof step === 'object' && step !== null) {
+                                    const stepTitle = step.step || step.title || 'Step';
+                                    const stepDesc = step.description || '';
+                                    return `<li><strong>${stepTitle}</strong>${stepDesc ? `: ${stepDesc}` : ''}</li>`;
+                                } else {
+                                    return `<li>${step}</li>`;
+                                }
+                            }).join('')}
                         </ol>
                     </div>
                 </div>
@@ -1453,7 +1541,7 @@ class QueryLibraryApp {
             // Add or update scenario via data manager
             if (window.dataManager) {
                 const isEditMode = !!this.editingSheetId;
-                
+
                 if (isEditMode) {
                     // Update existing scenario
                     console.log('✏️ Updating existing scenario:', this.editingSheetId);
@@ -1579,6 +1667,28 @@ class QueryLibraryApp {
 
         console.log(`✅ Form category dropdown populated with ${categories.length} categories`);
     }
+
+    // Clear cache and force reload - for debugging
+    async clearCacheAndReload() {
+        try {
+            console.log('🧹 Clearing cache and reloading...');
+
+            if (window.dataManager) {
+                await window.dataManager.forceReload();
+                this.allCheatSheets = window.dataManager.getAllScenarios();
+
+                // Refresh the UI
+                this.setupInterface();
+                this.showWelcomeMessage();
+
+                this.showToast('✅ Cache cleared and data reloaded!', 'success');
+                console.log('✅ Cache cleared and reloaded successfully');
+            }
+        } catch (error) {
+            console.error('❌ Cache clear failed:', error);
+            this.showToast('❌ Cache clear failed: ' + error.message, 'error');
+        }
+    }
 }
 
 // Global function for HTML button
@@ -1622,21 +1732,5 @@ window.initializeApp = () => {
     }
 };
 
-// Global function exposures for HTML compatibility
-window.performSearch = () => {
-    if (window.app) {
-        window.app.performSearch();
-    }
-};
-
-window.clearAllFilters = () => {
-    if (window.app) {
-        window.app.clearAllFilters();
-    }
-};
-
-window.clearSearch = () => {
-    if (window.app) {
-        window.app.clearSearch();
-    }
-};
+// Note: Global function exposures are handled in index.html setupGlobalFunctions()
+// to avoid duplication and ensure proper initialization order
